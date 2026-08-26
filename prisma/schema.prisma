@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  employeeId         String         @unique
+  email              String         @unique
+  password           String
+  fullName           String
+  phone              String?
+  role               String         @default("EMPLOYEE") // MANAGER | TEAM_LEAD | EMPLOYEE
+  designation        String         @default("Staff Member")
+  accountStatus      String         @default("ACTIVE")   // ACTIVE | INACTIVE | SUSPENDED
+  mustChangePassword Boolean        @default(false)
+  isDeleted          Boolean        @default(false)
+
+  // Team Relationship
+  teamId             String?
+  team               Team?          @relation("TeamMembers", fields: [teamId], references: [id], onDelete: SetNull)
+
+  // Team Leadership (If user is Team Lead)
+  ledTeams           Team[]         @relation("TeamLead")
+
+  // Attendance & Leaves
+  attendances        Attendance[]
+  leaveRequests      LeaveRequest[]
+  leaveApprovals     LeaveApprovalHistory[]
+  leaveBalances      LeaveBalance[]
+  
+  // Tasks
+  tasksAssigned      Task[]         @relation("AssignedTasks")
+  tasksCreated       Task[]         @relation("CreatedTasks")
+
+  // Announcements & System
+  announcementsCreated Announcement[] @relation("CreatedAnnouncements")
+  announcementReads    AnnouncementRead[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]     @relation("UserAuditLogs")
+
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([employeeId, email, role, teamId, accountStatus, isDeleted])
+}
+
+model Team {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  code        String         @unique
+  isActive    Boolean        @default(true)
+
+  teamLeadId  String?
+  teamLead    User?          @relation("TeamLead", fields: [teamLeadId], references: [id], onDelete: SetNull)
+
+  members     User[]         @relation("TeamMembers")
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([teamLeadId, isActive])
+}
+
+model Attendance {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime
+  checkInTime    DateTime?
+  checkOutTime   DateTime?
+  totalHours     Float          @default(0.0)
+  status         String         @default("PRESENT")   // PRESENT | ABSENT | ON_LEAVE | HALF_DAY
+  lateStatus     String         @default("ON_TIME")   // ON_TIME | LATE
+  isCorrected    Boolean        @default(false)
+  correctionNote String?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date, status, lateStatus])
+}
+
+model LeaveRequest {
+  id           String                 @id @default(uuid())
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType    String                 @default("CASUAL") // CASUAL | SICK | PAID | WORK_FROM_HOME | EMERGENCY
+  startDate    DateTime
+  endDate      DateTime
+  numberOfDays Float
+  reason       String
+  currentStage String                 @default("PENDING_TL") // PENDING_TL | PENDING_MANAGER | APPROVED | REJECTED
+
+  approvals    LeaveApprovalHistory[]
+
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@index([userId, currentStage, startDate, endDate])
+}
+
+model LeaveApprovalHistory {
+  id             String       @id @default(uuid())
+  leaveRequestId String
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+
+  actionById     String
+  actionBy       User         @relation(fields: [actionById], references: [id], onDelete: Cascade)
+
+  stage          String
+  action         String       // SUBMITTED | APPROVED | REJECTED
+  comments       String?
+
+  createdAt      DateTime     @default(now())
+
+  @@index([leaveRequestId, actionById])
+}
+
+model LeaveBalance {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType   String   @default("CASUAL")
+  totalQuota  Float    @default(12.0)
+  usedQuota   Float    @default(0.0)
+  year        Int      @default(2026)
+
+  @@unique([userId, leaveType, year])
+  @@index([userId, year])
+}
+
+model Task {
+  id            String    @id @default(uuid())
+  taskCode      String    @unique
+  title         String
+  description   String?
+  priority      String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  status        String    @default("TO_DO")  // TO_DO | IN_PROGRESS | COMPLETED
+  
+  assignedToId  String?
+  assignedTo    User?     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  assignedById  String
+  assignedBy    User      @relation("CreatedTasks", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  teamId        String?
+  dueDate       DateTime?
+  completedDate DateTime?
+  workNotes     String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([assignedToId, assignedById, teamId, status])
+}
+
+model Announcement {
+  id               String             @id @default(uuid())
+  announcementCode String?            @unique
+  title            String
+  content          String
+  priority         String             @default("NORMAL")    // NORMAL | IMPORTANT | URGENT
+  targetType       String             @default("ALL")       // ALL | TEAM | SPECIFIC_EMPLOYEES
+  targetId         String?            // Team ID or User ID if targeted
+  
+  createdById      String?
+  createdBy        User?              @relation("CreatedAnnouncements", fields: [createdById], references: [id], onDelete: SetNull)
+
+  reads            AnnouncementRead[]
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([targetType, targetId, createdById])
+}
+
+model AnnouncementRead {
+  id             String       @id @default(uuid())
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@unique([announcementId, userId])
+  @@index([userId, announcementId])
+}
+
+model SystemSetting {
+  id                    String   @id @default("global_config")
+  companyName           String   @default("Persevex Systems Corp")
+  companyEmail          String   @default("admin@persevex.com")
+  officeStartTime       String   @default("11:00")
+  officeEndTime         String   @default("20:00")
+  gracePeriodMinutes    Int      @default(15)
+  workingDays           String   @default("Monday,Tuesday,Thursday,Friday,Saturday,Sunday")
+  officeLatitude        String?  @default("12.916480")
+  officeLongitude       String?  @default("77.618145")
+  officeRadiusMeters    String?  @default("100")
+  enableLocationCheck   Boolean  @default(false)
+  updatedAt             DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  role      String
+  action    String
+  target    String
+  details   String
+  timestamp DateTime @default(now())
+
+  @@index([userId, action, timestamp])
+}

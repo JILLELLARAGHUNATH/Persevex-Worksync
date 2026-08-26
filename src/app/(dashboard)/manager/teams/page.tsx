@@ -1,0 +1,31 @@
+import { prisma } from '@/lib/prisma';
+import TeamsManagementClient from '@/components/teams/TeamsManagementClient';
+
+export default async function ManagerTeamsPage() {
+  const teams = await prisma.team.findMany({
+    include: {
+      teamLead: true,
+      members: { where: { isDeleted: false } },
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  const allUsers = await prisma.user.findMany({
+    where: { isDeleted: false },
+    include: { team: true },
+    orderBy: { fullName: 'asc' },
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Team Management</h1>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Create teams, assign Team Leads, and manage team member rosters
+        </p>
+      </div>
+
+      <TeamsManagementClient initialTeams={teams} allUsers={allUsers} />
+    </div>
+  );
+}
