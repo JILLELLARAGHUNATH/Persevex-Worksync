@@ -77,15 +77,15 @@ export default function LeaveRequestsClient({
   ).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Filter Tabs */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-colors">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-            <CalendarDays className="w-5 h-5" />
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-xl shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-colors">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">
+            <CalendarDays className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               {role === 'MANAGER' ? 'Organization Leave Review' : 'Team Leave Requests'}
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -94,7 +94,7 @@ export default function LeaveRequestsClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold">
+        <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
           {[
             { key: 'PENDING', label: `Pending (${pendingCount})` },
             { key: 'APPROVED', label: 'Approved' },
@@ -104,10 +104,10 @@ export default function LeaveRequestsClient({
             <button
               key={tab.key}
               onClick={() => setFilterStage(tab.key)}
-              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md transition text-xs cursor-pointer ${
                 filterStage === tab.key
-                  ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               {tab.label}
@@ -117,61 +117,61 @@ export default function LeaveRequestsClient({
       </div>
 
       {/* Requests Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-4">Applicant</th>
-                <th className="p-4">Leave Type</th>
-                <th className="p-4">Duration</th>
-                <th className="p-4">Days</th>
-                <th className="p-4">Reason</th>
-                <th className="p-4">Current Stage</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="py-3 px-4">Applicant</th>
+                <th className="py-3 px-4">Leave Type</th>
+                <th className="py-3 px-4">Duration</th>
+                <th className="py-3 px-4">Days</th>
+                <th className="py-3 px-4">Reason</th>
+                <th className="py-3 px-4">Current Stage</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-800 dark:text-slate-200">
               {filteredLeaves.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     No leave requests found in this view.
                   </td>
                 </tr>
               ) : (
                 filteredLeaves.map((l) => (
-                  <tr key={l.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-900 dark:text-white">
+                  <tr key={l.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">
                         {l.user?.fullName}
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono">
                         {l.user?.employeeId} &middot; {l.user?.team?.name || 'No Team'}
                       </div>
                     </td>
-                    <td className="p-4 font-bold text-indigo-600 dark:text-indigo-400">
-                      {l.leaveType}
+                    <td className="py-3 px-4 font-semibold text-violet-600 dark:text-violet-400">
+                      {l.leaveType.replace(/_/g, ' ')}
                     </td>
-                    <td className="p-4 font-mono">
+                    <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
                       {formatDate(l.startDate)} &rarr; {formatDate(l.endDate)}
                     </td>
-                    <td className="p-4 font-mono font-bold">
+                    <td className="py-3 px-4 font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {l.daysCount} days
                     </td>
-                    <td className="p-4 max-w-xs truncate text-slate-500 dark:text-slate-400" title={l.reason}>
+                    <td className="py-3 px-4 max-w-xs truncate text-slate-500 dark:text-slate-400" title={l.reason}>
                       {l.reason}
                     </td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       <StatusBadge status={l.currentStage} />
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="py-3 px-4 text-right">
                       {(l.currentStage === 'PENDING_TL' && role === 'TEAM_LEAD') ||
                       (l.currentStage === 'PENDING_MANAGER' && role === 'MANAGER') ? (
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             disabled={loadingId === l.id}
                             onClick={() => handleAction(l.id, 'APPROVE')}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition shadow-sm disabled:opacity-50 cursor-pointer"
+                            className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-2.5 rounded-lg flex items-center gap-1 transition shadow-xs disabled:opacity-50 cursor-pointer text-xs"
                           >
                             {loadingId === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                             Approve
@@ -179,7 +179,7 @@ export default function LeaveRequestsClient({
                           <button
                             disabled={loadingId === l.id}
                             onClick={() => handleAction(l.id, 'REJECT')}
-                            className="bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition border border-rose-200 dark:border-rose-800 disabled:opacity-50 cursor-pointer"
+                            className="h-8 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 dark:text-rose-400 font-medium px-2.5 rounded-lg flex items-center gap-1 transition border border-rose-200 dark:border-rose-800/60 disabled:opacity-50 cursor-pointer text-xs"
                           >
                             <X className="w-3.5 h-3.5" /> Reject
                           </button>

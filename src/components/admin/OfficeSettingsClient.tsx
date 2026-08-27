@@ -139,44 +139,54 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
   };
 
   return (
-    <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-xl space-y-8 transition-colors">
-      <div className="space-y-4">
-        <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-          <Building className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Corporate Entity Information
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+    <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs space-y-6 transition-colors">
+      <div className="space-y-3.5">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+            <Building className="w-3.5 h-3.5" />
+          </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Company / Office Name</label>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Entity Information</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Organization name and official communication address</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Company / Office Name</label>
             <input
               type="text"
               required
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium"
             />
           </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Official Administrative Email</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Official Administrative Email</label>
             <input
               type="email"
               required
               value={companyEmail}
               onChange={(e) => setCompanyEmail(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-          <div>
-            <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Physical Office Geofence & Coordinates
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Set the exact latitude, longitude, and allowed radius for employee attendance punches.
-            </p>
+      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3.5">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
+              <MapPin className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Physical Office Geofence & Coordinates</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Set latitude, longitude, and allowed radius for employee check-ins
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -185,51 +195,51 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
                 href={`https://www.google.com/maps?q=${officeLatitude},${officeLongitude}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-xl transition"
+                className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 px-2.5 py-1 rounded-md transition"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> View on Google Maps
+                <ExternalLink className="w-3 h-3" /> Map
               </a>
             )}
             <button
               type="button"
               onClick={handleDetectGPS}
               disabled={detectingGps}
-              className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-950 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-semibold transition"
+              className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer shadow-xs"
             >
-              {detectingGps ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crosshair className="w-3.5 h-3.5 text-emerald-500" />}
-              Detect My Current Location
+              {detectingGps ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crosshair className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+              Detect Location
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Office Latitude (GPS)</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Office Latitude (GPS)</label>
             <input
               type="text"
               required
               value={officeLatitude}
               onChange={(e) => setOfficeLatitude(e.target.value)}
               placeholder="e.g. 12.916480"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Office Longitude (GPS)</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Office Longitude (GPS)</label>
             <input
               type="text"
               required
               value={officeLongitude}
               onChange={(e) => setOfficeLongitude(e.target.value)}
               placeholder="e.g. 77.618145"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <div className="sm:col-span-2 space-y-2">
+          <div className="sm:col-span-2 space-y-2 pt-1">
             <div className="flex justify-between items-center">
-              <label className="text-slate-700 dark:text-slate-300 font-semibold">Allowed Geofence Radius (Meters)</label>
-              <span className="font-mono font-bold text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-lg border border-indigo-500/20">
+              <label className="text-slate-700 dark:text-slate-300 font-medium text-xs">Allowed Geofence Radius</label>
+              <span className="font-mono font-medium text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800/60">
                 {officeRadiusMeters} meters (~{(Number(officeRadiusMeters) / 1000).toFixed(2)} km)
               </span>
             </div>
@@ -240,21 +250,21 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
               step="10"
               value={officeRadiusMeters}
               onChange={(e) => setOfficeRadiusMeters(e.target.value)}
-              className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
-            <div className="flex justify-between text-[11px] text-slate-400">
-              <span>Strict (20m - Room level)</span>
-              <span>Standard Office (100m)</span>
-              <span>Large Campus / Tech Park (500m+)</span>
+            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+              <span>Strict (20m)</span>
+              <span>Standard (100m)</span>
+              <span>Campus (500m+)</span>
             </div>
           </div>
 
-          <div className="sm:col-span-2 p-3.5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <div>
-                <p className="font-bold text-slate-900 dark:text-white text-xs">Enforce GPS Geofencing Check</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Block punches if employee coordinates exceed the allowed office perimeter.</p>
+                <p className="font-medium text-slate-900 dark:text-slate-100 text-xs">Enforce GPS Geofencing Check</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Block punches if employee is outside the allowed perimeter.</p>
               </div>
             </div>
             <input
@@ -262,44 +272,50 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
               id="enableLocationCheck"
               checked={enableLocationCheck}
               onChange={(e) => setEnableLocationCheck(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-0 cursor-pointer"
+              className="w-4 h-4 rounded-sm text-blue-600 focus:ring-0 cursor-pointer accent-blue-600"
             />
           </div>
         </div>
       </div>
 
-      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
-        <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Shift Timings & Grace Period Policies
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3.5">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60">
+            <Clock className="w-3.5 h-3.5" />
+          </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Shift Start Time (HH:MM)</label>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Shift Timings & Grace Period Policies</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Default office shift schedule and late threshold</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Shift Start Time (HH:MM)</label>
             <input
               type="text"
               required
               value={officeStartTime}
               onChange={(e) => setOfficeStartTime(e.target.value)}
               placeholder="11:00"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Shift End Time (HH:MM)</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Shift End Time (HH:MM)</label>
             <input
               type="text"
               required
               value={officeEndTime}
               onChange={(e) => setOfficeEndTime(e.target.value)}
               placeholder="20:00"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Grace Period (Minutes)</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Grace Period (Minutes)</label>
             <input
               type="number"
               min="0"
@@ -308,20 +324,20 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
               value={gracePeriodMinutes}
               onChange={(e) => setGracePeriodMinutes(e.target.value)}
               placeholder="15"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
         <button
           type="submit"
           disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold px-6 py-3 rounded-xl transition shadow-md shadow-indigo-600/30 flex items-center gap-2"
+          className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Save System & Geofence Policies
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          Save System Settings
         </button>
       </div>
     </form>

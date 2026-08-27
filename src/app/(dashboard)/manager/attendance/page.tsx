@@ -11,9 +11,9 @@ export default async function ManagerAttendancePage() {
   const employees = await prisma.user.findMany({ where: { isDeleted: false }, select: { id: true, fullName: true, employeeId: true } });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Organization Attendance Ledger</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Organization Attendance Ledger</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Real-time check-in and check-out logs, shift punctuality, and working hours
         </p>

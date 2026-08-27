@@ -77,31 +77,34 @@ export default function UnifiedReportsClient({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6 transition-colors">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-xl shadow-xs space-y-5 transition-colors">
       <div className="space-y-4">
-        <h3 className="font-extrabold text-slate-900 dark:text-white text-base">Select Report Parameters</h3>
+        <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Select Report Parameters</h3>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure filters and format for data export</p>
+        </div>
 
         {role !== 'EMPLOYEE' && (
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Report Category</label>
-            <div className="flex gap-2">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Report Category</label>
+            <div className="inline-flex gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => setReportType('ATTENDANCE')}
-                className={'px-4 py-2 rounded-xl text-xs font-bold transition ' + (reportType === 'ATTENDANCE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300')}
+                className={'px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ' + (reportType === 'ATTENDANCE' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200')}
               >
                 Attendance Ledger
               </button>
               {role === 'MANAGER' && (
                 <button
                   onClick={() => setReportType('EMPLOYEE')}
-                  className={'px-4 py-2 rounded-xl text-xs font-bold transition ' + (reportType === 'EMPLOYEE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300')}
+                  className={'px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ' + (reportType === 'EMPLOYEE' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200')}
                 >
                   Workforce Roster
                 </button>
               )}
               <button
                 onClick={() => setReportType('LEAVE')}
-                className={'px-4 py-2 rounded-xl text-xs font-bold transition ' + (reportType === 'LEAVE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300')}
+                className={'px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ' + (reportType === 'LEAVE' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200')}
               >
                 Leave Utilization
               </button>
@@ -109,13 +112,13 @@ export default function UnifiedReportsClient({
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Date Range Preset</label>
+            <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Date Range Preset</label>
             <select
               value={datePreset}
               onChange={(e) => setDatePreset(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
             >
               <option value="TODAY">Today</option>
               <option value="THIS_WEEK">This Week</option>
@@ -130,21 +133,21 @@ export default function UnifiedReportsClient({
           {datePreset === 'CUSTOM' && (
             <>
               <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">From Date</label>
+                <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">From Date</label>
                 <input
                   type="date"
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-mono"
+                  className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">To Date</label>
+                <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">To Date</label>
                 <input
                   type="date"
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-mono"
+                  className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
             </>
@@ -152,11 +155,11 @@ export default function UnifiedReportsClient({
 
           {role === 'MANAGER' && (
             <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Team Scope</label>
+              <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Team Scope</label>
               <select
                 value={selectedTeam}
                 onChange={(e) => setSelectedTeam(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="">All Teams</option>
                 {teams.map((t) => (
@@ -168,11 +171,11 @@ export default function UnifiedReportsClient({
 
           {role !== 'EMPLOYEE' && (
             <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Employee</label>
+              <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Employee</label>
               <select
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="">All Employees</option>
                 {employees.map((e) => (
@@ -183,11 +186,11 @@ export default function UnifiedReportsClient({
           )}
 
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Attendance Status</label>
+            <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">Attendance Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="PRESENT">Present</option>
@@ -199,22 +202,22 @@ export default function UnifiedReportsClient({
         </div>
       </div>
 
-      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
         <button
           onClick={() => handleExport('csv')}
           disabled={loading}
-          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition"
+          className="h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-3 rounded-lg text-xs flex items-center gap-1.5 transition border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer disabled:opacity-50"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-slate-500" />}
-          Download CSV (.csv)
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-slate-500" />}
+          Download CSV
         </button>
 
         <button
           onClick={() => handleExport('xlsx')}
           disabled={loading}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow-md shadow-emerald-600/20"
+          className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3.5 rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 cursor-pointer"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
           Export Excel (.xlsx)
         </button>
       </div>

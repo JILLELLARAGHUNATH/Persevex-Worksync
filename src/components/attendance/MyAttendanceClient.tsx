@@ -194,10 +194,10 @@ export default function MyAttendanceClient({
   }, [records, datePreset, search, sortAsc, todayKey, yesterdayKey, startOfWeek, startOfMonth]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             {showHistory ? 'My Attendance History' : "Today's Attendance"}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -209,16 +209,16 @@ export default function MyAttendanceClient({
 
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/20 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition shadow-xs cursor-pointer"
         >
           {showHistory ? (
             <>
-              <Clock className="w-4 h-4" />
-              <span>View Today's Punch</span>
+              <Clock className="w-3.5 h-3.5" />
+              <span>View Today&apos;s Punch</span>
             </>
           ) : (
             <>
-              <History className="w-4 h-4" />
+              <History className="w-3.5 h-3.5" />
               <span>Attendance History ({records.length})</span>
             </>
           )}
@@ -226,43 +226,43 @@ export default function MyAttendanceClient({
       </div>
 
       {!showHistory ? (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
-                  <Clock className="w-7 h-7 animate-pulse" />
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 shrink-0">
+                  <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono" suppressHydrationWarning>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 font-mono" suppressHydrationWarning>
                       {mounted ? time : '--:--:--'}
                     </span>
                     {isCheckedIn && isCheckedOut ? (
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                      <span className="px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-semibold text-xs">
                         <Check className="w-3.5 h-3.5 inline mr-1" /> Shift Completed
                       </span>
                     ) : isCheckedIn ? (
-                      <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs animate-pulse">
+                      <span className="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-semibold text-xs">
                         ● On Duty
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs">
+                      <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold text-xs">
                         Ready to Punch In
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Shift: 11:00 AM – 8:00 PM (15m Grace) &middot; Target: 9.00 hrs
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Today's Punch In</span>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1" suppressHydrationWarning>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Today&apos;s Punch In</span>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-0.5" suppressHydrationWarning>
                   {mounted && todayAtt?.checkInTime ? formatTime(todayAtt.checkInTime) : '--:--'}
                 </p>
                 <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
@@ -270,9 +270,9 @@ export default function MyAttendanceClient({
                 </span>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Today's Punch Out</span>
-                <p className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 font-mono mt-1" suppressHydrationWarning>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Today&apos;s Punch Out</span>
+                <p className="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 font-mono mt-0.5" suppressHydrationWarning>
                   {mounted && todayAtt?.checkOutTime ? formatTime(todayAtt.checkOutTime) : '--:--'}
                 </p>
                 <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
@@ -280,34 +280,33 @@ export default function MyAttendanceClient({
                 </span>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Today's Duration</span>
-                <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1" suppressHydrationWarning>
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Today&apos;s Duration</span>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono mt-0.5" suppressHydrationWarning>
                   {mounted ? todayLiveDuration : '00h 00m 00s'}
                 </p>
-
                 <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                   Standard: 9.00 hrs shift
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <button
                 disabled={isCheckedIn || loading}
                 onClick={handleCheckIn}
-                className="py-4 px-6 rounded-2xl font-black text-sm text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2.5 cursor-pointer"
+                className="py-3 px-5 rounded-xl font-semibold text-xs sm:text-sm text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loading && !isCheckedIn ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                {loading && !isCheckedIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 <span>{isCheckedIn ? '✓ Punched In for Today' : 'Clock In Now'}</span>
               </button>
 
               <button
                 disabled={!isCheckedIn || isCheckedOut || loading}
                 onClick={handleCheckOut}
-                className="py-4 px-6 rounded-2xl font-black text-sm text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-md shadow-amber-600/20 flex items-center justify-center gap-2.5 cursor-pointer"
+                className="py-3 px-5 rounded-xl font-semibold text-xs sm:text-sm text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <AlertCircle className="w-5 h-5" />}
+                {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
                 <span>{isCheckedOut ? '✓ Shift Completed' : 'Clock Out'}</span>
               </button>
             </div>
@@ -315,8 +314,8 @@ export default function MyAttendanceClient({
         </div>
       ) : (
         /* NO TOP CARDS HERE - TODAY FILTER ACTIVE BY DEFAULT */
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative w-full md:w-80">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -324,45 +323,45 @@ export default function MyAttendanceClient({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by date, status, punctuality..."
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
               <button
                 onClick={() => setDatePreset('TODAY')}
-                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'TODAY' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'TODAY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
               >
                 Today
               </button>
               <button
                 onClick={() => setDatePreset('YESTERDAY')}
-                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'YESTERDAY' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'YESTERDAY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
               >
                 Yesterday
               </button>
               <button
                 onClick={() => setDatePreset('THIS_WEEK')}
-                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'THIS_WEEK' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'THIS_WEEK' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
               >
                 This Week
               </button>
               <button
                 onClick={() => setDatePreset('THIS_MONTH')}
-                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'THIS_MONTH' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'THIS_MONTH' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
               >
                 This Month
               </button>
               <button
                 onClick={() => setDatePreset('ALL')}
-                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'ALL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-3 py-1.5 rounded-xl transition ${datePreset === 'ALL' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
               >
                 All Records
               </button>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
             <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>

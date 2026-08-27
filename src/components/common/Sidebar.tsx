@@ -63,20 +63,20 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
   const links = getNavLinks();
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-full bg-[#16243A] border-r border-[#223450] transition-colors">
+      <div className="p-4 flex items-center justify-between border-b border-[#223450]">
         <Link href="/" className="block focus:outline-none">
-          <PersevexLogo size="sm" showWorkSyncTag={true} subtitle={role.replace(/_/g, ' ') + ' Portal'} className="!items-start" />
+          <PersevexLogo size="sm" showWorkSyncTag={true} subtitle={role.replace(/_/g, ' ') + ' PORTAL'} className="!items-start" />
         </Link>
 
         {onCloseMobile && (
-          <button onClick={onCloseMobile} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <button onClick={onCloseMobile} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 p-3.5 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href;
@@ -85,26 +85,26 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
               key={link.href}
               href={link.href}
               onClick={onCloseMobile}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-150 relative ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-[1.02]'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-blue-600/15 text-white font-semibold shadow-xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-1 before:bg-blue-500 before:rounded-r'
+                  : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
               }`}
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              {link.name}
+              <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+              <span>{link.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-indigo-600/10 dark:bg-indigo-600/20 border border-indigo-500/20 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-300 text-xs">
+      <div className="p-3.5 border-t border-[#223450] bg-[#101B2B] flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center font-bold text-blue-400 text-xs shrink-0 shadow-xs">
           {userName.charAt(0)}
         </div>
-        <div className="overflow-hidden">
-          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{userName}</p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{role.replace(/_/g, ' ')}</p>
+        <div className="overflow-hidden min-w-0">
+          <p className="text-xs font-semibold text-slate-100 truncate">{userName}</p>
+          <p className="text-[10px] text-slate-400 truncate capitalize">{role.toLowerCase().replace(/_/g, ' ')}</p>
         </div>
       </div>
     </div>

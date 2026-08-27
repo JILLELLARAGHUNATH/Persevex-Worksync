@@ -18,9 +18,9 @@ export default async function ManagerDashboardPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Manager Dashboard</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Manager Dashboard</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Real-time workforce attendance analytics, punctuality distribution, and team metrics
         </p>

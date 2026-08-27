@@ -15,9 +15,9 @@ export default async function ManagerEmployeesPage() {
   const teams = await prisma.team.findMany({ where: { isActive: true } });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Employees & Team Leads</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Employees & Team Leads</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Directory of all registered workforce members ({employees.length} total)
         </p>

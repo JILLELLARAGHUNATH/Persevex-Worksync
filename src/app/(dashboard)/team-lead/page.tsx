@@ -87,11 +87,11 @@ export default async function TeamLeadDashboardPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             Team Lead Command Center
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -101,13 +101,13 @@ export default async function TeamLeadDashboardPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/team-lead/team-members"
-            className="text-xs font-semibold px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700"
+            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700"
           >
             Squad Members ({assignedMembers.length})
           </Link>
           <Link
             href="/team-lead/leave-requests"
-            className="text-xs font-semibold px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm"
+            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition shadow-xs"
           >
             Leave Requests ({pendingTlLeaves})
           </Link>

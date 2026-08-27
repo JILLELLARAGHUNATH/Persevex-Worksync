@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import PersevexLogo from '@/components/common/PersevexLogo';
 import {
   Lock,
@@ -15,7 +14,9 @@ import {
   AlertCircle,
   Sun,
   Moon,
-  Loader2
+  Loader2,
+  ShieldAlert,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,6 +42,7 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -111,48 +113,48 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950 transition-colors duration-200 relative w-full">
+    <div className="w-full flex items-center justify-center relative">
       {/* Top Right Theme Toggle Button */}
-      <div className="fixed top-6 right-6 z-50">
+      <div className="fixed top-5 right-5 z-50">
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xl transition cursor-pointer flex items-center justify-center"
+          className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition cursor-pointer flex items-center justify-center"
           title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {mounted && isDark ? (
-            <Sun className="w-5 h-5 text-amber-400" />
+            <Sun className="w-4 h-4 text-amber-500" />
           ) : (
-            <Moon className="w-5 h-5 text-indigo-600" />
+            <Moon className="w-4 h-4 text-blue-600" />
           )}
         </button>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl dark:shadow-2xl transition-colors duration-200">
-        <div className="flex flex-col items-center text-center mb-6">
-          <PersevexLogo size="lg" subtitle="Employee Management & Attendance System" className="justify-center mb-2" />
-          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-bold">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-7 shadow-lg transition-colors">
+        <div className="flex flex-col items-center text-center mb-5">
+          <PersevexLogo size="lg" subtitle="Employee Management & Attendance System" className="justify-center mb-1.5" />
+          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 rounded-md text-xs font-medium">
             <RoleIcon className="w-3.5 h-3.5" /> Persevex Internal Access
           </div>
         </div>
 
         {errorMessage && (
-          <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-start gap-3 text-xs text-red-600 dark:text-red-400 animate-in fade-in duration-150">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+          <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 rounded-lg flex items-start gap-2.5 text-xs text-rose-600 dark:text-rose-400 animate-in fade-in duration-150">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
             <div>
-              <p className="font-bold">Access Denied</p>
-              <p className="mt-0.5 text-[11px] text-red-600 dark:text-red-300 leading-relaxed">{errorMessage}</p>
+              <p className="font-semibold">Access Denied</p>
+              <p className="mt-0.5 text-[11px] text-rose-600 dark:text-rose-300 leading-relaxed">{errorMessage}</p>
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
               Official Email or Employee ID
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
@@ -162,19 +164,19 @@ function LoginForm() {
                   if (errorMessage) setErrorMessage(null);
                 }}
                 placeholder="name@persevex.com or EMP-001"
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition font-mono ${
-                  errorMessage ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/20' : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500'
+                className={`w-full h-9.5 bg-slate-50 dark:bg-slate-800/70 border rounded-lg pl-9 pr-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition font-mono ${
+                  errorMessage ? 'border-rose-500 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
                 }`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
               Account Password
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
@@ -184,39 +186,43 @@ function LoginForm() {
                   if (errorMessage) setErrorMessage(null);
                 }}
                 placeholder="Enter your account password"
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none transition font-mono ${
-                  errorMessage ? 'border-red-500 focus:border-red-500 ring-1 ring-red-500/20' : 'border-slate-200 dark:border-slate-800 focus:border-indigo-500'
+                className={`w-full h-9.5 bg-slate-50 dark:bg-slate-800/70 border rounded-lg pl-9 pr-9 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition font-mono ${
+                  errorMessage ? 'border-rose-500 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+          <div className="flex items-center justify-between text-xs pt-0.5">
+            <label className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 cursor-pointer">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded bg-slate-100 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-indigo-600 focus:ring-0"
+                className="rounded-xs bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0 accent-blue-600"
               />
               Remember Me
             </label>
-            <Link href="/forgot-password" className="text-indigo-600 dark:text-indigo-400 hover:underline">
+            <button
+              type="button"
+              onClick={() => setForgotModalOpen(true)}
+              className="text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+            >
               Forgot Password?
-            </Link>
+            </button>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition duration-150 shadow-lg shadow-indigo-600/30 text-sm mt-2 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full h-9.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium rounded-lg transition duration-150 shadow-xs text-xs sm:text-sm mt-1 cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -229,6 +235,53 @@ function LoginForm() {
           </button>
         </form>
       </div>
+
+      {/* Professional Password Reset Modal */}
+      {forgotModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 transition-colors animate-in zoom-in-95">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60 shrink-0">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base">
+                    Password Reset Required
+                  </h3>
+                  <span className="text-[11px] font-medium text-slate-400">Organization Security Policy</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForgotModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700/70">
+              <p className="font-medium text-slate-800 dark:text-slate-200">
+                For security reasons, password resets are managed by your organization. Please contact your Manager or Administrator to reset your password.
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Your Manager or Administrator will assist you with resetting your account password.
+              </p>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setForgotModalOpen(false)}
+                className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-xs sm:text-sm transition shadow-xs cursor-pointer flex items-center justify-center"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

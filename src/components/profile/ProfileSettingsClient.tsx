@@ -82,49 +82,54 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
   const isOrganizer = profile?.role === 'MANAGER' || profile?.fullName?.toLowerCase().includes('shanmukh');
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 max-w-4xl">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-2xl text-white shadow-md shadow-indigo-600/20 shrink-0">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center font-semibold text-lg text-white shadow-xs shrink-0">
             {profile?.fullName?.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{profile?.fullName}</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">{profile?.fullName}</h2>
               {isOrganizer && (
-                <span className="text-[10px] bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 px-2 py-0.5 rounded-full font-bold">
+                <span className="text-[10px] bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 px-2 py-0.5 rounded-md font-medium">
                   Master Organizer
                 </span>
               )}
             </div>
-            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">
-              Employee ID: <strong className="text-slate-900 dark:text-white">{profile?.employeeId}</strong> &middot; {profile?.designation}
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-mono mt-0.5">
+              Employee ID: <strong className="text-slate-900 dark:text-slate-100 font-semibold">{profile?.employeeId}</strong> &middot; {profile?.designation}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            Role: <strong className="text-indigo-600 dark:text-indigo-400">{profile?.role}</strong>
+          <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            Role: <strong className="text-blue-600 dark:text-blue-400 font-semibold">{profile?.role}</strong>
           </span>
-          <span className="text-xs font-bold px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+          <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
             {profile?.accountStatus}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column: Personal Information Form */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 transition-colors">
-          <div className="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-            <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">Personal & Contact Details</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-colors">
+          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+              <User className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Personal & Contact Details</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Manage your profile information</p>
+            </div>
           </div>
 
-          <form onSubmit={handleUpdateProfile} className="space-y-3.5 text-xs">
+          <form onSubmit={handleUpdateProfile} className="space-y-3 text-xs">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Full Name *
               </label>
               <input
@@ -132,12 +137,12 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Email Address (Login Username) *
               </label>
               <input
@@ -145,12 +150,12 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium font-mono focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Phone Number
               </label>
               <input
@@ -158,12 +163,12 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 98765 43210"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium font-mono focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Job Title / Designation
               </label>
               <input
@@ -171,7 +176,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
                 placeholder="e.g. Lead Operations Manager"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -179,9 +184,9 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
               <button
                 type="submit"
                 disabled={profileLoading}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold flex items-center gap-1.5 shadow-md shadow-indigo-600/20 disabled:opacity-50 cursor-pointer transition"
+                className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer transition"
               >
-                {profileLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {profileLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Save Details
               </button>
             </div>
@@ -189,15 +194,20 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
         </div>
 
         {/* Right Column: Change Password Form */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 transition-colors">
-          <div className="pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-            <Lock className="w-4 h-4 text-amber-500" />
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">Security & Password</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-colors">
+          <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60">
+              <Lock className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Security & Password</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Update your account credentials</p>
+            </div>
           </div>
 
-          <form onSubmit={handleChangePassword} className="space-y-3.5 text-xs">
+          <form onSubmit={handleChangePassword} className="space-y-3 text-xs">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Current Password
               </label>
               <div className="relative">
@@ -206,20 +216,20 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium focus:border-indigo-500 focus:outline-none pr-10"
+                  className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-9 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 New Password *
               </label>
               <input
@@ -228,12 +238,12 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="At least 6 characters"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Confirm New Password *
               </label>
               <input
@@ -242,7 +252,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-type new password"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-slate-200 font-medium focus:border-indigo-500 focus:outline-none"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -250,9 +260,9 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
               <button
                 type="submit"
                 disabled={passLoading}
-                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold flex items-center gap-1.5 shadow-md shadow-amber-600/20 disabled:opacity-50 cursor-pointer transition"
+                className="h-8 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer transition"
               >
-                {passLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                {passLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
                 Update Password
               </button>
             </div>

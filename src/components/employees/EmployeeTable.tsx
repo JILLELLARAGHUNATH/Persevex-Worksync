@@ -152,25 +152,25 @@ export default function EmployeeTable({
   return (
     <div className="space-y-4">
       {/* Top Filter Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl shadow-xs flex flex-col sm:flex-row gap-2.5 items-center justify-between transition-colors">
         <div className="relative w-full sm:w-80">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, ID, or email..."
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+            className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
           />
-          <Search className="w-4 h-4 absolute right-3.5 top-3 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end text-xs">
           <select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3 py-2 text-slate-700 dark:text-slate-300 font-medium focus:outline-none"
+            className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer text-xs"
           >
-            <option value="">All Squads / Teams</option>
+            <option value="">All Teams</option>
             {teams.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -181,7 +181,7 @@ export default function EmployeeTable({
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3 py-2 text-slate-700 dark:text-slate-300 font-medium focus:outline-none"
+            className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer text-xs"
           >
             <option value="">All Roles</option>
             <option value="MANAGER">Manager</option>
@@ -192,100 +192,95 @@ export default function EmployeeTable({
           {canManage && (
             <button
               onClick={handleOpenCreate}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-2xl flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              className="h-8 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs px-3 rounded-lg flex items-center gap-1.5 transition shadow-xs cursor-pointer"
             >
-              <UserPlus className="w-4 h-4" /> Add Employee
+              <UserPlus className="w-3.5 h-3.5" /> Add Employee
             </button>
           )}
         </div>
       </div>
 
       {/* Directory Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-4">Employee</th>
-                <th className="p-4">Employee ID</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">Squad / Team</th>
-                <th className="p-4">Account Status</th>
-                {canManage && <th className="p-4 text-right">Actions</th>}
+                <th className="py-3 px-4">Employee</th>
+                <th className="py-3 px-4">Employee ID</th>
+                <th className="py-3 px-4">Role</th>
+                <th className="py-3 px-4">Team</th>
+                <th className="py-3 px-4">Status</th>
+                {canManage && <th className="py-3 px-4 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-800 dark:text-slate-200">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400">
+                  <td colSpan={6} className="py-8 text-center text-slate-400">
                     No matching employees found in workforce directory.
                   </td>
                 </tr>
               ) : (
                 filtered.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black flex items-center justify-center text-xs">
+                  <tr key={emp.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 font-bold flex items-center justify-center text-xs shrink-0">
                           {emp.fullName.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                             {emp.fullName}
-                            {emp.role === 'MANAGER' && (
-                              <span className="text-[10px] bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 px-2 py-0.5 rounded-full font-bold">
-                                Master Organizer
-                              </span>
-                            )}
                           </div>
-                          <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
-                            <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {emp.email}</span>
-                            {emp.phone && <span className="flex items-center gap-1">&middot; <Phone className="w-3 h-3" /> {emp.phone}</span>}
+                          <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                            <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-slate-400" /> {emp.email}</span>
+                            {emp.phone && <span className="flex items-center gap-1">&middot; <Phone className="w-3 h-3 text-slate-400" /> {emp.phone}</span>}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 font-mono font-bold text-slate-600 dark:text-slate-400">
+                    <td className="py-3 px-4 font-mono font-medium text-slate-600 dark:text-slate-400">
                       {emp.employeeId || '—'}
                     </td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${
+                        className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-medium border ${
                           emp.role === 'MANAGER'
-                            ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300'
+                            ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60'
                             : emp.role === 'TEAM_LEAD'
-                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {emp.role.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       {emp.team?.name || teams.find((t) => t.id === emp.teamId)?.name ? (
-                        <span className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-lg text-[11px] font-semibold border border-indigo-100 dark:border-indigo-900">
+                        <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-700">
                           {emp.team?.name || teams.find((t) => t.id === emp.teamId)?.name}
                         </span>
                       ) : (
                         <span className="text-slate-400 italic">Unassigned</span>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       <StatusBadge status={emp.accountStatus || 'ACTIVE'} />
                     </td>
                     {canManage && (
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleOpenEdit(emp)}
-                            className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
-                            title="Edit Profile Details"
+                            className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition cursor-pointer"
+                            title="Edit Profile"
                           >
                             <Edit className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleOpenPassword(emp)}
-                            className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                            className="p-1 text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition cursor-pointer"
                             title="Manage Password"
                           >
                             <Key className="w-3.5 h-3.5" />
@@ -294,10 +289,10 @@ export default function EmployeeTable({
                             <>
                               <button
                                 onClick={() => handleToggleStatus(emp)}
-                                className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                className={`p-1 rounded-md transition cursor-pointer ${
                                   emp.accountStatus === 'ACTIVE'
                                     ? 'text-slate-500 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                    : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950'
+                                    : 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60'
                                 }`}
                                 title={emp.accountStatus === 'ACTIVE' ? 'Deactivate Account' : 'Activate Account'}
                               >
@@ -305,15 +300,15 @@ export default function EmployeeTable({
                               </button>
                               <button
                                 onClick={() => setDeleteTarget({ id: emp.id, name: emp.fullName })}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition cursor-pointer"
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition cursor-pointer"
                                 title="Delete Record"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </>
                           ) : (
-                            <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold px-1.5 py-0.5 bg-purple-50 dark:bg-purple-950/50 rounded-md border border-purple-200 dark:border-purple-900" title="Organizer Account is Protected">
-                              Protected
+                            <span className="text-[10px] text-slate-500 font-medium px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                              Owner
                             </span>
                           )}
                         </div>

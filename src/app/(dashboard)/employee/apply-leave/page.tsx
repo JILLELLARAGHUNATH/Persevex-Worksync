@@ -15,9 +15,9 @@ export default async function ApplyLeavePage() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Apply for Leave</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Apply for Leave</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Submit a leave application and review your previous request statuses
         </p>

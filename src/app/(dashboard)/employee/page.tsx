@@ -40,7 +40,7 @@ export default async function EmployeeDashboardPage() {
     <div className="space-y-4">
       {/* Clean Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
           Welcome back, {session?.fullName}
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

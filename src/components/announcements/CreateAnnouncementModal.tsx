@@ -73,57 +73,57 @@ export default function CreateAnnouncementModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 transition-colors">
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-lg w-full p-5 shadow-xl space-y-3.5 transition-colors animate-in zoom-in-95">
+        <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <Megaphone className="w-5 h-5" />
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+              <Megaphone className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
                 {announcementData ? 'Edit Announcement' : 'Broadcast Announcement'}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">Reach the entire team or targeted groups</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition cursor-pointer">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Title *</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Title *</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Office Timing Update / Sprint Milestone"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium text-sm"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Message Content *</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Message Content *</label>
             <textarea
               required
               rows={4}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write the full announcement here..."
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white focus:border-indigo-500"
+              className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Priority</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-bold"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="NORMAL">Normal</option>
                 <option value="IMPORTANT">Important</option>
@@ -132,14 +132,14 @@ export default function CreateAnnouncementModal({
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Audience</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Audience</label>
               <select
                 value={targetType}
                 onChange={(e) => {
                   setTargetType(e.target.value);
                   setTargetId('');
                 }}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-semibold text-indigo-600 dark:text-indigo-400"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="ALL">All Employees</option>
                 <option value="TEAM">Specific Team</option>
@@ -150,12 +150,12 @@ export default function CreateAnnouncementModal({
 
           {targetType === 'TEAM' && (
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Select Target Team *</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Select Target Team *</label>
               <select
                 required
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="">Choose Team</option>
                 {teams.map((t) => (
@@ -167,12 +167,12 @@ export default function CreateAnnouncementModal({
 
           {targetType === 'SPECIFIC_EMPLOYEES' && (
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Select Target Employee *</label>
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Select Target Employee *</label>
               <select
                 required
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="">Choose Employee</option>
                 {allEmployees.map((emp) => (
@@ -182,20 +182,20 @@ export default function CreateAnnouncementModal({
             </div>
           )}
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold"
+              className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+              className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               Publish Announcement
             </button>
           </div>

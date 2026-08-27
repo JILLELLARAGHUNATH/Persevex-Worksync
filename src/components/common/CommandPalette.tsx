@@ -43,9 +43,9 @@ export default function CommandPalette() {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-start justify-center pt-24 p-4 animate-in fade-in duration-150">
-      <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 transition-colors">
+      <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-          <Search className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <Search className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <input
             autoFocus
             value={query}
@@ -74,11 +74,11 @@ export default function CommandPalette() {
                   className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition text-left text-xs group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+                    <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition">{item.title}</p>
+                      <p className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300 transition">{item.title}</p>
                       <span className="text-[10px] text-slate-500 uppercase font-semibold">{item.category}</span>
                     </div>
                   </div>

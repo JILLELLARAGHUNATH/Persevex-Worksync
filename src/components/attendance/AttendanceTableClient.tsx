@@ -145,8 +145,8 @@ export default function AttendanceTableClient({
         const bTime = new Date(b.checkInTime || b.date).getTime();
         return sortAsc ? aTime - bTime : bTime - aTime;
       }
-      let aVal = a[sortField] || '';
-      let bVal = b[sortField] || '';
+      const aVal = a[sortField] || '';
+      const bVal = b[sortField] || '';
       if (typeof aVal === 'string') {
         return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
       }
@@ -193,49 +193,49 @@ export default function AttendanceTableClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">{title}</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-mono font-bold">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 text-xs font-mono font-semibold">
           <Clock className="w-3.5 h-3.5" /> Shift: 11:00 AM – 8:00 PM (Wed Off)
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filtered Logs</span>
-          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{totalCount}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Filtered Logs</span>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{totalCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">On-Time (By 11:15 AM)</span>
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{onTimeCount}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">On-Time (By 11:15 AM)</span>
+          <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{onTimeCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Late Arrivals</span>
-          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{lateCount}</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Late Arrivals</span>
+          <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{lateCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm dark:shadow-xl transition-colors">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Shift Hours</span>
-          <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{avgHours} hrs</p>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Shift Hours</span>
+          <p className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-0.5">{avgHours} hrs</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm dark:shadow-xl space-y-4 transition-colors">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-xs space-y-3.5 transition-colors">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Standard Filter Order: Today 1st -> Yesterday -> This Week -> This Month -> All Time */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
-            <button onClick={() => { setDatePreset('TODAY'); setCustomDate(''); }} className={'px-3 py-1.5 rounded-xl font-bold transition ' + (datePreset === 'TODAY' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>Today</button>
-            <button onClick={() => { setDatePreset('YESTERDAY'); setCustomDate(''); }} className={'px-3 py-1.5 rounded-xl font-bold transition ' + (datePreset === 'YESTERDAY' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>Yesterday</button>
-            <button onClick={() => { setDatePreset('THIS_WEEK'); setCustomDate(''); }} className={'px-3 py-1.5 rounded-xl font-bold transition ' + (datePreset === 'THIS_WEEK' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>This Week</button>
-            <button onClick={() => { setDatePreset('THIS_MONTH'); setCustomDate(''); }} className={'px-3 py-1.5 rounded-xl font-bold transition ' + (datePreset === 'THIS_MONTH' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>This Month</button>
-            <button onClick={() => { setDatePreset('ALL'); setCustomDate(''); }} className={'px-3 py-1.5 rounded-xl font-bold transition ' + (datePreset === 'ALL' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>All Time</button>
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
+            <button onClick={() => { setDatePreset('TODAY'); setCustomDate(''); }} className={'px-2.5 py-1 rounded-md font-medium transition cursor-pointer ' + (datePreset === 'TODAY' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>Today</button>
+            <button onClick={() => { setDatePreset('YESTERDAY'); setCustomDate(''); }} className={'px-2.5 py-1 rounded-md font-medium transition cursor-pointer ' + (datePreset === 'YESTERDAY' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>Yesterday</button>
+            <button onClick={() => { setDatePreset('THIS_WEEK'); setCustomDate(''); }} className={'px-2.5 py-1 rounded-md font-medium transition cursor-pointer ' + (datePreset === 'THIS_WEEK' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>This Week</button>
+            <button onClick={() => { setDatePreset('THIS_MONTH'); setCustomDate(''); }} className={'px-2.5 py-1 rounded-md font-medium transition cursor-pointer ' + (datePreset === 'THIS_MONTH' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>This Month</button>
+            <button onClick={() => { setDatePreset('ALL'); setCustomDate(''); }} className={'px-2.5 py-1 rounded-md font-medium transition cursor-pointer ' + (datePreset === 'ALL' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white')}>All Time</button>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-semibold hidden sm:inline">Pick Date:</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">Pick Date:</span>
             <input
               type="date"
               value={customDate}
@@ -244,7 +244,7 @@ export default function AttendanceTableClient({
                 if (e.target.value) setDatePreset('CUSTOM');
                 else setDatePreset('TODAY');
               }}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-mono focus:border-indigo-500"
+              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-mono focus:border-blue-500"
             />
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function AttendanceTableClient({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, ID, or email..."
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
           )}
@@ -311,7 +311,7 @@ export default function AttendanceTableClient({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm dark:shadow-xl transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
         <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
           <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>

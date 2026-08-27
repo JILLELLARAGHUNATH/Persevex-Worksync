@@ -310,116 +310,129 @@ export default function EmployeeAttendanceHub({
   const targetShiftHours = 9.0;
 
   return (
-    <div className="space-y-4 transition-colors duration-200">
+    <div className="space-y-4">
       {/* ========================================================================= */}
-      {/* 1. TOP LIVE ATTENDANCE PUNCH CLOCK STRIP                                  */}
+      {/* 1. TOP HERO: ATTENDANCE PUNCH & SHIFT OVERVIEW                            */}
       {/* ========================================================================= */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-sm transition-colors">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Live Clock & Shift Status */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          {/* Live Clock & Shift Details */}
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
-              <Clock className="w-5 h-5 animate-pulse" />
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
+              <Clock className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight" suppressHydrationWarning>
-                {mounted ? time : '--:--:--'}
-              </span>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight" suppressHydrationWarning>
+                  {mounted ? time : '--:--:--'}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+                  &middot; {todayAtt?.date ? new Date(todayAtt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Shift: 11:00 AM – 8:00 PM (15m Grace) &middot; Target: 9h
+              </p>
+            </div>
+
+            <div className="hidden sm:block pl-2">
               {isCheckedIn && isCheckedOut ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-                  <Check className="w-3.5 h-3.5" /> Shift Completed
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-semibold text-[10px] border border-emerald-200 dark:border-emerald-800/60">
+                  <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Shift Completed
                 </span>
               ) : isCheckedIn ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500" /> On Duty
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 font-semibold text-[10px] border border-blue-200 dark:border-blue-800/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> On Duty
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px]">
-                  <Clock className="w-3.5 h-3.5" /> Ready for Punch-in
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[10px] border border-slate-200 dark:border-slate-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Ready for Check-in
                 </span>
               )}
             </div>
           </div>
 
           {/* Timestamps Pill */}
-          <div className="flex items-center gap-3 text-xs font-mono bg-slate-50 dark:bg-slate-950 px-3.5 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
-            <div>
-              <span className="text-[9px] text-slate-400 uppercase font-sans font-bold">In: </span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                {mounted && todayAtt?.checkInTime ? formatTime(todayAtt.checkInTime) : '--:--'}
-              </span>
-            </div>
-            <span className="text-slate-200 dark:text-slate-800">|</span>
-            <div>
-              <span className="text-[9px] text-slate-400 uppercase font-sans font-bold">Out: </span>
-              <span className="font-bold text-amber-600 dark:text-amber-400 font-mono">
-                {mounted && todayAtt?.checkOutTime ? formatTime(todayAtt.checkOutTime) : '--:--'}
-              </span>
-            </div>
-            <span className="text-slate-200 dark:text-slate-800">|</span>
-            <div>
-              <span className="text-[9px] text-slate-400 uppercase font-sans font-bold">Duration: </span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono" suppressHydrationWarning>
-                {mounted ? todayLiveDuration : '00h 00m 00s'}
-              </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2 text-xs font-mono bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">In: </span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                  {mounted && todayAtt?.checkInTime ? formatTime(todayAtt.checkInTime) : '--:--'}
+                </span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Out: </span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">
+                  {mounted && todayAtt?.checkOutTime ? formatTime(todayAtt.checkOutTime) : '--:--'}
+                </span>
+              </div>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Duration: </span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400 font-mono" suppressHydrationWarning>
+                  {mounted ? todayLiveDuration : '00h 00m 00s'}
+                </span>
+              </div>
             </div>
 
-          </div>
+            {/* Punch Buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={isCheckedIn || loading}
+                onClick={handleCheckIn}
+                className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                {loading && !isCheckedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
+              </button>
 
-          {/* Punch Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              disabled={isCheckedIn || loading}
-              onClick={handleCheckIn}
-              className="py-2 px-4 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm cursor-pointer flex items-center gap-1.5"
-            >
-              {loading && !isCheckedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
-            </button>
-
-            <button
-              disabled={!isCheckedIn || isCheckedOut || loading}
-              onClick={handleCheckOut}
-              className="py-2 px-4 rounded-xl font-bold text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm cursor-pointer flex items-center gap-1.5"
-            >
-              {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
-              <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
-            </button>
+              <button
+                disabled={!isCheckedIn || isCheckedOut || loading}
+                onClick={handleCheckOut}
+                className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. DUAL ANALYTICS GRID (EVERY PAST DAY HAS A CLEAR VISIBLE BAR)           */}
+      {/* 2. DUAL ANALYTICS GRID (ENTERPRISE PRESENTATION)                          */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left (2 Cols): MY ATTENDANCE & WORKING HOURS CHART */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between overflow-hidden">
           <div>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-mono">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 font-mono">
                   ATTENDANCE TREND
                 </span>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">
+                <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   My Attendance & Working Hours
                 </h3>
               </div>
 
               {/* Month / Custom Range Filter */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
                   <button
                     onClick={() => setFilterMode('MONTH')}
-                    className={`px-2.5 py-1 rounded-lg transition ${filterMode === 'MONTH' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'MONTH' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}
                   >
                     Month
                   </button>
                   <button
                     onClick={() => setFilterMode('CUSTOM')}
-                    className={`px-2.5 py-1 rounded-lg transition ${filterMode === 'CUSTOM' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'CUSTOM' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}
                   >
-                    Custom Range
+                    Custom
                   </button>
                 </div>
 
@@ -427,7 +440,7 @@ export default function EmployeeAttendanceHub({
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1 text-xs font-bold text-slate-800 dark:text-slate-200 focus:border-indigo-500 cursor-pointer"
+                    className="h-7 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
                   >
                     {monthOptions.map((m) => (
                       <option key={m.value} value={m.value}>
@@ -436,27 +449,27 @@ export default function EmployeeAttendanceHub({
                     ))}
                   </select>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-xs animate-in fade-in duration-150">
+                  <div className="flex items-center gap-1 text-xs">
                     <input
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-mono"
+                      className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-0.5 text-xs text-slate-800 dark:text-slate-200 font-mono"
                     />
-                    <span className="text-slate-400 font-mono">→</span>
+                    <span className="text-slate-400">&rarr;</span>
                     <input
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-mono"
+                      className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-0.5 text-xs text-slate-800 dark:text-slate-200 font-mono"
                     />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Clean Bar Chart (Every day has a clear visible status bar!) */}
-            <div className="h-44 sm:h-48 flex items-end justify-between gap-1 sm:gap-1.5 px-1 pt-2 overflow-hidden">
+            {/* Clean Bar Chart */}
+            <div className="h-40 sm:h-44 flex items-end justify-between gap-1 sm:gap-1.5 px-0.5 pt-2 overflow-hidden">
               {trendData.map((d: any) => {
                 const isHovered = hoveredDate === d.dateKey;
 
@@ -466,15 +479,15 @@ export default function EmployeeAttendanceHub({
 
                 if (d.status === 'PRESENT') {
                   heightPct = Math.min(100, Math.max(15, Math.round((d.hours / targetShiftHours) * 100)));
-                  barColor = 'bg-emerald-500 shadow-emerald-500/20'; // 🟢 Present (Green)
+                  barColor = 'bg-emerald-500';
                   statusText = d.lateStatus === 'LATE' ? 'Present (Late Arrival)' : 'Present (On-Time)';
                 } else if (d.status === 'LEAVE') {
                   heightPct = 100;
-                  barColor = 'bg-purple-500 shadow-purple-500/20'; // 🟣 Leave (Purple)
+                  barColor = 'bg-violet-500';
                   statusText = 'Approved Leave';
                 } else if (d.status === 'ABSENT' && d.isPastOrToday) {
-                  heightPct = 85; // Solid visible Red Bar for past absent days
-                  barColor = 'bg-rose-500/90 shadow-rose-500/20'; // 🔴 Absent (Red)
+                  heightPct = 85;
+                  barColor = 'bg-rose-500';
                   statusText = 'Unexcused Absence';
                 } else if (d.isWed) {
                   statusText = 'Off (Wednesday)';
@@ -490,12 +503,12 @@ export default function EmployeeAttendanceHub({
                   >
                     {/* Tooltip on Hover */}
                     {isHovered && (
-                      <div className="absolute bottom-full mb-3 z-40 bg-slate-950 text-white border border-slate-800 p-3 rounded-2xl shadow-2xl text-[11px] min-w-[160px] pointer-events-none animate-in fade-in zoom-in-95 duration-100">
-                        <div className="font-bold border-b border-slate-800 pb-1 mb-1.5 flex justify-between">
+                      <div className="absolute bottom-full mb-2 z-40 bg-slate-900 text-white border border-slate-800 p-2.5 rounded-xl shadow-xl text-xs min-w-[150px] pointer-events-none animate-in fade-in duration-100">
+                        <div className="font-semibold border-b border-slate-800 pb-1 mb-1 flex justify-between">
                           <span>{d.fullFormattedDate}</span>
                           {d.isToday && <span className="text-emerald-400 text-[9px] font-bold">TODAY</span>}
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-0.5 text-[11px]">
                           <p className="flex justify-between">
                             <span className="text-slate-400">Status:</span>
                             <strong className="text-emerald-400 font-semibold">{statusText}</strong>
@@ -506,14 +519,14 @@ export default function EmployeeAttendanceHub({
                           </p>
                           {d.record?.checkInTime && (
                             <p className="flex justify-between">
-                              <span className="text-slate-400">Check In:</span>
-                              <span className="font-mono text-emerald-400 font-bold">{formatTime(d.record.checkInTime)}</span>
+                              <span className="text-slate-400">In:</span>
+                              <span className="font-mono text-emerald-400 font-medium">{formatTime(d.record.checkInTime)}</span>
                             </p>
                           )}
                           {d.record?.checkOutTime && (
                             <p className="flex justify-between">
-                              <span className="text-slate-400">Check Out:</span>
-                              <span className="font-mono text-amber-400 font-bold">{formatTime(d.record.checkOutTime)}</span>
+                              <span className="text-slate-400">Out:</span>
+                              <span className="font-mono text-amber-400 font-medium">{formatTime(d.record.checkOutTime)}</span>
                             </p>
                           )}
                         </div>
@@ -522,25 +535,25 @@ export default function EmployeeAttendanceHub({
 
                     {/* Single Bar Track */}
                     <div
-                      className={`w-full rounded-xl h-full flex flex-col-reverse p-0.5 relative transition-all ${
+                      className={`w-full rounded-md h-full flex flex-col-reverse p-0.5 relative transition-all ${
                         d.isToday
-                          ? 'bg-emerald-500/10 ring-2 ring-emerald-500/40'
-                          : 'bg-slate-100 dark:bg-slate-950'
+                          ? 'bg-emerald-500/10 ring-1 ring-emerald-500/40'
+                          : 'bg-slate-100 dark:bg-slate-800'
                       }`}
                     >
                       {heightPct > 0 ? (
                         <div
                           style={{ height: `${heightPct}%` }}
-                          className={`w-full rounded-lg transition-all duration-300 shadow-sm ${barColor}`}
+                          className={`w-full rounded-sm transition-all duration-200 ${barColor}`}
                         />
                       ) : (
-                        <div className="w-full h-1 rounded bg-slate-200 dark:bg-slate-800 my-auto" />
+                        <div className="w-full h-0.5 rounded bg-slate-200 dark:bg-slate-700 my-auto" />
                       )}
                     </div>
 
                     {/* Day Number */}
-                    <span className={`text-[9px] font-mono font-bold block mt-0.5 ${
-                      d.isToday ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-slate-400'
+                    <span className={`text-[9px] font-mono block mt-0.5 ${
+                      d.isToday ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-400'
                     }`}>
                       {d.dayNumber}
                     </span>
@@ -551,31 +564,31 @@ export default function EmployeeAttendanceHub({
           </div>
 
           {/* Bottom Legend */}
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-4 text-xs font-semibold">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="text-slate-600 dark:text-slate-400 text-[11px]">Present</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+              <span className="w-2 h-2 rounded-full bg-violet-500" />
               <span className="text-slate-600 dark:text-slate-400 text-[11px]">Leave</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span className="text-slate-600 dark:text-slate-400 text-[11px]">Absent</span>
             </div>
           </div>
         </div>
 
         {/* Right (1 Col): STATUS DISTRIBUTION */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-3.5">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
                   STATUS DISTRIBUTION
                 </span>
-                <h3 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                   Shift Compliance
                 </h3>
               </div>
@@ -583,74 +596,74 @@ export default function EmployeeAttendanceHub({
             </div>
 
             {/* Horizontal Progress Bars */}
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {/* On-Time Arrival */}
               <div>
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" /> On-Time (By 11:15 AM)
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> On-Time (By 11:15 AM)
                   </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.totalOnTime}</span>
+                  <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalOnTime}</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalOnTime / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Late Arrivals */}
               <div>
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" /> Late Arrivals
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Late Arrivals
                   </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.totalLate}</span>
+                  <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalLate}</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalLate / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                    className="h-full bg-amber-500 rounded-full transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Approved Leaves */}
               <div>
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-500" /> Approved Leaves
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500" /> Approved Leaves
                   </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.totalLeave}</span>
+                  <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalLeave}</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalLeave / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-purple-500 rounded-full transition-all duration-500"
+                    className="h-full bg-violet-500 rounded-full transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Missed / Absences */}
               <div>
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" /> Missed / Unexcused
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Missed / Unexcused
                   </span>
-                  <span className="text-slate-900 dark:text-white font-mono">{stats.totalAbsent}</span>
+                  <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalAbsent}</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalAbsent / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-rose-500 rounded-full transition-all duration-500"
+                    className="h-full bg-rose-500 rounded-full transition-all duration-300"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 text-center">
+          <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 mt-3 text-center">
             <span className="text-[10px] text-slate-400 font-mono">
               Calculated over {stats.workingDaysCount} scheduled working days
             </span>

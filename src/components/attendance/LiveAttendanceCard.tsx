@@ -384,17 +384,17 @@ export default function LiveAttendanceCard({
   const getStatusBadge = () => {
     if (refreshingAttendance) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-[10px] border border-slate-200 dark:border-slate-700">
-          <Loader2 className="w-3 h-3 animate-spin" />
-          Checking Attendance
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[10px] border border-slate-200 dark:border-slate-700">
+          <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+          Checking Status
         </span>
       );
     }
 
     if (isCheckedIn && isCheckedOut) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-          <CheckCircle2 className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-semibold text-[10px] border border-emerald-200 dark:border-emerald-800/60">
+          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
           Shift Completed
         </span>
       );
@@ -402,220 +402,124 @@ export default function LiveAttendanceCard({
 
     if (isCheckedIn) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] animate-pulse">
-          <Sparkles className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 font-semibold text-[10px] border border-blue-200 dark:border-blue-800/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
           Currently On Duty
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-[10px] border border-slate-200 dark:border-slate-700">
-        <Clock className="w-3 h-3" />
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[10px] border border-slate-200 dark:border-slate-700">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
         Ready for Check-in
       </span>
     );
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-3.5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3 transition-colors">
-
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 sm:px-5 py-3 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 transition-colors">
       {/* Left: Clock and Date */}
-
       <div className="flex items-center gap-3">
-
-        <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
-          <Clock className="w-5 h-5 animate-pulse" />
+        <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
+          <Clock className="w-4 h-4" />
         </div>
 
         <div>
-
           <div className="flex items-center gap-2">
-
             <span
-              className="text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight"
+              className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight"
               suppressHydrationWarning
             >
-              {mounted
-                ? time
-                : '--:--:--'}
+              {mounted ? time : '--:--:--'}
             </span>
-
             {getStatusBadge()}
-
           </div>
 
           <p
-            className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium"
+            className="text-xs text-slate-500 dark:text-slate-400 mt-0.5"
             suppressHydrationWarning
           >
             {mounted
-              ? new Date().toLocaleDateString(
-                  'en-US',
-                  {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  }
-                )
-              : 'Today'}
-
-            {' · '}
-
-            Main Shift: 11:00 AM – 8:00 PM
-            {' '}
-            (15m Grace)
-
+              ? new Date().toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
+              : 'Today'}{' '}
+            &middot; Main Shift: 11:00 AM – 8:00 PM (15m Grace)
           </p>
-
         </div>
-
       </div>
 
-
       {/* Right side */}
-
-      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-
+      <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
         {/* Punch Information */}
-
-        <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs">
-
+        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs">
           <div>
-
-            <span className="text-[10px] text-slate-400 uppercase font-bold">
-              In:{' '}
-            </span>
-
+            <span className="text-[10px] text-slate-400 uppercase font-medium">In: </span>
             <span
-              className="font-mono font-bold text-emerald-600 dark:text-emerald-400"
+              className="font-mono font-semibold text-emerald-600 dark:text-emerald-400"
               suppressHydrationWarning
             >
-              {mounted
-                ? formatTimestamp(
-                    attendance?.checkInTime
-                  )
-                : '--:--'}
+              {mounted ? formatTimestamp(attendance?.checkInTime) : '--:--'}
             </span>
-
           </div>
 
-
-          <span className="text-slate-300 dark:text-slate-700">
-            |
-          </span>
-
+          <span className="text-slate-300 dark:text-slate-600">|</span>
 
           <div>
-
-            <span className="text-[10px] text-slate-400 uppercase font-bold">
-              Out:{' '}
-            </span>
-
+            <span className="text-[10px] text-slate-400 uppercase font-medium">Out: </span>
             <span
-              className="font-mono font-bold text-amber-600 dark:text-amber-400"
+              className="font-mono font-semibold text-amber-600 dark:text-amber-400"
               suppressHydrationWarning
             >
-              {mounted
-                ? formatTimestamp(
-                    attendance?.checkOutTime
-                  )
-                : '--:--'}
+              {mounted ? formatTimestamp(attendance?.checkOutTime) : '--:--'}
             </span>
-
           </div>
 
-
-          <span className="text-slate-300 dark:text-slate-700">
-            |
-          </span>
-
+          <span className="text-slate-300 dark:text-slate-600">|</span>
 
           <div>
-
-            <span className="text-[10px] text-slate-400 uppercase font-bold">
-              Duration:{' '}
-            </span>
-
-            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400" suppressHydrationWarning>
+            <span className="text-[10px] text-slate-400 uppercase font-medium">Duration: </span>
+            <span className="font-mono font-semibold text-blue-600 dark:text-blue-400" suppressHydrationWarning>
               {mounted ? liveDurationHMS : '00h 00m 00s'}
             </span>
-
-
           </div>
-
         </div>
 
-
         {/* Buttons */}
-
-        <div className="flex items-center gap-2">
-
+        <div className="flex items-center gap-1.5">
           {/* CLOCK IN */}
-
           <button
-            disabled={
-              isCheckedIn ||
-              loading ||
-              refreshingAttendance
-            }
+            disabled={isCheckedIn || loading || refreshingAttendance}
             onClick={handleCheckIn}
-            className="py-1.5 px-3.5 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm cursor-pointer flex items-center gap-1.5"
+            className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
-
             {loading && !isCheckedIn ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <CheckCircle2 className="w-3.5 h-3.5" />
             )}
-
-            <span>
-
-              {isCheckedIn
-                ? 'Punched In'
-                : 'Clock In'}
-
-            </span>
-
+            <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
           </button>
 
-
           {/* CLOCK OUT */}
-
           <button
-            disabled={
-              !isCheckedIn ||
-              isCheckedOut ||
-              loading ||
-              refreshingAttendance
-            }
+            disabled={!isCheckedIn || isCheckedOut || loading || refreshingAttendance}
             onClick={handleCheckOut}
-            className="py-1.5 px-3.5 rounded-xl font-bold text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition shadow-sm cursor-pointer flex items-center gap-1.5"
+            className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
-
-            {loading &&
-            isCheckedIn &&
-            !isCheckedOut ? (
+            {loading && isCheckedIn && !isCheckedOut ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <AlertCircle className="w-3.5 h-3.5" />
             )}
-
-            <span>
-
-              {isCheckedOut
-                ? 'Completed'
-                : 'Clock Out'}
-
-            </span>
-
+            <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
           </button>
-
         </div>
-
       </div>
-
     </div>
   );
 }

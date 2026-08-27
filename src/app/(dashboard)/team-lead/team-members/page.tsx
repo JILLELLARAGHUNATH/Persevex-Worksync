@@ -33,20 +33,20 @@ export default async function TLTeamMembersPage() {
     : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">Squad Team Members</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Squad Team Members</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Engineers and contributors under your leadership
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-bold">
-          <Users className="w-4 h-4" /> {members.length} Assigned Contributors
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 text-xs font-semibold">
+          <Users className="w-3.5 h-3.5" /> {members.length} Assigned Contributors
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm dark:shadow-xl transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
         <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
           <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>
@@ -71,7 +71,7 @@ export default async function TLTeamMembersPage() {
                 <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-600/10 dark:bg-indigo-600/20 border border-indigo-500/20 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 text-xs">
+                      <div className="w-8 h-8 rounded-xl bg-blue-600/10 dark:bg-blue-600/20 border border-blue-500/20 flex items-center justify-center font-bold text-blue-600 dark:text-blue-400 text-xs">
                         {m.fullName.charAt(0)}
                       </div>
                       <div>

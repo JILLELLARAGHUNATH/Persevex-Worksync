@@ -10,9 +10,9 @@ export default async function MyProfilePage() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Profile & Account Settings</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Profile & Account Settings</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Manage your personal details, contact information, and security password
         </p>

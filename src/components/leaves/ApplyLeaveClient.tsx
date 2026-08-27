@@ -16,29 +16,36 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Action Bar */}
       <div className="flex justify-end">
         <button
           onClick={() => setHistoryOpen(true)}
-          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition border border-slate-200 dark:border-slate-700"
+          className="h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-3 rounded-lg text-xs flex items-center gap-1.5 transition border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer"
         >
-          <History className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          View Leave History ({history.length})
+          <History className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+          Leave History ({history.length})
         </button>
       </div>
 
-      {/* Simplified Clean Apply Leave Form */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm space-y-5 transition-colors">
-        <h3 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
-          <CalendarPlus className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Submit Leave Request
-        </h3>
-
-        <form action={applyLeaveAction} className="space-y-4 text-xs">
+      {/* Clean Apply Leave Form */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-xl shadow-xs space-y-4 max-w-2xl transition-colors">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">
+            <CalendarPlus className="w-4 h-4" />
+          </div>
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Leave Type *</label>
-            <select name="leaveType" className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-medium">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+              Submit Leave Request
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Fill in absence dates and reason</p>
+          </div>
+        </div>
+
+        <form action={applyLeaveAction} className="space-y-3.5 text-xs">
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Leave Type *</label>
+            <select name="leaveType" className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer">
               <option value="CASUAL">Casual Leave</option>
               <option value="SICK">Sick Leave</option>
               <option value="PAID">Paid Annual Leave</option>
@@ -47,48 +54,55 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">From Date *</label>
-              <input type="date" name="startDate" required className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-mono" />
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">From Date *</label>
+              <input type="date" name="startDate" required className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500" />
             </div>
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">To Date *</label>
-              <input type="date" name="endDate" required className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white font-mono" />
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">To Date *</label>
+              <input type="date" name="endDate" required className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500" />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">Reason for Absence *</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Reason for Absence *</label>
             <textarea
               name="reason"
               required
               rows={3}
               placeholder="State the reason for this leave request..."
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-white"
+              className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-md shadow-indigo-600/20 text-xs flex items-center justify-center gap-2"
-          >
-            <Send className="w-4 h-4" /> Submit Application
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition shadow-xs text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" /> Submit Application
+            </button>
+          </div>
         </form>
       </div>
 
       {/* Leave History Modal */}
       {historyOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-5 shadow-xl space-y-3.5 transition-colors">
+            <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-base">My Leave History</h3>
+                <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">
+                  <History className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">My Leave History</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">All submitted requests</p>
+                </div>
               </div>
-              <button onClick={() => setHistoryOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
-                <X className="w-5 h-5" />
+              <button onClick={() => setHistoryOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition cursor-pointer">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -96,7 +110,7 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-300"
+                className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="PENDING_TL">Pending Team Lead</option>
@@ -106,32 +120,32 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
               </select>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
               <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[11px]">
                   <tr>
-                    <th className="p-3.5">Type</th>
-                    <th className="p-3.5">Dates</th>
-                    <th className="p-3.5">Days</th>
-                    <th className="p-3.5">Reason</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5">Applied</th>
+                    <th className="py-2.5 px-3.5">Type</th>
+                    <th className="py-2.5 px-3.5">Dates</th>
+                    <th className="py-2.5 px-3.5">Days</th>
+                    <th className="py-2.5 px-3.5">Reason</th>
+                    <th className="py-2.5 px-3.5">Status</th>
+                    <th className="py-2.5 px-3.5">Applied</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {filteredHistory.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-8 text-slate-400">No leave records found.</td>
+                      <td colSpan={6} className="text-center py-6 text-slate-400">No leave records found.</td>
                     </tr>
                   ) : (
                     filteredHistory.map((h) => (
-                      <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="p-3.5 font-bold text-slate-900 dark:text-white">{h.leaveType.replace(/_/g, ' ')}</td>
-                        <td className="p-3.5 font-mono">{formatDate(h.startDate)} &rarr; {formatDate(h.endDate)}</td>
-                        <td className="p-3.5 font-mono font-bold text-indigo-600 dark:text-indigo-400">{h.numberOfDays}d</td>
-                        <td className="p-3.5 max-w-xs truncate">{h.reason}</td>
-                        <td className="p-3.5"><StatusBadge status={h.currentStage} /></td>
-                        <td className="p-3.5 font-mono text-slate-400">{formatDate(h.createdAt)}</td>
+                      <tr key={h.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                        <td className="py-2.5 px-3.5 font-semibold text-slate-900 dark:text-slate-100">{h.leaveType.replace(/_/g, ' ')}</td>
+                        <td className="py-2.5 px-3.5 font-mono text-slate-600 dark:text-slate-400">{formatDate(h.startDate)} &rarr; {formatDate(h.endDate)}</td>
+                        <td className="py-2.5 px-3.5 font-mono font-semibold text-violet-600 dark:text-violet-400">{h.numberOfDays}d</td>
+                        <td className="py-2.5 px-3.5 max-w-xs truncate">{h.reason}</td>
+                        <td className="py-2.5 px-3.5"><StatusBadge status={h.currentStage} /></td>
+                        <td className="py-2.5 px-3.5 font-mono text-slate-400">{formatDate(h.createdAt)}</td>
                       </tr>
                     ))
                   )}

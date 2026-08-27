@@ -4,21 +4,23 @@
 
 @layer base {
   :root {
-    --bg-page: #f8fafc;
+    --bg-page: #F5F7FA;
     --bg-surface: #ffffff;
-    --bg-muted: #f1f5f9;
+    --bg-muted: #eef2f6;
     --border-subtle: #e2e8f0;
     --text-main: #0f172a;
     --text-muted: #64748b;
+    --brand-primary: #2563eb;
   }
 
   .dark {
-    --bg-page: #020617;
+    --bg-page: #0a101f;
     --bg-surface: #0f172a;
-    --bg-muted: #020617;
+    --bg-muted: #0c1427;
     --border-subtle: #1e293b;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
+    --brand-primary: #3b82f6;
   }
 
   html {
@@ -32,13 +34,16 @@
   body {
     background-color: var(--bg-page);
     color: var(--text-main);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;

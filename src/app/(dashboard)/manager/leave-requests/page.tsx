@@ -8,9 +8,9 @@ export default async function ManagerLeaveRequestsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Leave Requests & Approvals</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Leave Requests & Approvals</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Review and execute final decisions on workforce leave applications
         </p>

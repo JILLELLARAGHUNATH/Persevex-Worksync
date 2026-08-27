@@ -231,16 +231,15 @@ export default function TeamLeadDashboardClient({
       : 'Custom Range';
 
   return (
-    <div className="space-y-5">
-      {/* 1. Compact Attendance Punch Marker for Team Lead */}
+    <div className="space-y-4">
+      {/* 1. Attendance Punch Marker for Team Lead */}
       <LiveAttendanceCard initialAttendance={tlAttendance} currentUserId={currentUserId} />
 
-
       {/* 2. Compact Filter Toolbar (Today, Week, Month, Year, Custom) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
         {/* Left: Date Presets */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 font-bold">
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
             {(['TODAY', 'WEEK', 'MONTH', 'YEAR', 'CUSTOM'] as const).map((preset) => (
               <button
                 key={preset}
@@ -248,10 +247,10 @@ export default function TeamLeadDashboardClient({
                   setDatePreset(preset);
                   setHoveredSegment(null);
                 }}
-                className={`px-3 py-1.5 rounded-lg transition text-xs cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   datePreset === preset
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 {preset === 'TODAY'
@@ -262,14 +261,14 @@ export default function TeamLeadDashboardClient({
                   ? 'Month'
                   : preset === 'YEAR'
                   ? 'Year'
-                  : 'Custom Range'}
+                  : 'Custom'}
               </button>
             ))}
           </div>
 
           {/* Custom Date Pickers */}
           {datePreset === 'CUSTOM' && (
-            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-xs">
+            <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1 text-xs">
               <input
                 type="date"
                 value={customStart}
@@ -293,7 +292,7 @@ export default function TeamLeadDashboardClient({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none"
+            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">All Statuses</option>
             <option value="PRESENT">Present</option>
@@ -304,66 +303,73 @@ export default function TeamLeadDashboardClient({
           </select>
 
           {/* Display Mode Toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-0.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
             <button
               onClick={() => setDisplayMode('COUNT')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                displayMode === 'COUNT' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'
+              className={`px-2 py-0.5 rounded-md transition cursor-pointer text-xs ${
+                displayMode === 'COUNT' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'
               }`}
             >
               Count
             </button>
             <button
               onClick={() => setDisplayMode('PERCENTAGE')}
-              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                displayMode === 'PERCENTAGE' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'
+              className={`px-2 py-0.5 rounded-md transition cursor-pointer text-xs ${
+                displayMode === 'PERCENTAGE' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'
               }`}
             >
-              Percentage (%)
+              %
             </button>
           </div>
 
           {/* Reset Filters */}
           <button
             onClick={resetFilters}
-            className="text-xs text-rose-500 hover:text-rose-600 font-bold px-2 py-1 flex items-center gap-1 cursor-pointer transition"
+            className="h-8 px-2 text-xs text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 font-medium flex items-center gap-1 cursor-pointer transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             title="Reset Filters"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset
+            <RotateCcw className="w-3 h-3" /> Reset
           </button>
         </div>
       </div>
 
-      {/* 3. 4 Rich Summary Stat Cards (Synced to TL Squad) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3. 4 Refined Summary Stat Cards (Synced to TL Squad) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Present (On-Duty) */}
         <div
           onMouseEnter={() => setHoveredSegment('PRESENT')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 p-4 sm:p-5 rounded-2xl space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'PRESENT' ? 'ring-2 ring-emerald-500 shadow-md scale-[1.01]' : ''
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
+            hoveredSegment === 'PRESENT'
+              ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Present (On-Duty)
-            </span>
-            <span className="text-xs font-mono font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Present
+              </span>
+            </div>
+            <span className="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
               {presentPct}%
             </span>
           </div>
           <div>
-            <div className="text-3xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {displayMode === 'PERCENTAGE' ? `${presentPct}%` : summary.totalPresent}
             </div>
-            <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400 mt-0.5 font-medium">
-              {summary.onTimeCount} on-time &middot; {summary.lateCount} late arrivals
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {summary.onTimeCount} on-time &middot; {summary.lateCount} late
             </p>
           </div>
-          <div className="w-full h-2 bg-emerald-200/60 dark:bg-emerald-950 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               style={{ width: `${presentPct}%` }}
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              className="h-full bg-emerald-500 rounded-full transition-all duration-300"
             />
           </div>
         </div>
@@ -372,30 +378,37 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('LATE')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 p-4 sm:p-5 rounded-2xl space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'LATE' ? 'ring-2 ring-amber-500 shadow-md scale-[1.01]' : ''
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
+            hoveredSegment === 'LATE'
+              ? 'border-amber-500 ring-1 ring-amber-500/30'
+              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600" /> Late Arrivals
-            </span>
-            <span className="text-xs font-mono font-extrabold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Late Arrivals
+              </span>
+            </div>
+            <span className="text-xs font-mono font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/60">
               {latePct}%
             </span>
           </div>
           <div>
-            <div className="text-3xl font-black text-amber-700 dark:text-amber-300 font-mono">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {displayMode === 'PERCENTAGE' ? `${latePct}%` : summary.lateCount}
             </div>
-            <p className="text-[11px] text-amber-600/80 dark:text-amber-400 mt-0.5 font-medium">
-              Arrived after 11:15 AM grace threshold
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              After 11:15 AM grace cutoff
             </p>
           </div>
-          <div className="w-full h-2 bg-amber-200/60 dark:bg-amber-950 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               style={{ width: `${latePct}%` }}
-              className="h-full bg-amber-500 rounded-full transition-all duration-500"
+              className="h-full bg-amber-500 rounded-full transition-all duration-300"
             />
           </div>
         </div>
@@ -404,30 +417,37 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('ABSENT')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 p-4 sm:p-5 rounded-2xl space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'ABSENT' ? 'ring-2 ring-rose-500 shadow-md scale-[1.01]' : ''
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
+            hoveredSegment === 'ABSENT'
+              ? 'border-rose-500 ring-1 ring-rose-500/30'
+              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-              <XCircle className="w-4 h-4 text-rose-600" /> Absent (Unpunched)
-            </span>
-            <span className="text-xs font-mono font-extrabold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/60 px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <XCircle className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Absent
+              </span>
+            </div>
+            <span className="text-xs font-mono font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded-md border border-rose-200/60 dark:border-rose-800/60">
               {absentPct}%
             </span>
           </div>
           <div>
-            <div className="text-3xl font-black text-rose-700 dark:text-rose-300 font-mono">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {displayMode === 'PERCENTAGE' ? `${absentPct}%` : summary.absentCount}
             </div>
-            <p className="text-[11px] text-rose-600/80 dark:text-rose-400 mt-0.5 font-medium">
-              No clock-in recorded on scheduled day
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Unpunched shift
             </p>
           </div>
-          <div className="w-full h-2 bg-rose-200/60 dark:bg-rose-950 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               style={{ width: `${absentPct}%` }}
-              className="h-full bg-rose-500 rounded-full transition-all duration-500"
+              className="h-full bg-rose-500 rounded-full transition-all duration-300"
             />
           </div>
         </div>
@@ -436,145 +456,152 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('LEAVE')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 p-4 sm:p-5 rounded-2xl space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'LEAVE' ? 'ring-2 ring-purple-500 shadow-md scale-[1.01]' : ''
+          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
+            hoveredSegment === 'LEAVE'
+              ? 'border-violet-500 ring-1 ring-violet-500/30'
+              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
-              <CalendarDays className="w-4 h-4 text-purple-600" /> Approved Leave
-            </span>
-            <span className="text-xs font-mono font-extrabold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-md">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/50 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                <CalendarDays className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Approved Leave
+              </span>
+            </div>
+            <span className="text-xs font-mono font-semibold text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/50 px-1.5 py-0.5 rounded-md border border-violet-200/60 dark:border-violet-800/60">
               {leavePct}%
             </span>
           </div>
           <div>
-            <div className="text-3xl font-black text-purple-700 dark:text-purple-300 font-mono">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
               {displayMode === 'PERCENTAGE' ? `${leavePct}%` : summary.leaveCount}
             </div>
-            <p className="text-[11px] text-purple-600/80 dark:text-purple-400 mt-0.5 font-medium">
-              Sanctioned leave requests
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Sanctioned time-off
             </p>
           </div>
-          <div className="w-full h-2 bg-purple-200/60 dark:bg-purple-950 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div
               style={{ width: `${leavePct}%` }}
-              className="h-full bg-purple-500 rounded-full transition-all duration-500"
+              className="h-full bg-violet-500 rounded-full transition-all duration-300"
             />
           </div>
         </div>
       </div>
 
       {/* 4. Single Horizontal Attendance Distribution Bar (Squad Scoped) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-5 transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-xl shadow-xs space-y-4 transition-colors">
         {/* Header & Status Legend */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               {teamName || 'Squad'} Attendance Distribution
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {hoveredSegment ? (
-                <span className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5" />
-                  {hoveredSegment === 'PRESENT' && `Inspecting: Present (On-Duty) — ${summary.totalPresent} members (${presentPct}%) [${summary.onTimeCount} on-time, ${summary.lateCount} late]`}
-                  {hoveredSegment === 'LATE' && `Inspecting: Late Arrivals — ${summary.lateCount} members (${latePct}%)`}
-                  {hoveredSegment === 'ABSENT' && `Inspecting: Absent — ${summary.absentCount} members (${absentPct}%)`}
-                  {hoveredSegment === 'LEAVE' && `Inspecting: Approved Leave — ${summary.leaveCount} members (${leavePct}%)`}
+                <span className="text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  {hoveredSegment === 'PRESENT' && `Present: ${summary.totalPresent} members (${presentPct}%) [${summary.onTimeCount} on-time, ${summary.lateCount} late]`}
+                  {hoveredSegment === 'LATE' && `Late: ${summary.lateCount} members (${latePct}%)`}
+                  {hoveredSegment === 'ABSENT' && `Absent: ${summary.absentCount} members (${absentPct}%)`}
+                  {hoveredSegment === 'LEAVE' && `On Leave: ${summary.leaveCount} members (${leavePct}%)`}
                 </span>
               ) : (
                 <>
-                  Showing squad attendance for <strong className="text-slate-800 dark:text-slate-200 font-bold">{filterTitle}</strong> ({summary.totalSquad} Squad Members)
+                  Squad attendance for <strong className="text-slate-700 dark:text-slate-300">{filterTitle}</strong> ({summary.totalSquad} Squad Members)
                 </>
               )}
             </p>
           </div>
 
           {/* Color Legend Buttons */}
-          <div className="flex flex-wrap items-center gap-3.5 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <button
               onClick={() => setHoveredSegment(hoveredSegment === 'PRESENT' ? null : 'PRESENT')}
               onMouseEnter={() => setHoveredSegment('PRESENT')}
               onMouseLeave={() => setHoveredSegment(null)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition cursor-pointer ${
-                hoveredSegment === 'PRESENT' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500' : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600'
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition cursor-pointer ${
+                hoveredSegment === 'PRESENT' ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span>Present ({summary.totalPresent})</span>
             </button>
             <button
               onClick={() => setHoveredSegment(hoveredSegment === 'LATE' ? null : 'LATE')}
               onMouseEnter={() => setHoveredSegment('LATE')}
               onMouseLeave={() => setHoveredSegment(null)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition cursor-pointer ${
-                hoveredSegment === 'LATE' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 ring-1 ring-amber-500' : 'text-slate-700 dark:text-slate-300 hover:text-amber-600'
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition cursor-pointer ${
+                hoveredSegment === 'LATE' ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
               <span>Late ({summary.lateCount})</span>
             </button>
             <button
               onClick={() => setHoveredSegment(hoveredSegment === 'ABSENT' ? null : 'ABSENT')}
               onMouseEnter={() => setHoveredSegment('ABSENT')}
               onMouseLeave={() => setHoveredSegment(null)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition cursor-pointer ${
-                hoveredSegment === 'ABSENT' ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 ring-1 ring-rose-500' : 'text-slate-700 dark:text-slate-300 hover:text-rose-600'
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition cursor-pointer ${
+                hoveredSegment === 'ABSENT' ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <span className="w-3 h-3 rounded-full bg-rose-500 shadow-sm" />
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
               <span>Absent ({summary.absentCount})</span>
             </button>
             <button
               onClick={() => setHoveredSegment(hoveredSegment === 'LEAVE' ? null : 'LEAVE')}
               onMouseEnter={() => setHoveredSegment('LEAVE')}
               onMouseLeave={() => setHoveredSegment(null)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition cursor-pointer ${
-                hoveredSegment === 'LEAVE' ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 ring-1 ring-purple-500' : 'text-slate-700 dark:text-slate-300 hover:text-purple-600'
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition cursor-pointer ${
+                hoveredSegment === 'LEAVE' ? 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
               }`}
             >
-              <span className="w-3 h-3 rounded-full bg-purple-500 shadow-sm" />
-              <span>On Leave ({summary.leaveCount})</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+              <span>Leave ({summary.leaveCount})</span>
             </button>
           </div>
         </div>
 
         {/* Single Horizontal Bar Container */}
-        <div className="space-y-3 pt-6 pb-2 relative">
-          <div className="w-full h-12 bg-slate-100 dark:bg-slate-950 rounded-2xl p-1.5 border border-slate-200/80 dark:border-slate-800 flex items-center shadow-inner relative overflow-visible">
+        <div className="space-y-2 pt-2">
+          <div className="w-full h-8 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200/80 dark:border-slate-700 flex items-center relative overflow-visible">
             {/* Segment 1: Present (On-Time) */}
             {summary.onTimeCount > 0 && (!statusFilter || statusFilter === 'PRESENT' || statusFilter === 'ON_TIME') && (
               <div
                 onMouseEnter={() => setHoveredSegment('PRESENT')}
                 onMouseLeave={() => setHoveredSegment(null)}
                 style={{ width: `${(summary.onTimeCount / totalSlots) * 100}%` }}
-                className={`h-full bg-emerald-500 rounded-l-xl transition-all duration-300 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-black shadow-sm ${
-                  summary.lateCount === 0 && summary.leaveCount === 0 && summary.absentCount === 0 ? 'rounded-r-xl' : ''
+                className={`h-full bg-emerald-500 rounded-l-md transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
+                  summary.lateCount === 0 && summary.leaveCount === 0 && summary.absentCount === 0 ? 'rounded-r-md' : ''
                 } ${
-                  hoveredSegment === 'PRESENT' ? 'brightness-110 ring-4 ring-emerald-400/40 z-30 scale-y-110 shadow-lg' : 'hover:brightness-105'
+                  hoveredSegment === 'PRESENT' ? 'brightness-110 ring-2 ring-emerald-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
-                <span className="truncate px-1.5 text-xs drop-shadow-sm font-bold">
+                <span className="truncate px-1 text-[11px] font-semibold">
                   {displayMode === 'PERCENTAGE' ? (onTimePct >= 6 ? `${onTimePct}%` : '') : summary.onTimeCount}
                 </span>
 
                 {/* Floating Tooltip with Squad Member Names */}
-                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white border border-slate-800 p-3.5 rounded-2xl shadow-2xl text-[11px] min-w-[200px] max-w-[280px] whitespace-normal transition-all duration-150 animate-in fade-in zoom-in-95">
-                  <div className="font-bold flex items-center justify-between gap-1.5 text-emerald-400 pb-1.5 border-b border-slate-800 mb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Present (On-Time)
+                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white border border-slate-800 p-3 rounded-xl shadow-xl text-xs min-w-[180px] max-w-[260px] whitespace-normal transition-all duration-100">
+                  <div className="font-semibold flex items-center justify-between gap-1 text-emerald-400 pb-1 border-b border-slate-800 mb-1">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> On-Time
                     </span>
                     <span className="font-mono text-white text-xs">{summary.onTimeCount} ({onTimePct}%)</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-300">Punched in before 11:15 AM</p>
+                    <p className="text-slate-300 text-[11px]">Before 11:15 AM</p>
                     {memberBreakdown.onTime.length > 0 && (
-                      <div className="pt-1 border-t border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 font-bold block mb-1">Squad Members:</span>
-                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                      <div className="pt-1 border-t border-slate-800">
+                        <span className="text-[10px] text-slate-400 font-semibold block mb-1">Squad Members:</span>
+                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                           {memberBreakdown.onTime.map((m) => (
-                            <span key={m.id} className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-1.5 py-0.5 rounded-md font-medium">
+                            <span key={m.id} className="text-[10px] bg-slate-800 text-emerald-300 px-1.5 py-0.5 rounded font-medium">
                               {m.fullName} {m.id === currentUserId ? '(You / Lead)' : ''}
                             </span>
                           ))}
@@ -592,32 +619,32 @@ export default function TeamLeadDashboardClient({
                 onMouseEnter={() => setHoveredSegment('LATE')}
                 onMouseLeave={() => setHoveredSegment(null)}
                 style={{ width: `${(summary.lateCount / totalSlots) * 100}%` }}
-                className={`h-full bg-amber-500 transition-all duration-300 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-black shadow-sm ${
-                  summary.onTimeCount === 0 ? 'rounded-l-xl' : ''
-                } ${summary.absentCount === 0 && summary.leaveCount === 0 ? 'rounded-r-xl' : ''} ${
-                  hoveredSegment === 'LATE' ? 'brightness-110 ring-4 ring-amber-400/40 z-30 scale-y-110 shadow-lg' : 'hover:brightness-105'
+                className={`h-full bg-amber-500 transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
+                  summary.onTimeCount === 0 ? 'rounded-l-md' : ''
+                } ${summary.absentCount === 0 && summary.leaveCount === 0 ? 'rounded-r-md' : ''} ${
+                  hoveredSegment === 'LATE' ? 'brightness-110 ring-2 ring-amber-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
-                <span className="truncate px-1.5 text-xs drop-shadow-sm font-bold">
+                <span className="truncate px-1 text-[11px] font-semibold">
                   {displayMode === 'PERCENTAGE' ? (latePct >= 6 ? `${latePct}%` : '') : summary.lateCount}
                 </span>
 
                 {/* Floating Tooltip with Squad Member Names */}
-                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white border border-slate-800 p-3.5 rounded-2xl shadow-2xl text-[11px] min-w-[200px] max-w-[280px] whitespace-normal transition-all duration-150 animate-in fade-in zoom-in-95">
-                  <div className="font-bold flex items-center justify-between gap-1.5 text-amber-400 pb-1.5 border-b border-slate-800 mb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Late Arrivals
+                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white border border-slate-800 p-3 rounded-xl shadow-xl text-xs min-w-[180px] max-w-[260px] whitespace-normal transition-all duration-100">
+                  <div className="font-semibold flex items-center justify-between gap-1 text-amber-400 pb-1 border-b border-slate-800 mb-1">
+                    <span className="flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> Late Arrivals
                     </span>
                     <span className="font-mono text-white text-xs">{summary.lateCount} ({latePct}%)</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-300">Punched in after 11:15 AM</p>
+                    <p className="text-slate-300 text-[11px]">After 11:15 AM</p>
                     {memberBreakdown.late.length > 0 && (
-                      <div className="pt-1 border-t border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 font-bold block mb-1">Squad Members:</span>
-                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                      <div className="pt-1 border-t border-slate-800">
+                        <span className="text-[10px] text-slate-400 font-semibold block mb-1">Squad Members:</span>
+                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                           {memberBreakdown.late.map((m) => (
-                            <span key={m.id} className="text-[10px] bg-amber-950 text-amber-300 border border-amber-800/60 px-1.5 py-0.5 rounded-md font-medium">
+                            <span key={m.id} className="text-[10px] bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded font-medium">
                               {m.fullName} {m.id === currentUserId ? '(You / Lead)' : ''}
                             </span>
                           ))}
@@ -635,32 +662,32 @@ export default function TeamLeadDashboardClient({
                 onMouseEnter={() => setHoveredSegment('LEAVE')}
                 onMouseLeave={() => setHoveredSegment(null)}
                 style={{ width: `${(summary.leaveCount / totalSlots) * 100}%` }}
-                className={`h-full bg-purple-500 transition-all duration-300 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-black shadow-sm ${
-                  summary.onTimeCount === 0 && summary.lateCount === 0 ? 'rounded-l-xl' : ''
-                } ${summary.absentCount === 0 ? 'rounded-r-xl' : ''} ${
-                  hoveredSegment === 'LEAVE' ? 'brightness-110 ring-4 ring-purple-400/40 z-30 scale-y-110 shadow-lg' : 'hover:brightness-105'
+                className={`h-full bg-violet-500 transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
+                  summary.onTimeCount === 0 && summary.lateCount === 0 ? 'rounded-l-md' : ''
+                } ${summary.absentCount === 0 ? 'rounded-r-md' : ''} ${
+                  hoveredSegment === 'LEAVE' ? 'brightness-110 ring-2 ring-violet-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
-                <span className="truncate px-1.5 text-xs drop-shadow-sm font-bold">
+                <span className="truncate px-1 text-[11px] font-semibold">
                   {displayMode === 'PERCENTAGE' ? (leavePct >= 6 ? `${leavePct}%` : '') : summary.leaveCount}
                 </span>
 
                 {/* Floating Tooltip with Squad Member Names */}
-                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white border border-slate-800 p-3.5 rounded-2xl shadow-2xl text-[11px] min-w-[200px] max-w-[280px] whitespace-normal transition-all duration-150 animate-in fade-in zoom-in-95">
-                  <div className="font-bold flex items-center justify-between gap-1.5 text-purple-400 pb-1.5 border-b border-slate-800 mb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <CalendarDays className="w-3.5 h-3.5" /> Approved Leave
+                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white border border-slate-800 p-3 rounded-xl shadow-xl text-xs min-w-[180px] max-w-[260px] whitespace-normal transition-all duration-100">
+                  <div className="font-semibold flex items-center justify-between gap-1 text-violet-400 pb-1 border-b border-slate-800 mb-1">
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3" /> Approved Leave
                     </span>
                     <span className="font-mono text-white text-xs">{summary.leaveCount} ({leavePct}%)</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-300">Sanctioned time-off requests</p>
+                    <p className="text-slate-300 text-[11px]">Sanctioned time-off</p>
                     {memberBreakdown.leave.length > 0 && (
-                      <div className="pt-1 border-t border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 font-bold block mb-1">Squad Members:</span>
-                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                      <div className="pt-1 border-t border-slate-800">
+                        <span className="text-[10px] text-slate-400 font-semibold block mb-1">Squad Members:</span>
+                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                           {memberBreakdown.leave.map((m) => (
-                            <span key={m.id} className="text-[10px] bg-purple-950 text-purple-300 border border-purple-800/60 px-1.5 py-0.5 rounded-md font-medium">
+                            <span key={m.id} className="text-[10px] bg-slate-800 text-violet-300 px-1.5 py-0.5 rounded font-medium">
                               {m.fullName} {m.id === currentUserId ? '(You / Lead)' : ''}
                             </span>
                           ))}
@@ -678,32 +705,32 @@ export default function TeamLeadDashboardClient({
                 onMouseEnter={() => setHoveredSegment('ABSENT')}
                 onMouseLeave={() => setHoveredSegment(null)}
                 style={{ width: `${(summary.absentCount / totalSlots) * 100}%` }}
-                className={`h-full bg-rose-500 rounded-r-xl transition-all duration-300 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-black shadow-sm ${
-                  summary.onTimeCount === 0 && summary.lateCount === 0 && summary.leaveCount === 0 ? 'rounded-l-xl' : ''
+                className={`h-full bg-rose-500 rounded-r-md transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
+                  summary.onTimeCount === 0 && summary.lateCount === 0 && summary.leaveCount === 0 ? 'rounded-l-md' : ''
                 } ${
-                  hoveredSegment === 'ABSENT' ? 'brightness-110 ring-4 ring-rose-400/40 z-30 scale-y-110 shadow-lg' : 'hover:brightness-105'
+                  hoveredSegment === 'ABSENT' ? 'brightness-110 ring-2 ring-rose-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
-                <span className="truncate px-1.5 text-xs drop-shadow-sm font-bold">
+                <span className="truncate px-1 text-[11px] font-semibold">
                   {displayMode === 'PERCENTAGE' ? (absentPct >= 6 ? `${absentPct}%` : '') : summary.absentCount}
                 </span>
 
                 {/* Floating Tooltip with Squad Member Names */}
-                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white border border-slate-800 p-3.5 rounded-2xl shadow-2xl text-[11px] min-w-[200px] max-w-[280px] whitespace-normal transition-all duration-150 animate-in fade-in zoom-in-95">
-                  <div className="font-bold flex items-center justify-between gap-1.5 text-rose-400 pb-1.5 border-b border-slate-800 mb-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <XCircle className="w-3.5 h-3.5" /> Absent (Unpunched)
+                <div className="opacity-0 group-hover:opacity-100 pointer-events-none absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white border border-slate-800 p-3 rounded-xl shadow-xl text-xs min-w-[180px] max-w-[260px] whitespace-normal transition-all duration-100">
+                  <div className="font-semibold flex items-center justify-between gap-1 text-rose-400 pb-1 border-b border-slate-800 mb-1">
+                    <span className="flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> Absent
                     </span>
                     <span className="font-mono text-white text-xs">{summary.absentCount} ({absentPct}%)</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-slate-300">No clock-in recorded</p>
+                    <p className="text-slate-300 text-[11px]">No clock-in recorded</p>
                     {memberBreakdown.absent.length > 0 && (
-                      <div className="pt-1 border-t border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 font-bold block mb-1">Squad Members:</span>
-                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                      <div className="pt-1 border-t border-slate-800">
+                        <span className="text-[10px] text-slate-400 font-semibold block mb-1">Squad Members:</span>
+                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
                           {memberBreakdown.absent.map((m) => (
-                            <span key={m.id} className="text-[10px] bg-rose-950 text-rose-300 border border-rose-800/60 px-1.5 py-0.5 rounded-md font-medium">
+                            <span key={m.id} className="text-[10px] bg-slate-800 text-rose-300 px-1.5 py-0.5 rounded font-medium">
                               {m.fullName} {m.id === currentUserId ? '(You / Lead)' : ''}
                             </span>
                           ))}
@@ -717,7 +744,7 @@ export default function TeamLeadDashboardClient({
           </div>
 
           {/* Scale Markers */}
-          <div className="flex justify-between items-center px-1 text-[10px] font-mono text-slate-400 pt-1 font-bold">
+          <div className="flex justify-between items-center px-0.5 text-[10px] font-mono text-slate-400 font-medium">
             <span>0%</span>
             <span>25%</span>
             <span>50%</span>
@@ -728,4 +755,5 @@ export default function TeamLeadDashboardClient({
       </div>
     </div>
   );
+
 }

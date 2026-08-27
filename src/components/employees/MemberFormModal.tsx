@@ -72,28 +72,28 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl animate-in zoom-in-95 duration-150 space-y-5 transition-colors">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-4 transition-colors">
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-              <User className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+              <User className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
-                {memberData ? 'Edit Member' : 'Add New Member'}
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+                {memberData ? 'Edit Employee' : 'Add New Employee'}
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Simple 5-field account profile</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Workforce account details</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition cursor-pointer">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
               Employee Name *
             </label>
             <input
@@ -102,12 +102,12 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. Rahul Sharma"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
               Email Address *
             </label>
             <input
@@ -116,12 +116,12 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="rahul@persevex.com"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
             />
           </div>
 
           <div>
-            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+            <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
               Phone Number
             </label>
             <input
@@ -129,19 +129,19 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+91 98765 43210"
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+              className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
                 Role *
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium cursor-pointer"
               >
                 <option value="EMPLOYEE">Employee</option>
                 <option value="TEAM_LEAD">Team Lead</option>
@@ -150,13 +150,13 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
             </div>
 
             <div>
-              <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
-                Squad / Team
+              <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">
+                Team
               </label>
               <select
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-slate-900 dark:text-white focus:border-indigo-500 font-medium"
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium cursor-pointer"
               >
                 <option value="">No Team Assigned</option>
                 {teams.map((t) => (
@@ -169,10 +169,10 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
           </div>
 
           {!memberData && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex items-start gap-2 text-amber-800 dark:text-amber-300">
-              <Key className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg flex items-start gap-2 text-amber-800 dark:text-amber-300">
+              <Key className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
               <div>
-                <p className="font-bold">Auto Credentials Generated</p>
+                <p className="font-semibold text-xs">Auto Credentials Generated</p>
                 <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
                   ID will be auto-assigned. Temporary password: <strong className="font-mono">Persevex@123</strong>
                 </p>
@@ -180,29 +180,30 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
             </div>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 transition"
+              className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 transition shadow-sm disabled:opacity-50"
+              className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Save className="w-4 h-4" />
+                <Save className="w-3.5 h-3.5" />
               )}
-              {memberData ? 'Update Record' : 'Create Account'}
+              {memberData ? 'Save Changes' : 'Create Employee'}
             </button>
           </div>
         </form>
       </div>
     </div>
+
   );
 }

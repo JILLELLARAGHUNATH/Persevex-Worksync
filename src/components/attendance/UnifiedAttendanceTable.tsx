@@ -280,45 +280,45 @@ export default function UnifiedAttendanceTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* Latest Check-in Live Activity Banner */}
       {latestCheckIn && (
-        <div className="bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-transparent border border-emerald-500/20 dark:border-emerald-500/30 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+        <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 rounded-lg p-3 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
           <div className="flex items-center gap-2.5">
-            <span className="relative flex h-3 w-3">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
             <div>
-              <span className="font-bold text-slate-900 dark:text-white">Latest Check-In: </span>
-              <span className="text-emerald-700 dark:text-emerald-300 font-bold">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">Latest Check-In: </span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                 {latestCheckIn.user?.fullName || 'Staff Member'}
               </span>
               <span className="text-slate-500 dark:text-slate-400 ml-1.5 font-mono">
                 at {latestCheckIn.checkInTime ? formatTime(latestCheckIn.checkInTime) : '--:--'}
               </span>
               {latestCheckIn.lateStatus === 'LATE' ? (
-                <span className="ml-2 text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 px-1.5 py-0.2 rounded font-bold">
+                <span className="ml-2 text-[10px] bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.5 rounded font-medium">
                   Late
                 </span>
               ) : (
-                <span className="ml-2 text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+                <span className="ml-2 text-[10px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 rounded font-medium">
                   On-Time
                 </span>
               )}
             </div>
           </div>
-          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
-            Live Check-In Feed
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+            Live Feed
           </span>
         </div>
       )}
 
       {/* Filter Control Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-3xl shadow-sm space-y-3 transition-colors">
-        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl shadow-xs space-y-2.5 transition-colors">
+        <div className="flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
@@ -327,18 +327,18 @@ export default function UnifiedAttendanceTable({
                 setPage(1);
               }}
               placeholder="Search by Employee Name, ID, or Email..."
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition"
+              className="w-full bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <select
               value={datePreset}
               onChange={(e) => {
                 setDatePreset(e.target.value);
                 setPage(1);
               }}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-bold focus:outline-none cursor-pointer"
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer"
             >
               <option value="TODAY">Today (Default)</option>
               <option value="YESTERDAY">Yesterday</option>
@@ -356,7 +356,7 @@ export default function UnifiedAttendanceTable({
                   setTeamFilter(e.target.value);
                   setPage(1);
                 }}
-                className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer"
+                className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer"
               >
                 <option value="">All Teams</option>
                 {teams.map((t) => (
@@ -369,24 +369,24 @@ export default function UnifiedAttendanceTable({
 
             <button
               onClick={() => setAdvancedOpen(!advancedOpen)}
-              className="px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+              className="h-8 px-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
             >
               Filters {advancedOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
 
             <button
               onClick={() => handleExport('csv')}
-              className="px-3.5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-2xl flex items-center gap-1.5 hover:bg-indigo-100 transition cursor-pointer"
+              className="h-8 px-2.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" /> Export
             </button>
 
             <button
               onClick={resetFilters}
-              className="p-2 text-slate-400 hover:text-rose-500 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+              className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-rose-500 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               title="Reset Filters"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -394,7 +394,7 @@ export default function UnifiedAttendanceTable({
         {/* Custom Date Pickers */}
         {datePreset === 'CUSTOM' && (
           <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <span className="font-semibold text-slate-500">From:</span>
+            <span className="text-slate-500 font-medium">From:</span>
             <input
               type="date"
               value={customStart}
@@ -402,9 +402,9 @@ export default function UnifiedAttendanceTable({
                 setCustomStart(e.target.value);
                 setPage(1);
               }}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 font-mono text-xs"
+              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 font-mono text-xs"
             />
-            <span className="font-semibold text-slate-500">To:</span>
+            <span className="text-slate-500 font-medium">To:</span>
             <input
               type="date"
               value={customEnd}
@@ -412,18 +412,18 @@ export default function UnifiedAttendanceTable({
                 setCustomEnd(e.target.value);
                 setPage(1);
               }}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-1.5 font-mono text-xs"
+              className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 font-mono text-xs"
             />
           </div>
         )}
 
         {/* Advanced Filters Panel */}
         {advancedOpen && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2"
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs"
             >
               <option value="">All Statuses</option>
               <option value="PRESENT">Present</option>
@@ -435,7 +435,7 @@ export default function UnifiedAttendanceTable({
             <select
               value={punctualityFilter}
               onChange={(e) => setPunctualityFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2"
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs"
             >
               <option value="">Punctuality</option>
               <option value="ON_TIME">On Time (&le; 11:15 AM)</option>
@@ -445,7 +445,7 @@ export default function UnifiedAttendanceTable({
             <select
               value={checkInStatus}
               onChange={(e) => setCheckInStatus(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2"
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs"
             >
               <option value="">Check-In State</option>
               <option value="CHECKED_IN">Checked In</option>
@@ -455,7 +455,7 @@ export default function UnifiedAttendanceTable({
             <select
               value={workingHoursFilter}
               onChange={(e) => setWorkingHoursFilter(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2"
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs"
             >
               <option value="">Hours Filter</option>
               <option value="UNDER_4">&lt; 4.0 hrs</option>
@@ -467,14 +467,14 @@ export default function UnifiedAttendanceTable({
       </div>
 
       {/* Main Ledger Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-4">Employee</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">
+                <th className="py-3 px-4">Employee</th>
+                <th className="py-3 px-4">Date</th>
+                <th className="py-3 px-4">
                   <button
                     onClick={() => {
                       if (sortField === 'checkInTime') setSortAsc(!sortAsc);
@@ -483,33 +483,32 @@ export default function UnifiedAttendanceTable({
                         setSortAsc(false);
                       }
                     }}
-                    className="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition cursor-pointer"
+                    className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 transition cursor-pointer"
                   >
-                    Check In {sortField === 'checkInTime' && (sortAsc ? '▲' : '▼ (Latest)')}
+                    Check In {sortField === 'checkInTime' && (sortAsc ? '▲' : '▼')}
                   </button>
                 </th>
-                <th className="p-4">Check Out</th>
-                <th className="p-4">Working Hours</th>
-                <th className="p-4">Punctuality</th>
-                <th className="p-4">Attendance Status</th>
+                <th className="py-3 px-4">Check Out</th>
+                <th className="py-3 px-4">Working Hours</th>
+                <th className="py-3 px-4">Punctuality</th>
+                <th className="py-3 px-4">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-800 dark:text-slate-200">
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     No attendance records found for this view.
                   </td>
                 </tr>
               ) : (
                 paginated.map((r, i) => (
-                  <tr key={r.id || `${r.userId}_${r.date}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <tr key={r.id || `${r.userId}_${r.date}`} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         {r.user?.fullName || 'Employee'}
                         {i === 0 && r.checkInTime && getIndiaDateKey(r.date) === todayStr && (
-                          <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-1.5 py-0.2 rounded font-bold">
-
+                          <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 px-1 py-0.5 rounded font-medium">
                             Latest
                           </span>
                         )}
@@ -518,38 +517,36 @@ export default function UnifiedAttendanceTable({
                         {r.user?.employeeId || 'ID: --'} {showTeamCol && r.user?.team?.name ? `· ${r.user.team.name}` : ''}
                       </div>
                     </td>
-                    <td className="p-4 font-mono">
+                    <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
                       {formatDate(r.date)}
                     </td>
-                    <td className="p-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    <td className="py-3 px-4 font-mono font-medium text-emerald-600 dark:text-emerald-400">
                       {r.checkInTime ? formatTime(r.checkInTime) : '—'}
                     </td>
-                    <td className="p-4 font-mono font-bold text-amber-600 dark:text-amber-400">
+                    <td className="py-3 px-4 font-mono font-medium text-amber-600 dark:text-amber-400">
                       {r.checkOutTime ? formatTime(r.checkOutTime) : '—'}
                     </td>
-                    <td className="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400" suppressHydrationWarning>
+                    <td className="py-3 px-4 font-mono font-medium text-blue-600 dark:text-blue-400" suppressHydrationWarning>
                       {r.checkInTime
                         ? mounted
                           ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.checkOutTime ? r.totalHours : nowTick)
                           : (r.checkOutTime ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.totalHours) : 'In Progress')
                         : '—'}
                     </td>
-
-
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       {r.lateStatus === 'LATE' ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                          <AlertTriangle className="w-3.5 h-3.5" /> Late Arrival
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+                          <AlertTriangle className="w-3 h-3" /> Late Arrival
                         </span>
                       ) : r.checkInTime ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> On Time
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" /> On Time
                         </span>
                       ) : (
                         <span className="text-slate-400 font-mono text-[11px]">—</span>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       <StatusBadge status={r.status || 'PRESENT'} />
                     </td>
                   </tr>
@@ -560,27 +557,27 @@ export default function UnifiedAttendanceTable({
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+        <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
           <div>
             Showing <strong className="text-slate-800 dark:text-slate-200">{paginated.length}</strong> of{' '}
             <strong className="text-slate-800 dark:text-slate-200">{filtered.length}</strong> entries
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 font-bold"
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 font-medium"
             >
               Previous
             </button>
-            <span className="font-bold text-slate-700 dark:text-slate-300">
+            <span className="font-medium text-slate-700 dark:text-slate-300 px-1">
               Page {page} of {totalPages}
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 font-bold"
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-700 font-medium"
             >
               Next
             </button>

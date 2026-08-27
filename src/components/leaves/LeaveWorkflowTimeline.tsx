@@ -30,21 +30,21 @@ export default function LeaveWorkflowTimeline({ currentStage }: TimelineProps) {
   };
 
   return (
-    <div className="flex items-center justify-between w-full py-5 px-2">
+    <div className="flex items-center justify-between w-full py-4 px-1">
       {steps.map((step, idx) => {
         const status = getStepStatus(idx);
         return (
           <React.Fragment key={step.key}>
             <div className="flex flex-col items-center">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center border text-xs font-bold transition-all shadow-sm ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-semibold transition-all ${
                   status === 'completed'
-                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400'
                     : status === 'active'
-                    ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-400 ring-2 ring-amber-500/20 animate-pulse'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
                     : status === 'rejected'
-                    ? 'bg-red-500/15 border-red-500 text-red-600 dark:text-red-400'
-                    : 'bg-slate-100  dark:bg-slate-950 dark:bg-slate-800 border-slate-300  dark:border-slate-800 dark:border-slate-700 text-slate-400 dark:text-slate-500'
+                    ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400'
+                    : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500'
                 }`}
               >
                 {status === 'completed' ? (
@@ -55,7 +55,7 @@ export default function LeaveWorkflowTimeline({ currentStage }: TimelineProps) {
                   <Clock className="w-4 h-4" />
                 )}
               </div>
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mt-2 text-center">
+              <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 mt-1.5 text-center">
                 {step.label}
               </span>
             </div>
