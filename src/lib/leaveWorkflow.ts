@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
 import type { UserSession } from '@/lib/auth';
+
 
 export function nextStageAfterApprove(stage: string, role?: string) {
   if (role === 'MANAGER') return 'APPROVED';

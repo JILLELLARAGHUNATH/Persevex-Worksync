@@ -1,13 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import { getJwtSecretKey } from './jwtSecret';
 
 export type UserRole = 'MANAGER' | 'TEAM_LEAD' | 'EMPLOYEE';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'persevex-super-secret-enterprise-key-2026-auth-jwt-token'
-);
-
 export interface UserSession {
+
   id: string;
   employeeId: string;
   email: string;
@@ -19,11 +17,12 @@ export interface UserSession {
 
 export async function signSessionToken(payload: UserSession, rememberMe: boolean = false): Promise<string> {
   const expTime = rememberMe ? '30d' : '12h';
+  const secretKey = getJwtSecretKey();
   return await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(expTime)
-    .sign(SECRET_KEY);
+    .sign(secretKey);
 }
 
 export async function getSession(): Promise<UserSession | null> {
@@ -32,7 +31,8 @@ export async function getSession(): Promise<UserSession | null> {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, SECRET_KEY);
+    const secretKey = getJwtSecretKey();
+    const { payload } = await jwtVerify(token, secretKey);
     return payload as unknown as UserSession;
   } catch (error) {
     console.error('Session verification failed:', error);

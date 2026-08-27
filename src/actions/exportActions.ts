@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
 import { getSession } from '@/lib/auth';
+import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+
 
 export interface ReportFilters {
   datePreset?: string;
@@ -82,24 +84,25 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
   }
 
   if (filters?.datePreset) {
+    const india = getIndiaWorkdayInfo();
     const now = new Date();
     if (filters.datePreset === 'TODAY') {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-      whereClause.date = { gte: start, lte: end };
+      whereClause.date = { gte: india.startOfDayIST, lte: india.endOfDayIST };
     } else if (filters.datePreset === 'THIS_WEEK') {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
-      whereClause.date = { gte: start, lte: now };
+      const start = new Date(india.startOfDayIST.getTime() - 6 * 24 * 60 * 60 * 1000);
+      whereClause.date = { gte: start, lte: india.endOfDayIST };
     } else if (filters.datePreset === 'LAST_WEEK') {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13, 0, 0, 0, 0);
-      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 23, 59, 59, 999);
+      const start = new Date(india.startOfDayIST.getTime() - 13 * 24 * 60 * 60 * 1000);
+      const end = new Date(india.startOfDayIST.getTime() - 7 * 24 * 60 * 60 * 1000);
       whereClause.date = { gte: start, lte: end };
     } else if (filters.datePreset === 'THIS_MONTH') {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      whereClause.date = { gte: start, lte: now };
+      const start = new Date(Date.UTC(india.year, india.month - 1, 1, -5, -30, 0, 0));
+      whereClause.date = { gte: start, lte: india.endOfDayIST };
     } else if (filters.datePreset === 'LAST_MONTH') {
-      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
-      const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      const prevMonthYear = india.month === 1 ? india.year - 1 : india.year;
+      const prevMonth = india.month === 1 ? 12 : india.month - 1;
+      const start = new Date(Date.UTC(prevMonthYear, prevMonth - 1, 1, -5, -30, 0, 0));
+      const end = new Date(Date.UTC(india.year, india.month - 1, 0, 18, 29, 59, 999));
       whereClause.date = { gte: start, lte: end };
     } else if (filters.datePreset === 'CUSTOM' && (filters.customStart || filters.customEnd)) {
       whereClause.date = {};
@@ -125,12 +128,13 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
     'Employee ID': r.user.employeeId,
     'Employee Name': r.user.fullName,
     'Team': r.user.team?.name || 'General',
-    'Check-In': r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString() : '--',
-    'Check-Out': r.checkOutTime ? new Date(r.checkOutTime).toLocaleTimeString() : '--',
+    'Check-In': r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true }) : '--',
+    'Check-Out': r.checkOutTime ? new Date(r.checkOutTime).toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true }) : '--',
     'Working Hours': r.totalHours,
     'Punctuality': r.lateStatus,
     'Status': r.status,
   }));
+
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();

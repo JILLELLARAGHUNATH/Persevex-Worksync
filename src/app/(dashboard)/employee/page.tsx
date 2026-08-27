@@ -1,14 +1,29 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import EmployeeAttendanceHub from '@/components/attendance/EmployeeAttendanceHub';
+import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 
 export default async function EmployeeDashboardPage() {
   const session = await getSession();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const india = getIndiaWorkdayInfo();
 
-  const todayAttendance = await prisma.attendance.findUnique({
-    where: { userId_date: { userId: session!.id, date: today } },
+  const todayAttendance = await prisma.attendance.findFirst({
+    where: {
+      userId: session!.id,
+      OR: [
+        { date: india.canonicalDate },
+        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+      ],
+    },
+    include: {
+      user: {
+        include: { team: true },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 
   const allRecords = await prisma.attendance.findMany({
@@ -37,6 +52,7 @@ export default async function EmployeeDashboardPage() {
       <EmployeeAttendanceHub
         initialTodayAttendance={todayAttendance}
         allRecords={allRecords}
+        currentUserId={session!.id}
       />
     </div>
   );

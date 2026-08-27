@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Clock,
   CheckCircle2,
@@ -9,11 +9,15 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDurationHMSFormatted } from '@/lib/utils';
+
 
 export default function LiveAttendanceCard({
   initialAttendance,
+  currentUserId,
 }: {
   initialAttendance: any;
+  currentUserId?: string;
 }) {
   const [time, setTime] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -22,11 +26,7 @@ export default function LiveAttendanceCard({
   const [refreshingAttendance, setRefreshingAttendance] = useState(true);
 
   /*
-   * IMPORTANT:
-   * Always fetch the latest attendance record from the server.
-   *
-   * This fixes the Vercel deployment issue where initialAttendance
-   * may be stale/null after logout and login.
+   * Always fetch the latest attendance record from the server for the active user.
    */
   const refreshAttendance = useCallback(async () => {
     try {
@@ -34,10 +34,7 @@ export default function LiveAttendanceCard({
 
       const response = await fetch('/api/attendance/check-in-out', {
         method: 'GET',
-
-        // Prevent browser / deployment cache
         cache: 'no-store',
-
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           Pragma: 'no-cache',
@@ -60,30 +57,14 @@ export default function LiveAttendanceCard({
     }
   }, []);
 
-  /*
-   * Keep server-provided attendance,
-   * but the API refresh below will always get the latest data.
-   */
   useEffect(() => {
     setAttendance(initialAttendance);
   }, [initialAttendance]);
 
-  /*
-   * Fetch fresh attendance when the dashboard opens.
-   *
-   * This is the main fix for Vercel.
-   */
   useEffect(() => {
     refreshAttendance();
   }, [refreshAttendance]);
 
-  /*
-   * Refresh attendance whenever the browser tab becomes active again.
-   *
-   * Example:
-   * Siva checks in -> logs out -> logs in again.
-   * The latest attendance is fetched from the database.
-   */
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -91,21 +72,17 @@ export default function LiveAttendanceCard({
       }
     };
 
-    window.addEventListener(
-      'visibilitychange',
-      handleVisibilityChange
-    );
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange
-      );
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [refreshAttendance]);
 
   /*
-   * Existing realtime event support.
+   * Realtime event support with strict user isolation.
    */
   useEffect(() => {
     const handleRealtime = (e: Event) => {
@@ -118,26 +95,16 @@ export default function LiveAttendanceCard({
         ) {
           const att = detail.payload.attendance;
 
+          // Strictly filter out events belonging to other employees
+          if (currentUserId && att.userId !== currentUserId) {
+            return;
+          }
+
           setAttendance((currentAttendance: any) => {
-            /*
-             * If there is no current attendance,
-             * accept the incoming attendance.
-             */
-            if (!currentAttendance) {
-              return att;
+            if (currentAttendance?.userId && att.userId !== currentAttendance.userId) {
+              return currentAttendance;
             }
-
-            /*
-             * Update only if it belongs to the same user.
-             */
-            if (
-              att.id === currentAttendance.id ||
-              att.userId === currentAttendance.userId
-            ) {
-              return att;
-            }
-
-            return currentAttendance;
+            return att;
           });
         }
       } catch (error) {
@@ -145,27 +112,25 @@ export default function LiveAttendanceCard({
       }
     };
 
-    window.addEventListener(
-      'persevex-realtime',
-      handleRealtime
-    );
+    window.addEventListener('persevex-realtime', handleRealtime);
 
     return () => {
-      window.removeEventListener(
-        'persevex-realtime',
-        handleRealtime
-      );
+      window.removeEventListener('persevex-realtime', handleRealtime);
     };
-  }, []);
+  }, [currentUserId]);
+
+
+  const [nowTick, setNowTick] = useState<Date>(new Date());
 
   /*
-   * Live clock.
+   * Live clock and second-by-second ticker.
    */
   useEffect(() => {
     setMounted(true);
 
     const updateTime = () => {
       const now = new Date();
+      setNowTick(now);
 
       setTime(
         now.toLocaleTimeString('en-US', {
@@ -183,6 +148,15 @@ export default function LiveAttendanceCard({
 
     return () => clearInterval(timer);
   }, []);
+
+  const liveDurationHMS = useMemo(() => {
+    if (!attendance?.checkInTime) return '00h 00m 00s';
+    if (attendance?.checkOutTime) {
+      return formatDurationHMSFormatted(attendance.checkInTime, attendance.checkOutTime);
+    }
+    return formatDurationHMSFormatted(attendance.checkInTime, null, nowTick);
+  }, [attendance, nowTick]);
+
 
   /*
    * CLOCK IN
@@ -564,13 +538,10 @@ export default function LiveAttendanceCard({
               Duration:{' '}
             </span>
 
-            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-
-              {attendance?.totalHours
-                ? `${attendance.totalHours} hrs`
-                : '0.00 hrs'}
-
+            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400" suppressHydrationWarning>
+              {mounted ? liveDurationHMS : '00h 00m 00s'}
             </span>
+
 
           </div>
 

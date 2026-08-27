@@ -51,8 +51,9 @@ export default async function TeamLeadMyAttendancePage() {
       </div>
 
       <div className="space-y-3">
-        <UnifiedAttendanceTable initialRecords={history} showTeamCol={false} />
+        <UnifiedAttendanceTable initialRecords={history} showTeamCol={false} currentUserId={session.id} />
       </div>
     </div>
   );
 }
+

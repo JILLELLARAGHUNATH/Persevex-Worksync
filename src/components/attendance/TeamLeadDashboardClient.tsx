@@ -15,6 +15,8 @@ import {
 import LiveAttendanceCard from './LiveAttendanceCard';
 import { useRouter } from 'next/navigation';
 
+import { getIndiaDateKey } from '@/lib/utils';
+
 export default function TeamLeadDashboardClient({
   teamMembers,
   initialAttendances,
@@ -52,7 +54,7 @@ export default function TeamLeadDashboardClient({
     setAttendances(initialAttendances);
   }, [initialAttendances]);
 
-  // Real-time synchronization via SSE
+  // Real-time synchronization via SSE (strictly scoped to Squad + TL)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       try {
@@ -62,11 +64,15 @@ export default function TeamLeadDashboardClient({
         if (detail.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
           if (att) {
+            // Only accept if this user is in the Team Lead's squad or is the TL themselves
+            const isSquadMember = members.some((m) => m.id === att.userId) || att.userId === currentUserId;
+            if (!isSquadMember) return;
+
             setAttendances((prev) => {
               const idx = prev.findIndex(
                 (r) =>
                   r.id === att.id ||
-                  (r.userId === att.userId && getLocalDateKey(r.date) === getLocalDateKey(att.date))
+                  (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
               );
               if (idx >= 0) {
                 const copy = [...prev];
@@ -84,36 +90,24 @@ export default function TeamLeadDashboardClient({
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [router]);
+  }, [router, members, currentUserId]);
 
-  // Background refresh every 10s or on window focus
+  // Background refresh on window focus
   useEffect(() => {
     const onFocus = () => router.refresh();
     window.addEventListener('focus', onFocus);
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 10000);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') router.refresh();
+    });
 
     return () => {
       window.removeEventListener('focus', onFocus);
-      clearInterval(interval);
     };
   }, [router]);
 
   const now = new Date();
-  const getLocalDateKey = (d: any): string => {
-    if (!d) return '';
-    const date = new Date(d);
-    return (
-      date.getFullYear() +
-      '-' +
-      String(date.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(date.getDate()).padStart(2, '0')
-    );
-  };
+  const todayStr = getIndiaDateKey(now);
 
-  const todayStr = getLocalDateKey(now);
 
   // Active squad pool (Squad members + Team Lead)
   const activeSquadPool = useMemo(() => {
@@ -136,8 +130,9 @@ export default function TeamLeadDashboardClient({
     });
 
     if (datePreset === 'TODAY') {
-      matchingRecords = matchingRecords.filter((r) => getLocalDateKey(r.date) === todayStr);
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
     } else if (datePreset === 'WEEK') {
+
       const dayOfWeek = now.getDay();
       const distanceToMonday = (dayOfWeek + 6) % 7;
       const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday, 0, 0, 0, 0);
@@ -237,7 +232,8 @@ export default function TeamLeadDashboardClient({
   return (
     <div className="space-y-5">
       {/* 1. Compact Attendance Punch Marker for Team Lead */}
-      <LiveAttendanceCard initialAttendance={tlAttendance} />
+      <LiveAttendanceCard initialAttendance={tlAttendance} currentUserId={currentUserId} />
+
 
       {/* 2. Compact Filter Toolbar (Today, Week, Month, Year, Custom) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs transition-colors">

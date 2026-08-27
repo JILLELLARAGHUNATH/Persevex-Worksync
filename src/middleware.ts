@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getJwtSecretKey } from './lib/jwtSecret';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'persevex-super-secret-enterprise-key-2026-auth-jwt-token'
-);
 
 const ROLE_ROUTES: Record<string, string> = {
   MANAGER: '/manager',
@@ -35,8 +33,9 @@ export async function middleware(request: NextRequest) {
 
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, SECRET_KEY);
+      const { payload } = await jwtVerify(token, getJwtSecretKey());
       const userRole = (payload.role as string)?.toUpperCase();
+
 
       if (pathname === '/login') {
         const destination = ROLE_ROUTES[userRole] || '/employee';

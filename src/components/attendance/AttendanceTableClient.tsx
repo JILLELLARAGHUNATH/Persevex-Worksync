@@ -9,15 +9,9 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 
-function getLocalDateKey(dateInput: Date | string | null | undefined): string {
-  if (!dateInput) return '';
-  const d = new Date(dateInput);
-  if (isNaN(d.getTime())) return '';
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + day;
-}
+import { getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
+
+
 
 interface AttendanceTableProps {
   initialRecords: any[];
@@ -80,18 +74,30 @@ export default function AttendanceTableClient({
     return () => window.removeEventListener('persevex-realtime', handler as EventListener);
   }, []);
 
-  const now = new Date();
-  const localTodayKey = getLocalDateKey(now);
+  const [mounted, setMounted] = useState(false);
+  const [nowTick, setNowTick] = useState<Date>(new Date());
+
+  useEffect(() => {
+    setMounted(true);
+    const timer = setInterval(() => setNowTick(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+
+  const now = nowTick;
+  const localTodayKey = getIndiaDateKey(now);
   const yesterdayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-  const localYesterdayKey = getLocalDateKey(yesterdayDate);
+  const localYesterdayKey = getIndiaDateKey(yesterdayDate);
   const startOfWeekDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 0, 0, 0, 0);
   const startOfMonthDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
   const endOfTodayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
+
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
       const recordDateObj = new Date(r.checkInTime || r.date);
-      const recordDateKey = getLocalDateKey(r.checkInTime || r.date);
+      const recordDateKey = getIndiaDateKey(r.checkInTime || r.date);
+
 
       if (datePreset === 'TODAY' && recordDateKey !== localTodayKey) return false;
       if (datePreset === 'YESTERDAY' && recordDateKey !== localYesterdayKey) return false;
@@ -354,9 +360,15 @@ export default function AttendanceTableClient({
                   <td className="p-4 text-amber-600 dark:text-amber-400 font-mono font-bold">
                     {formatTime(r.checkOutTime)}
                   </td>
-                  <td className="p-4 font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {r.totalHours} hrs
+                  <td className="p-4 font-mono font-semibold text-slate-800 dark:text-slate-200" suppressHydrationWarning>
+                    {r.checkInTime
+                      ? mounted
+                        ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.checkOutTime ? r.totalHours : nowTick)
+                        : (r.checkOutTime ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.totalHours) : 'In Progress')
+                      : '—'}
                   </td>
+
+
                   <td className="p-4">
                     <StatusBadge status={r.lateStatus} />
                   </td>

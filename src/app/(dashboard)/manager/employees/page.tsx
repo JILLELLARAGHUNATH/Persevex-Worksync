@@ -1,7 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import EmployeeTable from '@/components/employees/EmployeeTable';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerEmployeesPage() {
+
   const employees = await prisma.user.findMany({
     where: { isDeleted: false },
     include: { team: { include: { teamLead: true } } },

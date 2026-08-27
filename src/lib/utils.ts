@@ -1,35 +1,105 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+export { getIndiaWorkdayInfo, getIndiaDateKey, isSameIndiaWorkday } from './attendanceDate';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string | null | undefined): string {
+export function formatDate(date: Date | string | number | null | undefined): string {
   if (!date) return '--';
-  const d = new Date(date);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[d.getMonth()]} ${d.getDate().toString().padStart(2, '0')}, ${d.getFullYear()}`;
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '--';
+
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(d);
 }
 
-export function formatTime(date: Date | string | null | undefined): string {
+export function formatTime(date: Date | string | number | null | undefined): string {
   if (!date) return '--:--';
-  const d = new Date(date);
-  let hours = d.getHours();
-  const minutes = d.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  const strHours = hours.toString().padStart(2, '0');
-  return `${strHours}:${minutes} ${ampm}`;
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return '--:--';
+
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(d);
 }
 
-// Formats punch timestamps into accurate hours, minutes, and seconds
+// Formats punch timestamps into accurate hours, minutes, and seconds (HH:MM:SS)
+export function formatDurationHMS(
+  checkIn: Date | string | null | undefined,
+  checkOut?: Date | string | null | undefined,
+  nowOrFallback?: Date | number | string | null
+): string {
+  if (!checkIn) {
+    if (typeof nowOrFallback === 'number' && nowOrFallback > 0) {
+      const totalSec = Math.round(nowOrFallback * 3600);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+    return '00:00:00';
+  }
+
+  const startTime = new Date(checkIn).getTime();
+  if (isNaN(startTime)) return '00:00:00';
+
+  let endTime: number;
+  if (checkOut) {
+    endTime = new Date(checkOut).getTime();
+  } else if (nowOrFallback instanceof Date) {
+    endTime = nowOrFallback.getTime();
+  } else if (typeof nowOrFallback === 'string' && !isNaN(new Date(nowOrFallback).getTime())) {
+    endTime = new Date(nowOrFallback).getTime();
+  } else if (typeof nowOrFallback === 'number' && nowOrFallback > 0) {
+    const totalSec = Math.round(nowOrFallback * 3600);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  } else {
+    endTime = Date.now();
+  }
+
+  const diffMs = Math.max(0, endTime - startTime);
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+// Formats punch timestamps into human-readable formatted string (e.g. 08h 30m 15s)
+export function formatDurationHMSFormatted(
+  checkIn: Date | string | null | undefined,
+  checkOut?: Date | string | null | undefined,
+  nowOrFallback?: Date | number | string | null
+): string {
+  if (!checkIn && (typeof nowOrFallback !== 'number' || nowOrFallback <= 0)) {
+    return '00h 00m 00s';
+  }
+
+  const digital = formatDurationHMS(checkIn, checkOut, nowOrFallback);
+  const [h, m, s] = digital.split(':');
+  return `${h}h ${m}m ${s}s`;
+}
+
+// Formats punch timestamps into concise hours and minutes
 export function formatAttendanceDuration(
   checkIn: Date | string | null | undefined,
   checkOut: Date | string | null | undefined,
-  fallbackHours?: number | null
+  _fallbackHours?: number | null
 ): string {
+
   if (!checkIn) return '--';
   if (!checkOut) return 'In Progress';
 
@@ -53,12 +123,7 @@ export function formatAttendanceDuration(
 
 export function formatDuration(decimalHours: number | null | undefined): string {
   if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours) || decimalHours <= 0) {
-    return '0m';
+    return '00:00:00';
   }
-  const totalMinutes = Math.round(Number(decimalHours) * 60);
-  const hrs = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-  if (hrs === 0) return `${mins}m`;
-  if (mins === 0) return `${hrs}h`;
-  return `${hrs}h ${mins}m`;
+  return formatDurationHMS(null, null, decimalHours);
 }

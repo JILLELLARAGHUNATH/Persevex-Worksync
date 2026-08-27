@@ -1,134 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { getSession } from '@/lib/auth';
-
-import {
-  checkInAction,
-  checkOutAction,
-} from '@/actions/attendanceActions';
-
+import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+import { checkInAction, checkOutAction } from '@/actions/attendanceActions';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(
-  _request: NextRequest
-) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
 
     if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-        },
+        { success: false, error: 'Unauthorized' },
         {
           status: 401,
           headers: {
-            'Cache-Control':
-              'no-store, no-cache, must-revalidate, max-age=0',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
           },
         }
       );
     }
 
-    /*
-     * Get today's attendance.
-     *
-     * Search using checkInTime because this works more reliably
-     * across local development and Vercel deployment.
-     */
-
     const now = new Date();
+    const india = getIndiaWorkdayInfo(now);
 
-    /*
-     * Get the current date parts in Asia/Kolkata.
-     */
-
-    const indiaDateString =
-      new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Kolkata',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).format(now);
-
-    const [
-      year,
-      month,
-      day,
-    ] = indiaDateString
-      .split('-')
-      .map(Number);
-
-    /*
-     * Start of today in Indian time.
-     *
-     * IST = UTC + 5:30
-     */
-
-    const startOfTodayIST =
-      new Date(
-        Date.UTC(
-          year,
-          month - 1,
-          day,
-          -5,
-          -30,
-          0,
-          0
-        )
-      );
-
-    /*
-     * End of today in Indian time.
-     */
-
-    const endOfTodayIST =
-      new Date(
-        Date.UTC(
-          year,
-          month - 1,
-          day,
-          18,
-          29,
-          59,
-          999
-        )
-      );
-
-    const record =
-      await prisma.attendance.findFirst({
-        where: {
-          userId: session.id,
-
-          OR: [
-            {
-              checkInTime: {
-                gte: startOfTodayIST,
-                lte: endOfTodayIST,
-              },
-            },
-
-            {
-              date: {
-                gte: startOfTodayIST,
-                lte: endOfTodayIST,
-              },
-            },
-          ],
+    const record = await prisma.attendance.findFirst({
+      where: {
+        userId: session.id,
+        OR: [
+          { date: india.canonicalDate },
+          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        ],
+      },
+      include: {
+        user: {
+          include: { team: true },
         },
-
-        include: {
-          user: true,
-        },
-
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
     return NextResponse.json(
       {
@@ -137,30 +52,19 @@ export async function GET(
       },
       {
         status: 200,
-
         headers: {
-          'Cache-Control':
-            'no-store, no-cache, must-revalidate, max-age=0',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
           Pragma: 'no-cache',
           Expires: '0',
         },
       }
     );
   } catch (error) {
-    console.error(
-      'Attendance GET error:',
-      error
-    );
-
+    console.error('Attendance GET error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          'Failed to load attendance.',
-      },
+      { success: false, error: 'Failed to load attendance.' },
       {
         status: 500,
-
         headers: {
           'Cache-Control': 'no-store',
         },
@@ -169,19 +73,13 @@ export async function GET(
   }
 }
 
-
-export async function POST(
-  request: NextRequest
-) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
 
     if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-        },
+        { success: false, error: 'Unauthorized' },
         {
           status: 401,
           headers: {
@@ -192,91 +90,43 @@ export async function POST(
     }
 
     let body: any = {};
-
     try {
       body = await request.json();
     } catch {
       body = {};
     }
 
-    const op = (
-      body.op || ''
-    )
-      .toString()
-      .toLowerCase();
+    const op = (body.op || '').toString().toLowerCase();
 
-    /*
-     * CLOCK OUT
-     */
-
-    if (
-      op === 'checkout' ||
-      op === 'check_out' ||
-      op === 'check-out'
-    ) {
-      const res =
-        await checkOutAction();
-
-      return NextResponse.json(
-        res,
-        {
-          status:
-            res?.success
-              ? 200
-              : 400,
-
-          headers: {
-            'Cache-Control':
-              'no-store, no-cache, must-revalidate',
-          },
-        }
-      );
+    // CLOCK OUT
+    if (op === 'checkout' || op === 'check_out' || op === 'check-out') {
+      const res = await checkOutAction();
+      return NextResponse.json(res, {
+        status: res?.success ? 200 : 400,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      });
     }
 
+    // CLOCK IN
+    const coords = body?.coords || null;
+    const res = await checkInAction(coords);
 
-    /*
-     * CLOCK IN
-     */
-
-    const coords =
-      body?.coords || null;
-
-    const res =
-      await checkInAction(
-        coords
-      );
-
-    return NextResponse.json(
-      res,
-      {
-        status:
-          res?.success
-            ? 200
-            : 400,
-
-        headers: {
-          'Cache-Control':
-            'no-store, no-cache, must-revalidate',
-        },
-      }
-    );
-  } catch (error) {
-    console.error(
-      'Attendance POST error:',
-      error
-    );
-
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          'Attendance operation failed.',
+    return NextResponse.json(res, {
+      status: res?.success ? 200 : 400,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
+    });
+  } catch (error) {
+    console.error('Attendance POST error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Attendance operation failed.' },
       {
         status: 500,
         headers: {
-          'Cache-Control':
-            'no-store',
+          'Cache-Control': 'no-store',
         },
       }
     );

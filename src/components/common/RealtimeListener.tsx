@@ -29,6 +29,7 @@ export default function RealtimeListener() {
 
   useEffect(() => {
     let reconnectTimeout: any = null;
+    let backoffDelay = 3000;
 
     const connectSSE = () => {
       if (eventSourceRef.current) {
@@ -37,6 +38,10 @@ export default function RealtimeListener() {
 
       const eventSource = new EventSource('/api/realtime');
       eventSourceRef.current = eventSource;
+
+      eventSource.onopen = () => {
+        backoffDelay = 3000;
+      };
 
       eventSource.onmessage = (event) => {
         try {
@@ -86,7 +91,8 @@ export default function RealtimeListener() {
       eventSource.onerror = () => {
         eventSource.close();
         clearTimeout(reconnectTimeout);
-        reconnectTimeout = setTimeout(connectSSE, 3000);
+        reconnectTimeout = setTimeout(connectSSE, backoffDelay);
+        backoffDelay = Math.min(backoffDelay * 1.5, 15000);
       };
     };
 
@@ -98,6 +104,7 @@ export default function RealtimeListener() {
         eventSourceRef.current.close();
       }
     };
+
   }, [router]);
 
   return null;

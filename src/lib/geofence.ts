@@ -25,9 +25,9 @@ export function haversineMeters(from: GeoCoords, to: GeoCoords): number {
 export function isLocationCheckEnabled(settings: any): boolean {
   if (process.env.ENABLE_LOCATION_CHECK === 'false') return false;
   if (process.env.ENABLE_LOCATION_CHECK === 'true') return true;
-  if (settings?.enableLocationCheck === false) return false;
-  return true; // Enforced by default
+  return Boolean(settings?.enableLocationCheck);
 }
+
 
 export function assertWithinOfficeGeofence(
   settings: any,

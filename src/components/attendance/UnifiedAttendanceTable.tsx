@@ -20,16 +20,21 @@ import { exportAttendanceReport } from '@/actions/exportActions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
+import { getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
+
+
 export default function UnifiedAttendanceTable({
   initialRecords,
   teams = [],
   employees = [],
   showTeamCol = true,
+  currentUserId,
 }: {
   initialRecords: any[];
   teams?: any[];
   employees?: any[];
   showTeamCol?: boolean;
+  currentUserId?: string;
 }) {
   const router = useRouter();
   const [records, setRecords] = useState(initialRecords);
@@ -52,23 +57,21 @@ export default function UnifiedAttendanceTable({
   const [sortField, setSortField] = useState('checkInTime');
   const [sortAsc, setSortAsc] = useState(false);
 
-  const getLocalDateKey = (d: any): string => {
-    if (!d) return '';
-    const date = new Date(d);
-    return (
-      date.getFullYear() +
-      '-' +
-      String(date.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(date.getDate()).padStart(2, '0')
-    );
-  };
+  const [mounted, setMounted] = useState(false);
+  const [nowTick, setNowTick] = useState<Date>(new Date());
+  const now = nowTick;
 
-  const now = new Date();
+  useEffect(() => {
+    setMounted(true);
+    const timer = setInterval(() => setNowTick(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setRecords(initialRecords);
   }, [initialRecords]);
+
+
 
   // Real-time synchronization
   useEffect(() => {
@@ -78,11 +81,16 @@ export default function UnifiedAttendanceTable({
         if (detail?.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
           if (att) {
+            // For personal view (My Attendance), strictly filter out records for other users
+            if (!showTeamCol && currentUserId && att.userId !== currentUserId) {
+              return;
+            }
+
             setRecords((prev) => {
               const idx = prev.findIndex(
                 (r) =>
                   r.id === att.id ||
-                  (r.userId === att.userId && getLocalDateKey(r.date) === getLocalDateKey(att.date))
+                  (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
               );
 
               // Preserve or hydrate user object if missing
@@ -113,10 +121,10 @@ export default function UnifiedAttendanceTable({
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [employees, router]);
+  }, [employees, router, showTeamCol, currentUserId]);
 
-  const todayStr = getLocalDateKey(now);
-  const yesterdayStr = getLocalDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const todayStr = getIndiaDateKey(now);
+  const yesterdayStr = getIndiaDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
   const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
   const startOfLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);
   const endOfLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
@@ -124,11 +132,12 @@ export default function UnifiedAttendanceTable({
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
+
   const filtered = useMemo(() => {
     return records
       .filter((r) => {
         const recDate = new Date(r.date);
-        const recDateKey = getLocalDateKey(r.date);
+        const recDateKey = getIndiaDateKey(r.date);
 
         if (datePreset === 'TODAY' && recDateKey !== todayStr) return false;
         if (datePreset === 'YESTERDAY' && recDateKey !== yesterdayStr) return false;
@@ -221,13 +230,14 @@ export default function UnifiedAttendanceTable({
   // Find latest active check-in
   const latestCheckIn = useMemo(() => {
     const todayActive = records.filter(
-      (r) => getLocalDateKey(r.date) === todayStr && r.checkInTime
+      (r) => getIndiaDateKey(r.date) === todayStr && r.checkInTime
     );
     if (todayActive.length === 0) return null;
     return todayActive.sort(
       (a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime()
     )[0];
   }, [records, todayStr]);
+
 
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   const paginated = useMemo(() => {
@@ -497,8 +507,9 @@ export default function UnifiedAttendanceTable({
                     <td className="p-4">
                       <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         {r.user?.fullName || 'Employee'}
-                        {i === 0 && r.checkInTime && getLocalDateKey(r.date) === todayStr && (
+                        {i === 0 && r.checkInTime && getIndiaDateKey(r.date) === todayStr && (
                           <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-1.5 py-0.2 rounded font-bold">
+
                             Latest
                           </span>
                         )}
@@ -516,9 +527,15 @@ export default function UnifiedAttendanceTable({
                     <td className="p-4 font-mono font-bold text-amber-600 dark:text-amber-400">
                       {r.checkOutTime ? formatTime(r.checkOutTime) : '—'}
                     </td>
-                    <td className="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                      {r.totalHours ? `${r.totalHours} hrs` : r.checkInTime ? 'In Progress' : '—'}
+                    <td className="p-4 font-mono font-bold text-indigo-600 dark:text-indigo-400" suppressHydrationWarning>
+                      {r.checkInTime
+                        ? mounted
+                          ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.checkOutTime ? r.totalHours : nowTick)
+                          : (r.checkOutTime ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.totalHours) : 'In Progress')
+                        : '—'}
                     </td>
+
+
                     <td className="p-4">
                       {r.lateStatus === 'LATE' ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">

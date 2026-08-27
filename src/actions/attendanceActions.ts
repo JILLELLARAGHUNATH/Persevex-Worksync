@@ -4,31 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 import { revalidatePath } from 'next/cache';
-
-function getIndiaDateParts() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hourCycle: 'h23',
-  }).formatToParts(new Date());
-
-  const get = (type: string) =>
-    Number(parts.find((part) => part.type === type)?.value);
-
-  return {
-    year: get('year'),
-    month: get('month'),
-    day: get('day'),
-    hour: get('hour'),
-    minute: get('minute'),
-    second: get('second'),
-  };
-}
+import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+import { assertWithinOfficeGeofence } from '@/lib/geofence';
 
 export async function checkInAction(
   coords?: { lat: number; lng: number } | null
@@ -42,20 +19,27 @@ export async function checkInAction(
     };
   }
 
-  // Current date and time in India
-  const india = getIndiaDateParts();
+  // Get current date and time in India (Asia/Kolkata)
+  const now = new Date();
+  const india = getIndiaWorkdayInfo(now);
 
-  // Store the attendance date consistently as IST midnight converted to UTC
-  const today = new Date(
-    Date.UTC(india.year, india.month - 1, india.day - 1, 18, 30, 0, 0)
-  );
-
-  const existing = await prisma.attendance.findUnique({
+  // Check if an attendance record already exists for today's Indian workday
+  const existing = await prisma.attendance.findFirst({
     where: {
-      userId_date: {
-        userId: session.id,
-        date: today,
+      userId: session.id,
+      OR: [
+        { date: india.canonicalDate },
+        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+      ],
+    },
+    include: {
+      user: {
+        include: { team: true },
       },
+    },
+    orderBy: {
+      createdAt: 'desc',
     },
   });
 
@@ -63,131 +47,103 @@ export async function checkInAction(
     return {
       success: false,
       error: 'You have already checked in for today.',
+      data: existing,
     };
   }
 
-  // Get office settings
+  // Retrieve office configuration
   const settings = await prisma.systemSetting.findUnique({
     where: {
       id: 'global_config',
     },
   });
 
+  // Geofence validation
+  const geofenceResult = assertWithinOfficeGeofence(settings, coords);
+  if (!geofenceResult.ok) {
+    return {
+      success: false,
+      error: geofenceResult.error,
+    };
+  }
+
+  // Calculate late status based on office start time and grace period
   const officeStart = settings?.officeStartTime || '11:00';
   const grace = settings?.gracePeriodMinutes || 15;
-
   const [startH, startM] = officeStart.split(':').map(Number);
 
-  // Calculate cutoff in India time
   const currentMinutes = india.hour * 60 + india.minute;
+  const cutoffMinutes = (isNaN(startH) ? 11 : startH) * 60 + (isNaN(startM) ? 0 : startM) + (isNaN(grace) ? 15 : grace);
 
-  const cutoffMinutes =
-    startH * 60 +
-    startM +
-    grace;
+  const lateStatus = currentMinutes > cutoffMinutes ? 'LATE' : 'ON_TIME';
 
-  const lateStatus =
-    currentMinutes > cutoffMinutes
-      ? 'LATE'
-      : 'ON_TIME';
+  let attendanceRecord: any;
 
-  // Actual timestamp
-  const now = new Date();
-
-  // Geofence validation
-  const officeConfig = settings as any;
-
-  const enableLocation =
-    process.env.ENABLE_LOCATION_CHECK === 'true' ||
-    Boolean(officeConfig?.enableLocationCheck);
-
-  if (
-    enableLocation &&
-    officeConfig?.officeLatitude &&
-    officeConfig?.officeLongitude
-  ) {
-    const officeLat = Number(officeConfig.officeLatitude);
-    const officeLng = Number(officeConfig.officeLongitude);
-    const officeRadius = Number(
-      officeConfig.officeRadiusMeters || 100
-    );
-
-    if (
-      coords &&
-      typeof coords.lat === 'number' &&
-      typeof coords.lng === 'number'
-    ) {
-      const toRad = (v: number) => (v * Math.PI) / 180;
-
-      const R = 6371000;
-
-      const dLat = toRad(coords.lat - officeLat);
-      const dLon = toRad(coords.lng - officeLng);
-
-      const a =
-        Math.sin(dLat / 2) *
-          Math.sin(dLat / 2) +
-        Math.cos(toRad(officeLat)) *
-          Math.cos(toRad(coords.lat)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-
-      const c =
-        2 *
-        Math.atan2(
-          Math.sqrt(a),
-          Math.sqrt(1 - a)
-        );
-
-      const distance = R * c;
-
-      if (distance > officeRadius) {
-        return {
-          success: false,
-          error: `You are ${Math.round(
-            distance
-          )}m away from office (allowed: ${officeRadius}m).`,
-        };
-      }
+  if (existing) {
+    // Update existing placeholder record (e.g. from roster/leave)
+    attendanceRecord = await prisma.attendance.update({
+      where: { id: existing.id },
+      data: {
+        checkInTime: now,
+        status: 'PRESENT',
+        lateStatus,
+      },
+      include: {
+        user: {
+          include: { team: true },
+        },
+      },
+    });
+  } else {
+    // Create new attendance record for today
+    try {
+      attendanceRecord = await prisma.attendance.create({
+        data: {
+          userId: session.id,
+          date: india.canonicalDate,
+          checkInTime: now,
+          status: 'PRESENT',
+          lateStatus,
+        },
+        include: {
+          user: {
+            include: { team: true },
+          },
+        },
+      });
+    } catch {
+      // Handle unique constraint race condition fallback
+      attendanceRecord = await prisma.attendance.upsert({
+        where: {
+          userId_date: {
+            userId: session.id,
+            date: india.canonicalDate,
+          },
+        },
+        update: {
+          checkInTime: now,
+          status: 'PRESENT',
+          lateStatus,
+        },
+        create: {
+          userId: session.id,
+          date: india.canonicalDate,
+          checkInTime: now,
+          status: 'PRESENT',
+          lateStatus,
+        },
+        include: {
+          user: {
+            include: { team: true },
+          },
+        },
+      });
     }
   }
 
-  const attendance = await prisma.attendance.upsert({
-    where: {
-      userId_date: {
-        userId: session.id,
-        date: today,
-      },
-    },
-
-    update: {
-      checkInTime: now,
-      status: 'PRESENT',
-      lateStatus,
-    },
-
-    create: {
-      userId: session.id,
-      date: today,
-      checkInTime: now,
-      status: 'PRESENT',
-      lateStatus,
-    },
-  });
-
-  const attendanceWithUser =
-    await prisma.attendance.findUnique({
-      where: {
-        id: attendance.id,
-      },
-      include: {
-        user: true,
-      },
-    });
-
   appEvents.emit(EVENT_TYPES.ATTENDANCE_UPDATE, {
     status: 'CHECKED_IN',
-    attendance: attendanceWithUser,
+    attendance: attendanceRecord,
     userId: session.id,
     teamLeadId: session.teamId,
   });
@@ -201,7 +157,7 @@ export async function checkInAction(
 
   return {
     success: true,
-    data: attendanceWithUser,
+    data: attendanceRecord,
   };
 }
 
@@ -209,11 +165,27 @@ export async function checkOutAction(): Promise<{ success: boolean; error?: stri
   const session = await getSession();
   if (!session) return { success: false, error: 'Unauthorized: Please log in.' };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const india = getIndiaWorkdayInfo(now);
 
-  const record = await prisma.attendance.findUnique({
-    where: { userId_date: { userId: session.id, date: today } },
+  // Locate the existing attendance record for today's Indian workday
+  const record = await prisma.attendance.findFirst({
+    where: {
+      userId: session.id,
+      OR: [
+        { date: india.canonicalDate },
+        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+      ],
+    },
+    include: {
+      user: {
+        include: { team: true },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 
   if (!record || !record.checkInTime) {
@@ -221,10 +193,9 @@ export async function checkOutAction(): Promise<{ success: boolean; error?: stri
   }
 
   if (record.checkOutTime) {
-    return { success: false, error: 'You have already completed clock-out for today.' };
+    return { success: false, error: 'You have already completed clock-out for today.', data: record };
   }
 
-  const now = new Date();
   const diffMs = now.getTime() - new Date(record.checkInTime).getTime();
   const totalHours = parseFloat((Math.max(0, diffMs) / (1000 * 60 * 60)).toFixed(2));
 
@@ -234,7 +205,11 @@ export async function checkOutAction(): Promise<{ success: boolean; error?: stri
       checkOutTime: now,
       totalHours,
     },
-    include: { user: true },
+    include: {
+      user: {
+        include: { team: true },
+      },
+    },
   });
 
   appEvents.emit(EVENT_TYPES.ATTENDANCE_UPDATE, {

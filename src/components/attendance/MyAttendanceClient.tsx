@@ -14,7 +14,9 @@ import {
   Loader2
 } from 'lucide-react';
 import StatusBadge from '@/components/common/StatusBadge';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
+
+
 import { toast } from 'sonner';
 
 interface Props {
@@ -65,29 +67,33 @@ export default function MyAttendanceClient({
     return () => clearInterval(timer);
   }, []);
 
-  // Real-time synchronization
+  // Real-time synchronization (strictly isolated to current user)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       const custom = e as CustomEvent;
       if (custom.detail?.type === 'ATTENDANCE_UPDATE') {
         const att = custom.detail.payload?.attendance;
-        if (att) {
-          setTodayAtt(att);
-          setRecords((prev) => {
-            const idx = prev.findIndex((r) => r.id === att.id);
-            if (idx >= 0) {
-              const copy = [...prev];
-              copy[idx] = att;
-              return copy;
-            }
-            return [att, ...prev];
-          });
+        if (!att) return;
+
+        if (todayAtt?.userId && att.userId !== todayAtt.userId) {
+          return;
         }
+
+        setTodayAtt(att);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === att.id || (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = att;
+            return copy;
+          }
+          return [att, ...prev];
+        });
       }
     };
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, []);
+  }, [todayAtt]);
 
   const handleCheckIn = async () => {
     setLoading(true);
@@ -146,31 +152,26 @@ export default function MyAttendanceClient({
   const isCheckedIn = Boolean(todayAtt?.checkInTime);
   const isCheckedOut = Boolean(todayAtt?.checkOutTime);
 
+  // Calculate live current shift duration for today (HH:MM:SS)
   const todayLiveDuration = useMemo(() => {
-    if (!todayAtt?.checkInTime) return '0.00';
-    if (todayAtt?.checkOutTime && todayAtt?.totalHours) {
-      return Number(todayAtt.totalHours).toFixed(2);
+    if (!todayAtt?.checkInTime) return '00h 00m 00s';
+    if (todayAtt?.checkOutTime) {
+      return formatDurationHMSFormatted(todayAtt.checkInTime, todayAtt.checkOutTime);
     }
-    const checkInDate = new Date(todayAtt.checkInTime);
-    const diffMs = nowTick.getTime() - checkInDate.getTime();
-    const hours = Math.max(0, diffMs) / (1000 * 60 * 60);
-    return hours.toFixed(2);
+    return formatDurationHMSFormatted(todayAtt.checkInTime, null, nowTick);
   }, [todayAtt, nowTick]);
 
-  const getLocalDateKey = (d: Date | string) => {
-    const date = new Date(d);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  };
 
-  const todayKey = getLocalDateKey(nowTick);
-  const yesterdayKey = getLocalDateKey(new Date(nowTick.getFullYear(), nowTick.getMonth(), nowTick.getDate() - 1));
+  const todayKey = getIndiaDateKey(nowTick);
+  const yesterdayKey = getIndiaDateKey(new Date(nowTick.getFullYear(), nowTick.getMonth(), nowTick.getDate() - 1));
   const startOfWeek = new Date(nowTick.getFullYear(), nowTick.getMonth(), nowTick.getDate() - 6);
   const startOfMonth = new Date(nowTick.getFullYear(), nowTick.getMonth(), 1);
 
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
-      const rKey = getLocalDateKey(r.date);
+      const rKey = getIndiaDateKey(r.date);
       const rDate = new Date(r.date);
+
 
       if (datePreset === 'TODAY' && rKey !== todayKey) return false;
       if (datePreset === 'YESTERDAY' && rKey !== yesterdayKey) return false;
@@ -281,9 +282,10 @@ export default function MyAttendanceClient({
 
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Today's Duration</span>
-                <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1">
-                  {todayLiveDuration} hrs
+                <p className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1" suppressHydrationWarning>
+                  {mounted ? todayLiveDuration : '00h 00m 00s'}
                 </p>
+
                 <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                   Standard: 9.00 hrs shift
                 </span>
@@ -396,8 +398,9 @@ export default function MyAttendanceClient({
                         {formatTime(r.checkOutTime)}
                       </td>
                       <td className="p-4 font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {r.totalHours ? `${r.totalHours} hrs` : '0 hrs'}
+                        {r.checkInTime ? formatDurationHMSFormatted(r.checkInTime, r.checkOutTime, r.totalHours) : '—'}
                       </td>
+
                       <td className="p-4">
                         <StatusBadge status={r.lateStatus} />
                       </td>

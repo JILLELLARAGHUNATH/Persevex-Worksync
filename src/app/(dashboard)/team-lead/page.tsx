@@ -2,20 +2,36 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import TeamLeadDashboardClient from '@/components/attendance/TeamLeadDashboardClient';
 import Link from 'next/link';
+import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 
 export default async function TeamLeadDashboardPage() {
   const session = await getSession();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const india = getIndiaWorkdayInfo();
 
   const currentUser = await prisma.user.findUnique({
     where: { id: session!.id },
     include: { team: true },
   });
 
-  const tlAttendance = await prisma.attendance.findUnique({
-    where: { userId_date: { userId: session!.id, date: today } },
+  const tlAttendance = await prisma.attendance.findFirst({
+    where: {
+      userId: session!.id,
+      OR: [
+        { date: india.canonicalDate },
+        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+      ],
+    },
+    include: {
+      user: {
+        include: { team: true },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
+
 
   // 1. Resolve squads led by this Team Lead
   const ledTeams = await prisma.team.findMany({

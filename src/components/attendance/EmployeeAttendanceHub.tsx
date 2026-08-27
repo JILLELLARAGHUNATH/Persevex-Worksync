@@ -12,18 +12,20 @@ import {
   LogIn,
   LogOut
 } from 'lucide-react';
-import { formatTime } from '@/lib/utils';
+import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface Props {
   initialTodayAttendance: any;
   allRecords: any[];
   holidays?: any[];
+  currentUserId?: string;
 }
 
 export default function EmployeeAttendanceHub({
   initialTodayAttendance,
   allRecords = [],
+  currentUserId,
 }: Props) {
   const [todayAtt, setTodayAtt] = useState(initialTodayAttendance);
   const [records, setRecords] = useState(allRecords);
@@ -67,29 +69,35 @@ export default function EmployeeAttendanceHub({
     return () => clearInterval(timer);
   }, []);
 
-  // Real-time synchronization via SSE
+  // Real-time synchronization via SSE (strictly isolated to current user)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       const custom = e as CustomEvent;
       if (custom.detail?.type === 'ATTENDANCE_UPDATE') {
         const att = custom.detail.payload?.attendance;
-        if (att) {
-          setTodayAtt(att);
-          setRecords((prev) => {
-            const idx = prev.findIndex((r) => r.id === att.id);
-            if (idx >= 0) {
-              const copy = [...prev];
-              copy[idx] = att;
-              return copy;
-            }
-            return [att, ...prev];
-          });
+        if (!att) return;
+
+        // Ignore events for other users
+        if (currentUserId && att.userId !== currentUserId) {
+          return;
         }
+
+        setTodayAtt(att);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === att.id || (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = att;
+            return copy;
+          }
+          return [att, ...prev];
+        });
       }
     };
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, []);
+  }, [currentUserId]);
+
 
   // Punch in / out actions
   const handleCheckIn = async () => {
@@ -163,12 +171,8 @@ export default function EmployeeAttendanceHub({
   const isCheckedIn = Boolean(todayAtt?.checkInTime);
   const isCheckedOut = Boolean(todayAtt?.checkOutTime);
 
-  const formatYMD = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
+  const formatYMD = (d: any) => getIndiaDateKey(d);
+
 
   const monthOptions = [
     { value: 0, label: 'January' },
@@ -185,17 +189,15 @@ export default function EmployeeAttendanceHub({
     { value: 11, label: 'December' },
   ];
 
-  // Calculate live current shift duration for today
+  // Calculate live current shift duration for today (HH:MM:SS)
   const todayLiveDuration = useMemo(() => {
-    if (!todayAtt?.checkInTime) return '0.00';
-    if (todayAtt?.checkOutTime && todayAtt?.totalHours) {
-      return Number(todayAtt.totalHours).toFixed(2);
+    if (!todayAtt?.checkInTime) return '00h 00m 00s';
+    if (todayAtt?.checkOutTime) {
+      return formatDurationHMSFormatted(todayAtt.checkInTime, todayAtt.checkOutTime);
     }
-    const checkInDate = new Date(todayAtt.checkInTime);
-    const diffMs = nowTick.getTime() - checkInDate.getTime();
-    const hours = Math.max(0, diffMs) / (1000 * 60 * 60);
-    return hours.toFixed(2);
+    return formatDurationHMSFormatted(todayAtt.checkInTime, null, nowTick);
   }, [todayAtt, nowTick]);
+
 
   // Calculate daily dataset with explicit status colors for every day
   const { trendData, stats } = useMemo(() => {
@@ -357,10 +359,11 @@ export default function EmployeeAttendanceHub({
             <span className="text-slate-200 dark:text-slate-800">|</span>
             <div>
               <span className="text-[9px] text-slate-400 uppercase font-sans font-bold">Duration: </span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">
-                {todayLiveDuration} hrs
+              <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono" suppressHydrationWarning>
+                {mounted ? todayLiveDuration : '00h 00m 00s'}
               </span>
             </div>
+
           </div>
 
           {/* Punch Buttons */}

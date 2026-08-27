@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { getIndiaDateKey } from '@/lib/utils';
+
 export default function ManagerDashboardClient({
   initialEmployees,
   initialTeams,
@@ -70,7 +72,7 @@ export default function ManagerDashboardClient({
               const idx = prev.findIndex(
                 (r) =>
                   r.id === att.id ||
-                  (r.userId === att.userId && getLocalDateKey(r.date) === getLocalDateKey(att.date))
+                  (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
               );
               if (idx >= 0) {
                 const copy = [...prev];
@@ -104,17 +106,16 @@ export default function ManagerDashboardClient({
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
   }, []);
 
-  // Periodic background refresh (every 10s or when window regains focus)
+  // Periodic background refresh (when window regains focus or visibility)
   useEffect(() => {
     const onFocus = () => router.refresh();
     window.addEventListener('focus', onFocus);
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 10000);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') router.refresh();
+    });
 
     return () => {
       window.removeEventListener('focus', onFocus);
-      clearInterval(interval);
     };
   }, [router]);
 
@@ -123,6 +124,7 @@ export default function ManagerDashboardClient({
       const now = new Date();
       setCurrentTime(
         now.toLocaleTimeString('en-US', {
+          timeZone: 'Asia/Kolkata',
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
@@ -131,6 +133,7 @@ export default function ManagerDashboardClient({
       );
       setCurrentDateStr(
         now.toLocaleDateString('en-US', {
+          timeZone: 'Asia/Kolkata',
           weekday: 'short',
           month: 'short',
           day: 'numeric',
@@ -144,19 +147,8 @@ export default function ManagerDashboardClient({
   }, []);
 
   const now = new Date();
-  const getLocalDateKey = (d: any): string => {
-    if (!d) return '';
-    const date = new Date(d);
-    return (
-      date.getFullYear() +
-      '-' +
-      String(date.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(date.getDate()).padStart(2, '0')
-    );
-  };
+  const todayStr = getIndiaDateKey(now);
 
-  const todayStr = getLocalDateKey(now);
 
   // Active Employee Pool (Filtered by Team if chosen)
   const activeEmployeePool = useMemo(() => {
@@ -188,8 +180,9 @@ export default function ManagerDashboardClient({
     });
 
     if (datePreset === 'TODAY') {
-      matchingRecords = matchingRecords.filter((r) => getLocalDateKey(r.date) === todayStr);
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
     } else if (datePreset === 'WEEK') {
+
       const dayOfWeek = now.getDay();
       const distanceToMonday = (dayOfWeek + 6) % 7;
       const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday, 0, 0, 0, 0);
