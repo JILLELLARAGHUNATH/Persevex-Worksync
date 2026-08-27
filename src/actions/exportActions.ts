@@ -61,13 +61,18 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
 
   const whereClause: any = {};
   if (session.role === 'TEAM_LEAD') {
-    whereClause.user = { teamId: session.teamId };
+    whereClause.user = { teamId: session.teamId, role: { not: 'MANAGER' } };
   } else if (session.role === 'EMPLOYEE') {
     whereClause.userId = session.id;
   } else {
-    if (filters?.teamId) whereClause.user = { teamId: filters.teamId };
-    if (filters?.employeeId) whereClause.userId = filters.employeeId;
+    whereClause.user = { role: { not: 'MANAGER' } };
+    if (filters?.teamId) whereClause.user.teamId = filters.teamId;
+    if (filters?.employeeId) {
+      delete whereClause.user;
+      whereClause.userId = filters.employeeId;
+    }
   }
+
 
   if (filters?.status) {
     if (filters.status === 'PRESENT') {

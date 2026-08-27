@@ -109,10 +109,11 @@ export default function TeamLeadDashboardClient({
   const todayStr = getIndiaDateKey(now);
 
 
-  // Active squad pool (Squad members + Team Lead)
+  // Active squad pool (Squad members + Team Lead; Managers excluded)
   const activeSquadPool = useMemo(() => {
-    return members.filter((m) => !m.isDeleted && m.accountStatus !== 'SUSPENDED');
+    return members.filter((m) => !m.isDeleted && m.accountStatus !== 'SUSPENDED' && m.role !== 'MANAGER');
   }, [members]);
+
 
   const resetFilters = () => {
     setDatePreset('TODAY');

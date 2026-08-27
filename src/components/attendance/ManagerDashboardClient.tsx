@@ -150,9 +150,9 @@ export default function ManagerDashboardClient({
   const todayStr = getIndiaDateKey(now);
 
 
-  // Active Employee Pool (Filtered by Team if chosen)
+  // Active Employee Pool (Team Leads and Employees only - Managers do not mark shift attendance)
   const activeEmployeePool = useMemo(() => {
-    const valid = employees.filter((e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED');
+    const valid = employees.filter((e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED' && e.role !== 'MANAGER');
     if (selectedTeam) {
       return valid.filter((e) => e.teamId === selectedTeam);
     }
@@ -175,9 +175,11 @@ export default function ManagerDashboardClient({
   // ---------------------------------------------------------------------------
   const { summary, memberBreakdown } = useMemo(() => {
     let matchingRecords = attendances.filter((r) => {
+      if (r.user?.role === 'MANAGER') return false;
       if (selectedTeam && r.user?.teamId !== selectedTeam) return false;
       return true;
     });
+
 
     if (datePreset === 'TODAY') {
       matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
