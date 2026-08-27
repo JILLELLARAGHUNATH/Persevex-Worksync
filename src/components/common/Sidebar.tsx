@@ -66,8 +66,9 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors">
       <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
         <Link href="/" className="block focus:outline-none">
-          <PersevexLogo size="sm" subtitle={role.replace(/_/g, ' ') + ' Portal'} />
+          <PersevexLogo size="sm" showWorkSyncTag={true} subtitle={role.replace(/_/g, ' ') + ' Portal'} className="!items-start" />
         </Link>
+
         {onCloseMobile && (
           <button onClick={onCloseMobile} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
             <X className="w-5 h-5" />

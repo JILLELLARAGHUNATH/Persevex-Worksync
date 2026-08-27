@@ -11,12 +11,12 @@ async function main() {
     await prisma.systemSetting.create({
       data: {
         id: 'global_config',
-        companyName: 'PERSEVEX Systems Corp',
+        companyName: 'Persevex Education Consultancy LLP',
         companyEmail: 'contact@persevex.com',
         officeStartTime: '09:00',
         officeEndTime: '18:00',
         gracePeriodMinutes: 15,
-        workingDays: 'Monday,Tuesday,Wednesday,Thursday,Friday',
+        workingDays: 'Monday,Tuesday,Thursday,Friday,Saturday,Sunday',
       },
     });
   }

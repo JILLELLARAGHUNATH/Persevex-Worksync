@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, User, Key, LogOut, Sun, Moon, CalendarCheck, Menu } from 'lucide-react';
 import { toast } from 'sonner';
+import PersevexLogo from './PersevexLogo';
+
 
 interface TopbarProps {
   user: {
@@ -135,7 +137,12 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        <Link href="/" className="lg:hidden flex items-center shrink-0">
+          <PersevexLogo size="sm" showWorkSyncTag={false} />
+        </Link>
       </div>
+
 
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Working Theme Switcher Button */}
