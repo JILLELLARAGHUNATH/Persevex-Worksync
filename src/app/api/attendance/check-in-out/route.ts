@@ -1,56 +1,284 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSession } from '@/lib/auth';
-import { checkInAction, checkOutAction } from '@/actions/attendanceActions';
+
+import {
+  checkInAction,
+  checkOutAction,
+} from '@/actions/attendanceActions';
+
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-export async function GET(_request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+export async function GET(
+  _request: NextRequest
+) {
+  try {
+    const session = await getSession();
 
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  const utcToday = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
+    if (!session) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        {
+          status: 401,
+          headers: {
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        }
+      );
+    }
 
-  // Robust check matching UTC date, local date, or today checkIn timestamp
-  const record = await prisma.attendance.findFirst({
-    where: {
-      userId: session.id,
-      OR: [
-        { date: utcToday },
-        { date: startOfToday },
-        { date: { gte: startOfToday, lte: endOfToday } },
-        { checkInTime: { gte: startOfToday, lte: endOfToday } },
-      ],
-    },
-    include: { user: true },
-    orderBy: { createdAt: 'desc' },
-  });
+    /*
+     * Get today's attendance.
+     *
+     * Search using checkInTime because this works more reliably
+     * across local development and Vercel deployment.
+     */
 
-  return NextResponse.json({ success: true, data: record || null });
+    const now = new Date();
+
+    /*
+     * Get the current date parts in Asia/Kolkata.
+     */
+
+    const indiaDateString =
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(now);
+
+    const [
+      year,
+      month,
+      day,
+    ] = indiaDateString
+      .split('-')
+      .map(Number);
+
+    /*
+     * Start of today in Indian time.
+     *
+     * IST = UTC + 5:30
+     */
+
+    const startOfTodayIST =
+      new Date(
+        Date.UTC(
+          year,
+          month - 1,
+          day,
+          -5,
+          -30,
+          0,
+          0
+        )
+      );
+
+    /*
+     * End of today in Indian time.
+     */
+
+    const endOfTodayIST =
+      new Date(
+        Date.UTC(
+          year,
+          month - 1,
+          day,
+          18,
+          29,
+          59,
+          999
+        )
+      );
+
+    const record =
+      await prisma.attendance.findFirst({
+        where: {
+          userId: session.id,
+
+          OR: [
+            {
+              checkInTime: {
+                gte: startOfTodayIST,
+                lte: endOfTodayIST,
+              },
+            },
+
+            {
+              date: {
+                gte: startOfTodayIST,
+                lte: endOfTodayIST,
+              },
+            },
+          ],
+        },
+
+        include: {
+          user: true,
+        },
+
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: record || null,
+      },
+      {
+        status: 200,
+
+        headers: {
+          'Cache-Control':
+            'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
+  } catch (error) {
+    console.error(
+      'Attendance GET error:',
+      error
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          'Failed to load attendance.',
+      },
+      {
+        status: 500,
+
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
+  }
 }
 
-export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
-  let body: any = {};
+export async function POST(
+  request: NextRequest
+) {
   try {
-    body = await request.json();
-  } catch {
-    body = {};
+    const session = await getSession();
+
+    if (!session) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        {
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-store',
+          },
+        }
+      );
+    }
+
+    let body: any = {};
+
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
+    const op = (
+      body.op || ''
+    )
+      .toString()
+      .toLowerCase();
+
+    /*
+     * CLOCK OUT
+     */
+
+    if (
+      op === 'checkout' ||
+      op === 'check_out' ||
+      op === 'check-out'
+    ) {
+      const res =
+        await checkOutAction();
+
+      return NextResponse.json(
+        res,
+        {
+          status:
+            res?.success
+              ? 200
+              : 400,
+
+          headers: {
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate',
+          },
+        }
+      );
+    }
+
+
+    /*
+     * CLOCK IN
+     */
+
+    const coords =
+      body?.coords || null;
+
+    const res =
+      await checkInAction(
+        coords
+      );
+
+    return NextResponse.json(
+      res,
+      {
+        status:
+          res?.success
+            ? 200
+            : 400,
+
+        headers: {
+          'Cache-Control':
+            'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
+  } catch (error) {
+    console.error(
+      'Attendance POST error:',
+      error
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          'Attendance operation failed.',
+      },
+      {
+        status: 500,
+        headers: {
+          'Cache-Control':
+            'no-store',
+        },
+      }
+    );
   }
-
-  const op = (body.op || '').toString().toLowerCase();
-
-  if (op === 'checkout' || op === 'check_out' || op === 'check-out') {
-    const res = await checkOutAction();
-    return NextResponse.json(res, res?.success ? { status: 200 } : { status: 400 });
-  }
-
-  const coords = body?.coords || null;
-  const res = await checkInAction(coords);
-  return NextResponse.json(res, res?.success ? { status: 200 } : { status: 400 });
 }
