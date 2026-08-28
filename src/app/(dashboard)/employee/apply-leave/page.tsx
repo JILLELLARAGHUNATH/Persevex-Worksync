@@ -2,17 +2,21 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import ApplyLeaveClient from '@/components/leaves/ApplyLeaveClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ApplyLeavePage() {
   const session = await getSession();
 
-  const balances = await prisma.leaveBalance.findMany({
-    where: { userId: session!.id, year: new Date().getFullYear() },
-  });
-
-  const history = await prisma.leaveRequest.findMany({
-    where: { userId: session!.id },
-    orderBy: { createdAt: 'desc' },
-  });
+  const [balances, history] = await Promise.all([
+    prisma.leaveBalance.findMany({
+      where: { userId: session!.id, year: new Date().getFullYear() },
+    }),
+    prisma.leaveRequest.findMany({
+      where: { userId: session!.id },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
 
   return (
     <div className="space-y-4 max-w-4xl">

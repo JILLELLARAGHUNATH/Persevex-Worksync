@@ -5,6 +5,9 @@ import LeaveWorkflowTimeline from '@/components/leaves/LeaveWorkflowTimeline';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function MyLeavesPage() {
   const session = await getSession();
   const leaves = await prisma.leaveRequest.findMany({

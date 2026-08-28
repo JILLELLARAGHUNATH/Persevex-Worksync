@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import LeaveRequestsClient from '@/components/leaves/LeaveRequestsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TLLeavesPage() {
   const session = await getSession();
 

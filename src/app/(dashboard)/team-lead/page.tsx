@@ -4,62 +4,74 @@ import TeamLeadDashboardClient from '@/components/attendance/TeamLeadDashboardCl
 import Link from 'next/link';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TeamLeadDashboardPage() {
   const session = await getSession();
   const india = getIndiaWorkdayInfo();
 
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session!.id },
-    include: { team: true },
-  });
-
-  const tlAttendance = await prisma.attendance.findFirst({
-    where: {
-      userId: session!.id,
-      OR: [
-        { date: india.canonicalDate },
-        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-      ],
-    },
-    include: {
-      user: {
-        include: { team: true },
+  const [currentUser, tlAttendance, ledTeams] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session!.id },
+      include: { team: true },
+    }),
+    prisma.attendance.findFirst({
+      where: {
+        userId: session!.id,
+        OR: [
+          { date: india.canonicalDate },
+          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        ],
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      include: {
+        user: {
+          include: { team: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    prisma.team.findMany({
+      where: {
+        OR: [
+          { teamLeadId: session?.id },
+          { id: session?.teamId || '' },
+        ],
+        isActive: true,
+      },
+      select: { id: true, name: true },
+    }),
+  ]);
 
-
-  // 1. Resolve squads led by this Team Lead
-  const ledTeams = await prisma.team.findMany({
-    where: {
-      OR: [
-        { teamLeadId: session?.id },
-        { id: session?.teamId || '' },
-      ],
-      isActive: true,
-    },
-    select: { id: true, name: true },
-  });
   const ledTeamIds = ledTeams.map((t) => t.id);
   const primaryTeamName = ledTeams[0]?.name || currentUser?.team?.name || 'Squad';
 
-  // 2. Resolve team members assigned to squads led by this Team Lead
-  const assignedMembers = ledTeamIds.length > 0
-    ? await prisma.user.findMany({
-        where: {
-          teamId: { in: ledTeamIds },
-          isDeleted: false,
-        },
-        include: {
-          team: true,
-        },
-        orderBy: { fullName: 'asc' },
-      })
-    : [];
+  // 2. Resolve team members and pending leaves in parallel
+  const [assignedMembers, pendingTlLeaves] = await Promise.all([
+    ledTeamIds.length > 0
+      ? prisma.user.findMany({
+          where: {
+            teamId: { in: ledTeamIds },
+            isDeleted: false,
+          },
+          include: {
+            team: true,
+          },
+          orderBy: { fullName: 'asc' },
+        })
+      : Promise.resolve([]),
+    ledTeamIds.length > 0
+      ? prisma.leaveRequest.count({
+          where: {
+            currentStage: 'PENDING_TL',
+            user: { teamId: { in: ledTeamIds } },
+          },
+        })
+      : Promise.resolve(0),
+  ]);
 
   // Full squad pool including the Team Lead
   const fullSquadPool = [
@@ -75,16 +87,6 @@ export default async function TeamLeadDashboardPage() {
     },
     orderBy: { date: 'desc' },
   });
-
-  // 4. Resolve pending leaves count
-  const pendingTlLeaves = assignedMembers.length > 0
-    ? await prisma.leaveRequest.count({
-        where: {
-          currentStage: 'PENDING_TL',
-          userId: { in: squadUserIds },
-        },
-      })
-    : 0;
 
   return (
     <div className="space-y-4">

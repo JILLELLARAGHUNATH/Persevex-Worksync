@@ -16,14 +16,18 @@ import { useRouter } from 'next/navigation';
 
 import { getIndiaDateKey } from '@/lib/utils';
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function ManagerDashboardClient({
   initialEmployees,
   initialTeams,
   initialAttendances,
+  initialApprovedLeaves = EMPTY_ARRAY,
 }: {
   initialEmployees: any[];
   initialTeams: any[];
   initialAttendances: any[];
+  initialApprovedLeaves?: any[];
 }) {
   const router = useRouter();
 
@@ -31,6 +35,7 @@ export default function ManagerDashboardClient({
   const [employees, setEmployees] = useState<any[]>(initialEmployees);
   const [teams, setTeams] = useState<any[]>(initialTeams);
   const [attendances, setAttendances] = useState<any[]>(initialAttendances);
+  const [leavesList, setLeavesList] = useState<any[]>(initialApprovedLeaves);
 
   // 1. Filter States: TODAY, WEEK, MONTH, YEAR, CUSTOM
   const [datePreset, setDatePreset] = useState<'TODAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM'>('TODAY');
@@ -57,6 +62,10 @@ export default function ManagerDashboardClient({
   useEffect(() => {
     setAttendances(initialAttendances);
   }, [initialAttendances]);
+
+  useEffect(() => {
+    setLeavesList(initialApprovedLeaves);
+  }, [initialApprovedLeaves]);
 
   // Real-time synchronization
   useEffect(() => {
@@ -98,13 +107,26 @@ export default function ManagerDashboardClient({
           } else if (action === 'STATUS_TOGGLED' && user) {
             setEmployees((prev) => prev.map((x) => (x.id === user.id ? { ...x, accountStatus: user.accountStatus } : x)));
           }
+        } else if (detail.type === 'LEAVE_STATUS_CHANGED') {
+          const leave = detail.payload?.leave;
+          const stage = detail.payload?.stage || leave?.currentStage;
+          const leaveId = detail.payload?.leaveId || leave?.id;
+          if (stage === 'APPROVED' && leave) {
+            setLeavesList((prev) => {
+              const filtered = prev.filter((l) => l.id !== leaveId);
+              return [leave, ...filtered];
+            });
+          } else if (stage !== 'APPROVED' && leaveId) {
+            setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
+          }
+          router.refresh();
         }
       } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, []);
+  }, [router]);
 
   // Periodic background refresh (when window regains focus or visibility)
   useEffect(() => {
@@ -180,49 +202,57 @@ export default function ManagerDashboardClient({
       return true;
     });
 
+    let startRangeKey = todayStr;
+    let endRangeKey = todayStr;
 
     if (datePreset === 'TODAY') {
+      startRangeKey = todayStr;
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
     } else if (datePreset === 'WEEK') {
-
       const dayOfWeek = now.getDay();
       const distanceToMonday = (dayOfWeek + 6) % 7;
       const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(monday);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= monday && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'MONTH') {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(startOfMonth);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= startOfMonth && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'YEAR') {
       const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(startOfYear);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= startOfYear && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'CUSTOM') {
-      const s = customStart ? new Date(customStart) : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
-      const e = customEnd ? new Date(customEnd) : new Date(now);
+      startRangeKey = customStart || getIndiaDateKey(new Date(now.getTime() - 6 * 86400000));
+      endRangeKey = customEnd || todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= s && d <= e;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     }
 
-    // Categorize records and employees
+    // 1. Categorize Checked-In Records (Present & Late)
     const onTimeUsers = new Set<string>();
     const lateUsers = new Set<string>();
-    const leaveUsers = new Set<string>();
+    const checkedInUsers = new Set<string>();
 
     matchingRecords.forEach((r) => {
       if (activeEmployeePool.some((e) => e.id === r.userId)) {
-        if (r.status === 'ON_LEAVE') {
-          leaveUsers.add(r.userId);
-        } else if (r.status === 'PRESENT') {
+        if (r.status === 'PRESENT' || r.checkInTime) {
+          checkedInUsers.add(r.userId);
           if (r.lateStatus === 'LATE') {
             lateUsers.add(r.userId);
           } else {
@@ -232,12 +262,33 @@ export default function ManagerDashboardClient({
       }
     });
 
+    // 2. Categorize Approved Leaves independently based on inclusive date range
+    const leaveUsers = new Set<string>();
+    leavesList.forEach((leave) => {
+      if (leave.currentStage !== 'APPROVED') return;
+      if (!activeEmployeePool.some((e) => e.id === leave.userId)) return;
+
+      const leaveStartKey = getIndiaDateKey(leave.startDate);
+      const leaveEndKey = getIndiaDateKey(leave.endDate);
+
+      // Check if approved leave overlaps with the selected date or range
+      const isCovered = leaveStartKey <= endRangeKey && leaveEndKey >= startRangeKey;
+      if (isCovered) {
+        leaveUsers.add(leave.userId);
+      }
+    });
+
     const onTimeEmployees = activeEmployeePool.filter((e) => onTimeUsers.has(e.id));
     const lateEmployees = activeEmployeePool.filter((e) => lateUsers.has(e.id));
     const leaveEmployees = activeEmployeePool.filter((e) => leaveUsers.has(e.id));
-    const absentEmployees = activeEmployeePool.filter(
-      (e) => !onTimeUsers.has(e.id) && !lateUsers.has(e.id) && !leaveUsers.has(e.id)
-    );
+
+    // Absent: all active employees who have NOT checked in (Approved leave employees who did not check in are still included in Absent)
+    const absentEmployees = activeEmployeePool.filter((e) => !checkedInUsers.has(e.id));
+
+    // For chart partition: employees on approved leave who did not check in
+    const unpunchedLeaveEmployees = leaveEmployees.filter((e) => !checkedInUsers.has(e.id));
+    // For chart partition: unexcused absent employees (no check-in and no approved leave)
+    const unexcusedAbsentEmployees = absentEmployees.filter((e) => !leaveUsers.has(e.id));
 
     const onTimeCount = onTimeEmployees.length;
     const lateCount = lateEmployees.length;
@@ -253,6 +304,8 @@ export default function ManagerDashboardClient({
         lateCount,
         leaveCount,
         absentCount,
+        chartLeaveCount: unpunchedLeaveEmployees.length,
+        chartAbsentCount: unexcusedAbsentEmployees.length,
         totalWorkforce,
       },
       memberBreakdown: {
@@ -260,16 +313,17 @@ export default function ManagerDashboardClient({
         late: lateEmployees,
         leave: leaveEmployees,
         absent: absentEmployees,
+        unexcusedAbsent: unexcusedAbsentEmployees,
       },
     };
-  }, [datePreset, attendances, activeEmployeePool, todayStr, selectedTeam, customStart, customEnd]);
+  }, [datePreset, attendances, leavesList, activeEmployeePool, todayStr, selectedTeam, customStart, customEnd]);
 
-    const totalSlots = summary.totalWorkforce;
-    const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
-    const onTimePct = Math.round((summary.onTimeCount / totalSlots) * 100);
-    const latePct = Math.round((summary.lateCount / totalSlots) * 100);
-    const leavePct = Math.round((summary.leaveCount / totalSlots) * 100);
-    const absentPct = Math.max(0, 100 - (onTimePct + latePct + leavePct));
+  const totalSlots = summary.totalWorkforce;
+  const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
+  const onTimePct = Math.round((summary.onTimeCount / totalSlots) * 100);
+  const latePct = Math.round((summary.lateCount / totalSlots) * 100);
+  const leavePct = Math.round((summary.leaveCount / totalSlots) * 100);
+  const absentPct = Math.round((summary.absentCount / totalSlots) * 100);
 
   // Current filter title
   const filterTitle =
@@ -768,10 +822,10 @@ export default function ManagerDashboardClient({
               <div
                 onMouseEnter={() => setHoveredSegment('LEAVE')}
                 onMouseLeave={() => setHoveredSegment(null)}
-                style={{ width: `${(summary.leaveCount / totalSlots) * 100}%` }}
+                style={{ width: `${((statusFilter === 'ON_LEAVE' ? summary.leaveCount : (summary.chartLeaveCount || summary.leaveCount)) / totalSlots) * 100}%` }}
                 className={`h-full bg-violet-500 transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
                   summary.onTimeCount === 0 && summary.lateCount === 0 ? 'rounded-l-md' : ''
-                } ${summary.absentCount === 0 ? 'rounded-r-md' : ''} ${
+                } ${(statusFilter ? summary.absentCount : summary.chartAbsentCount) === 0 ? 'rounded-r-md' : ''} ${
                   hoveredSegment === 'LEAVE' ? 'brightness-110 ring-2 ring-violet-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
@@ -807,13 +861,13 @@ export default function ManagerDashboardClient({
             )}
 
             {/* Segment 4: Absent */}
-            {summary.absentCount > 0 && (!statusFilter || statusFilter === 'ABSENT') && (
+            {(statusFilter ? summary.absentCount : summary.chartAbsentCount) > 0 && (!statusFilter || statusFilter === 'ABSENT') && (
               <div
                 onMouseEnter={() => setHoveredSegment('ABSENT')}
                 onMouseLeave={() => setHoveredSegment(null)}
-                style={{ width: `${(summary.absentCount / totalSlots) * 100}%` }}
+                style={{ width: `${((statusFilter === 'ABSENT' ? summary.absentCount : (summary.chartAbsentCount || summary.absentCount)) / totalSlots) * 100}%` }}
                 className={`h-full bg-rose-500 rounded-r-md transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
-                  summary.onTimeCount === 0 && summary.lateCount === 0 && summary.leaveCount === 0 ? 'rounded-l-md' : ''
+                  summary.onTimeCount === 0 && summary.lateCount === 0 && (statusFilter ? summary.leaveCount : summary.chartLeaveCount) === 0 ? 'rounded-l-md' : ''
                 } ${
                   hoveredSegment === 'ABSENT' ? 'brightness-110 ring-2 ring-rose-400/50 z-30' : 'hover:brightness-105'
                 }`}

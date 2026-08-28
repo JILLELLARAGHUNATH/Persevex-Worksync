@@ -44,3 +44,15 @@ export async function destroySession() {
   const cookieStore = await cookies();
   cookieStore.delete('persevex_session');
 }
+
+export async function updateSessionCookie(payload: UserSession) {
+  const cookieStore = await cookies();
+  const token = await signSessionToken(payload);
+  cookieStore.set('persevex_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 12 * 60 * 60,
+  });
+}

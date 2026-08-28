@@ -1,6 +1,9 @@
 import { getSession } from '@/lib/auth';
 import UnifiedReportsClient from '@/components/reports/UnifiedReportsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function EmployeeReportsPage() {
   const session = await getSession();
 

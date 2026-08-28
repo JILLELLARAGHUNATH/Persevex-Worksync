@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import UnifiedAttendanceTable from '@/components/attendance/UnifiedAttendanceTable';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TeamLeadMyAttendancePage() {
   const session = await getSession();
   if (!session) return null;

@@ -116,6 +116,20 @@ export default function EmployeeTable({
         item.id === emp.id ? { ...item, accountStatus: nextStatus } : item
       )
     );
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('persevex-realtime', {
+          detail: {
+            type: 'WORKFORCE_UPDATE',
+            payload: {
+              action: 'STATUS_TOGGLED',
+              user: { ...emp, accountStatus: nextStatus },
+              userId: emp.id,
+            },
+          },
+        })
+      );
+    }
     const res = await toggleMemberStatusAction(emp.id);
     if (res.success) {
       toast.success(`Account status set to ${nextStatus}`);
@@ -133,15 +147,30 @@ export default function EmployeeTable({
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
+    const targetName = deleteTarget.name;
     setDeleteLoading(true);
     // Immediate optimistic update
-    setEmployees((prev) => prev.filter((e) => e.id !== deleteTarget.id));
-    const res = await deleteEmployeeAction(deleteTarget.id);
+    setEmployees((prev) => prev.filter((e) => e.id !== targetId));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('persevex-realtime', {
+          detail: {
+            type: 'WORKFORCE_UPDATE',
+            payload: {
+              action: 'EMPLOYEE_DELETED',
+              userId: targetId,
+            },
+          },
+        })
+      );
+    }
+    const res = await deleteEmployeeAction(targetId);
     setDeleteLoading(false);
     setDeleteTarget(null);
 
     if (res.success) {
-      toast.success(deleteTarget.name + ' removed from directory.');
+      toast.success(targetName + ' removed from directory.');
       router.refresh();
     } else {
       toast.error(res.error || 'Failed to delete employee.');

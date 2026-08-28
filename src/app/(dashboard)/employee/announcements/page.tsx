@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import EmployeeAnnouncementCenter from '@/components/announcements/EmployeeAnnouncementCenter';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function EmployeeAnnouncementsPage() {
   const session = await getSession();
   if (!session) return null;

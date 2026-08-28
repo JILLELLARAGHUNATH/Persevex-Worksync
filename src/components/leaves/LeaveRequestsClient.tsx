@@ -30,6 +30,18 @@ export default function LeaveRequestsClient({
       try {
         const detail = (e as CustomEvent).detail;
         if (detail?.type === 'LEAVE_STATUS_CHANGED') {
+          if (detail.payload?.leave) {
+            const updated = detail.payload.leave;
+            setLeaves((prev) => {
+              const idx = prev.findIndex((l) => l.id === updated.id);
+              if (idx >= 0) {
+                const copy = [...prev];
+                copy[idx] = { ...copy[idx], ...updated };
+                return copy;
+              }
+              return [updated, ...prev];
+            });
+          }
           router.refresh();
         }
       } catch {}

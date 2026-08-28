@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import LeaveRequestsClient from '@/components/leaves/LeaveRequestsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerLeaveRequestsPage() {
   const leaves = await prisma.leaveRequest.findMany({
     include: { user: { include: { team: true } } },

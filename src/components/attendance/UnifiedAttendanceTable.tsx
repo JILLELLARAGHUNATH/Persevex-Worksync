@@ -22,22 +22,32 @@ import { useRouter } from 'next/navigation';
 
 import { getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
 
+const EMPTY_ARRAY: any[] = [];
 
 export default function UnifiedAttendanceTable({
-  initialRecords,
-  teams = [],
-  employees = [],
+  initialRecords = EMPTY_ARRAY,
+  teams = EMPTY_ARRAY,
+  employees = EMPTY_ARRAY,
+  approvedLeaves = EMPTY_ARRAY,
   showTeamCol = true,
   currentUserId,
+  defaultStatus,
 }: {
-  initialRecords: any[];
+  initialRecords?: any[];
   teams?: any[];
   employees?: any[];
+  approvedLeaves?: any[];
   showTeamCol?: boolean;
   currentUserId?: string;
+  defaultStatus?: string;
 }) {
   const router = useRouter();
   const [records, setRecords] = useState(initialRecords);
+  const [employeeList, setEmployeeList] = useState(employees);
+  const [leavesList, setLeavesList] = useState(approvedLeaves);
+
+  const initialStatusValue = defaultStatus !== undefined ? defaultStatus : (showTeamCol ? 'PRESENT' : '');
+
   const [search, setSearch] = useState('');
   const [datePreset, setDatePreset] = useState('TODAY');
   const [customStart, setCustomStart] = useState('');
@@ -45,7 +55,7 @@ export default function UnifiedAttendanceTable({
   const [teamFilter, setTeamFilter] = useState('');
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(initialStatusValue);
   const [checkInStatus, setCheckInStatus] = useState('');
   const [checkOutStatus, setCheckOutStatus] = useState('');
   const [punctualityFilter, setPunctualityFilter] = useState('');
@@ -71,14 +81,22 @@ export default function UnifiedAttendanceTable({
     setRecords(initialRecords);
   }, [initialRecords]);
 
+  useEffect(() => {
+    setEmployeeList(employees);
+  }, [employees]);
 
+  useEffect(() => {
+    setLeavesList(approvedLeaves);
+  }, [approvedLeaves]);
 
   // Real-time synchronization
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail;
-        if (detail?.type === 'ATTENDANCE_UPDATE') {
+        if (!detail) return;
+
+        if (detail.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
           if (att) {
             // For personal view (My Attendance), strictly filter out records for other users
@@ -98,7 +116,7 @@ export default function UnifiedAttendanceTable({
               if (!userObj && idx >= 0 && prev[idx].user) {
                 userObj = prev[idx].user;
               } else if (!userObj) {
-                const foundEmp = employees.find((emp) => emp.id === att.userId);
+                const foundEmp = employeeList.find((emp) => emp.id === att.userId);
                 if (foundEmp) userObj = foundEmp;
               }
 
@@ -115,13 +133,44 @@ export default function UnifiedAttendanceTable({
             // Smooth background refresh
             router.refresh();
           }
+        } else if (detail.type === 'WORKFORCE_UPDATE') {
+          const user = detail.payload?.user;
+          const action = detail.payload?.action;
+
+          if (action === 'EMPLOYEE_CREATED' && user) {
+            setEmployeeList((prev) => {
+              if (prev.some((x) => x.id === user.id)) return prev;
+              return [user, ...prev];
+            });
+          } else if (action === 'EMPLOYEE_UPDATED' && user) {
+            setEmployeeList((prev) => prev.map((x) => (x.id === user.id ? { ...x, ...user } : x)));
+          } else if (action === 'EMPLOYEE_DELETED' && detail.payload?.userId) {
+            setEmployeeList((prev) => prev.filter((x) => x.id !== detail.payload.userId));
+          } else if (action === 'STATUS_TOGGLED' && user) {
+            setEmployeeList((prev) =>
+              prev.map((x) => (x.id === user.id ? { ...x, accountStatus: user.accountStatus } : x))
+            );
+          }
+        } else if (detail.type === 'LEAVE_STATUS_CHANGED') {
+          const leave = detail.payload?.leave;
+          const stage = detail.payload?.stage || leave?.currentStage;
+          const leaveId = detail.payload?.leaveId || leave?.id;
+          if (stage === 'APPROVED' && leave) {
+            setLeavesList((prev) => {
+              const filtered = prev.filter((l) => l.id !== leaveId);
+              return [leave, ...filtered];
+            });
+          } else if (stage !== 'APPROVED' && leaveId) {
+            setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
+          }
+          router.refresh();
         }
-      } catch { }
+      } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [employees, router, showTeamCol, currentUserId]);
+  }, [employeeList, router, showTeamCol, currentUserId]);
 
   const todayStr = getIndiaDateKey(now);
   const yesterdayStr = getIndiaDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
@@ -132,9 +181,81 @@ export default function UnifiedAttendanceTable({
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
+  // Combine recorded attendance + logically generated absent/on-leave employees
+  const combinedRecords = useMemo(() => {
+    let activePool: any[] = [];
+    if (showTeamCol) {
+      activePool = employeeList.filter(
+        (e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED' && e.role !== 'MANAGER'
+      );
+    } else if (currentUserId) {
+      activePool = employeeList.filter(
+        (e) => e.id === currentUserId && !e.isDeleted && e.accountStatus !== 'SUSPENDED'
+      );
+    }
+
+    const targetDates: string[] = [];
+    if (datePreset === 'TODAY') {
+      targetDates.push(todayStr);
+    } else if (datePreset === 'YESTERDAY') {
+      targetDates.push(yesterdayStr);
+    } else if (datePreset === 'CUSTOM' && customStart && customEnd && customStart === customEnd) {
+      targetDates.push(customStart);
+    } else {
+      targetDates.push(todayStr);
+    }
+
+    const logicalRows: any[] = [];
+
+    targetDates.forEach((targetDateStr) => {
+      const recordedOnDate = records.filter(
+        (r) => getIndiaDateKey(r.date) === targetDateStr
+      );
+      const recordedUserIds = new Set(recordedOnDate.map((r) => r.userId));
+
+      activePool.forEach((emp) => {
+        if (!recordedUserIds.has(emp.id)) {
+          const isOnApprovedLeave = leavesList.some((l) => {
+            if (l.userId !== emp.id) return false;
+            if (l.currentStage !== 'APPROVED') return false;
+            const s = getIndiaDateKey(l.startDate);
+            const e = getIndiaDateKey(l.endDate);
+            return targetDateStr >= s && targetDateStr <= e;
+          });
+
+          logicalRows.push({
+            id: `logical-${isOnApprovedLeave ? 'leave' : 'absent'}-${emp.id}-${targetDateStr}`,
+            userId: emp.id,
+            date: targetDateStr,
+            checkInTime: null,
+            checkOutTime: null,
+            totalHours: 0,
+            status: isOnApprovedLeave ? 'ON_LEAVE' : 'ABSENT',
+            lateStatus: null,
+            user: emp,
+            isLogical: true,
+            isOnApprovedLeave,
+          });
+        }
+      });
+    });
+
+    return [...records, ...logicalRows];
+  }, [
+    records,
+    employeeList,
+    leavesList,
+    showTeamCol,
+    currentUserId,
+    datePreset,
+    customStart,
+    customEnd,
+    todayStr,
+    yesterdayStr,
+  ]);
 
   const filtered = useMemo(() => {
-    return records
+    return combinedRecords
       .filter((r) => {
         const recDate = new Date(r.date);
         const recDateKey = getIndiaDateKey(r.date);
@@ -153,9 +274,9 @@ export default function UnifiedAttendanceTable({
         if (search.trim()) {
           const q = search.toLowerCase();
           const name = r.user?.fullName?.toLowerCase() || '';
-          const id = r.user?.employeeId?.toLowerCase() || '';
+          const empId = r.user?.employeeId?.toLowerCase() || '';
           const email = r.user?.email?.toLowerCase() || '';
-          if (!name.includes(q) && !id.includes(q) && !email.includes(q)) return false;
+          if (!name.includes(q) && !empId.includes(q) && !email.includes(q)) return false;
         }
 
         if (teamFilter && r.user?.teamId !== teamFilter) return false;
@@ -169,6 +290,11 @@ export default function UnifiedAttendanceTable({
             if (r.status !== 'PRESENT' || r.lateStatus !== 'LATE') return false;
           } else if (statusFilter === 'ON_TIME') {
             if (r.status !== 'PRESENT' || r.lateStatus !== 'ON_TIME') return false;
+          } else if (statusFilter === 'ABSENT') {
+            // Absent = no check-in record for selected date
+            if (r.status !== 'ABSENT' && !r.isLogical && r.checkInTime) return false;
+          } else if (statusFilter === 'ON_LEAVE') {
+            if (r.status !== 'ON_LEAVE' && !r.isOnApprovedLeave) return false;
           } else {
             if (r.status !== statusFilter) return false;
           }
@@ -187,22 +313,30 @@ export default function UnifiedAttendanceTable({
         return true;
       })
       .sort((a, b) => {
-        // When sorting by checkInTime, prioritize newest check-in timestamps first
+        // When sorting by checkInTime, prioritize newest check-in timestamps first, then place non-checked-in alphabetically by name
         if (sortField === 'checkInTime') {
           const aTime = a.checkInTime ? new Date(a.checkInTime).getTime() : 0;
           const bTime = b.checkInTime ? new Date(b.checkInTime).getTime() : 0;
           if (aTime !== bTime) {
             return sortAsc ? aTime - bTime : bTime - aTime;
           }
+          const aName = a.user?.fullName || '';
+          const bName = b.user?.fullName || '';
+          return aName.localeCompare(bName);
         }
 
         // Fallback or date sort
         const aDate = new Date(a.checkInTime || a.date).getTime();
         const bDate = new Date(b.checkInTime || b.date).getTime();
-        return sortAsc ? aDate - bDate : bDate - aDate;
+        if (aDate !== bDate) {
+          return sortAsc ? aDate - bDate : bDate - aDate;
+        }
+        const aName = a.user?.fullName || '';
+        const bName = b.user?.fullName || '';
+        return aName.localeCompare(bName);
       });
   }, [
-    records,
+    combinedRecords,
     search,
     datePreset,
     customStart,
@@ -248,7 +382,14 @@ export default function UnifiedAttendanceTable({
   const handleExport = async (format: 'csv' | 'xlsx') => {
     try {
       toast.info(`Generating ${format.toUpperCase()} attendance export...`);
-      const res = await exportAttendanceReport({ format });
+      const res = await exportAttendanceReport({
+        format,
+        status: statusFilter || undefined,
+        datePreset,
+        customStart: customStart || undefined,
+        customEnd: customEnd || undefined,
+        teamId: teamFilter || undefined,
+      });
       if (res?.base64) {
         const link = document.createElement('a');
         link.href = `data:application/octet-stream;base64,${res.base64}`;
@@ -269,7 +410,7 @@ export default function UnifiedAttendanceTable({
     setTeamFilter('');
     setEmployeeFilter('');
     setRoleFilter('');
-    setStatusFilter('');
+    setStatusFilter(initialStatusValue);
     setCheckInStatus('');
     setCheckOutStatus('');
     setPunctualityFilter('');
@@ -422,8 +563,11 @@ export default function UnifiedAttendanceTable({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs"
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-8 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs text-slate-700 dark:text-slate-300 font-medium focus:outline-none cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="PRESENT">Present</option>

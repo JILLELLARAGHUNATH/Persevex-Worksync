@@ -15,16 +15,18 @@ import {
 import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY: any[] = [];
+
 interface Props {
   initialTodayAttendance: any;
-  allRecords: any[];
+  allRecords?: any[];
   holidays?: any[];
   currentUserId?: string;
 }
 
 export default function EmployeeAttendanceHub({
   initialTodayAttendance,
-  allRecords = [],
+  allRecords = EMPTY_ARRAY,
   currentUserId,
 }: Props) {
   const [todayAtt, setTodayAtt] = useState(initialTodayAttendance);
@@ -122,6 +124,15 @@ export default function EmployeeAttendanceHub({
       if (data?.success) {
         toast.success('Punched in successfully!');
         setTodayAtt(data.data);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === data.data.id || (r.userId === data.data.userId && getIndiaDateKey(r.date) === getIndiaDateKey(data.data.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = data.data;
+            return copy;
+          }
+          return [data.data, ...prev];
+        });
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('persevex-realtime', {
@@ -151,6 +162,15 @@ export default function EmployeeAttendanceHub({
       if (data?.success) {
         toast.success('Punched out successfully!');
         setTodayAtt(data.data);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === data.data.id || (r.userId === data.data.userId && getIndiaDateKey(r.date) === getIndiaDateKey(data.data.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = data.data;
+            return copy;
+          }
+          return [data.data, ...prev];
+        });
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('persevex-realtime', {
@@ -469,65 +489,124 @@ export default function EmployeeAttendanceHub({
             </div>
 
             {/* Clean Bar Chart */}
-            <div className="h-40 sm:h-44 flex items-end justify-between gap-1 sm:gap-1.5 px-0.5 pt-2 overflow-hidden">
-              {trendData.map((d: any) => {
+            <div className="h-44 sm:h-48 flex items-end justify-between gap-1 sm:gap-1.5 px-0.5 pt-2">
+              {trendData.map((d: any, idx: number) => {
                 const isHovered = hoveredDate === d.dateKey;
 
                 let heightPct = 0;
                 let barColor = 'bg-slate-200 dark:bg-slate-800';
-                let statusText = 'Absent';
+                let statusLabel = 'Absent';
+                let statusColorClass = 'text-rose-600 dark:text-rose-400';
 
                 if (d.status === 'PRESENT') {
                   heightPct = Math.min(100, Math.max(15, Math.round((d.hours / targetShiftHours) * 100)));
                   barColor = 'bg-emerald-500';
-                  statusText = d.lateStatus === 'LATE' ? 'Present (Late Arrival)' : 'Present (On-Time)';
+                  statusLabel = d.lateStatus === 'LATE' ? 'Late' : 'Present';
+                  statusColorClass = d.lateStatus === 'LATE' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
                 } else if (d.status === 'LEAVE') {
                   heightPct = 100;
                   barColor = 'bg-violet-500';
-                  statusText = 'Approved Leave';
+                  statusLabel = 'Approved Leave';
+                  statusColorClass = 'text-violet-600 dark:text-violet-400';
                 } else if (d.status === 'ABSENT' && d.isPastOrToday) {
                   heightPct = 85;
                   barColor = 'bg-rose-500';
-                  statusText = 'Unexcused Absence';
+                  statusLabel = 'Absent';
+                  statusColorClass = 'text-rose-600 dark:text-rose-400';
                 } else if (d.isWed) {
-                  statusText = 'Off (Wednesday)';
+                  statusLabel = 'Weekly Off (Wednesday)';
+                  statusColorClass = 'text-slate-400';
                   heightPct = 0;
                 }
+
+                const checkInDisplay = d.record?.checkInTime
+                  ? formatTime(d.record.checkInTime)
+                  : d.status === 'ABSENT' && d.isPastOrToday
+                  ? 'No check-in recorded'
+                  : '—';
+
+                const checkOutDisplay = d.record?.checkOutTime
+                  ? formatTime(d.record.checkOutTime)
+                  : d.isToday && d.record?.checkInTime
+                  ? '--:--'
+                  : '—';
+
+                const durationDisplay = d.record?.checkInTime
+                  ? d.record?.checkOutTime
+                    ? formatDurationHMSFormatted(d.record.checkInTime, d.record.checkOutTime, d.record.totalHours)
+                    : d.isToday
+                    ? formatDurationHMSFormatted(d.record.checkInTime, null, nowTick) + ' (Live)'
+                    : '—'
+                  : '—';
+
+                const punctualityDisplay = d.status === 'PRESENT'
+                  ? d.lateStatus === 'LATE'
+                    ? 'Late'
+                    : 'On Time'
+                  : null;
+
+                const tooltipAlignClass = idx < 3
+                  ? 'left-0'
+                  : idx > trendData.length - 4
+                  ? 'right-0'
+                  : 'left-1/2 -translate-x-1/2';
 
                 return (
                   <div
                     key={d.dateKey}
                     onMouseEnter={() => setHoveredDate(d.dateKey)}
                     onMouseLeave={() => setHoveredDate(null)}
+                    onClick={() => setHoveredDate(hoveredDate === d.dateKey ? null : d.dateKey)}
                     className="flex-1 flex flex-col items-center gap-1 h-full justify-end group cursor-pointer relative min-w-0"
                   >
-                    {/* Tooltip on Hover */}
+                    {/* Professional Tooltip on Hover / Touch */}
                     {isHovered && (
-                      <div className="absolute bottom-full mb-2 z-40 bg-slate-900 text-white border border-slate-800 p-2.5 rounded-xl shadow-xl text-xs min-w-[150px] pointer-events-none animate-in fade-in duration-100">
-                        <div className="font-semibold border-b border-slate-800 pb-1 mb-1 flex justify-between">
-                          <span>{d.fullFormattedDate}</span>
-                          {d.isToday && <span className="text-emerald-400 text-[9px] font-bold">TODAY</span>}
-                        </div>
-                        <div className="space-y-0.5 text-[11px]">
-                          <p className="flex justify-between">
-                            <span className="text-slate-400">Status:</span>
-                            <strong className="text-emerald-400 font-semibold">{statusText}</strong>
-                          </p>
-                          <p className="flex justify-between">
-                            <span className="text-slate-400">Duration:</span>
-                            <strong className="text-white font-mono">{d.hours} hrs {d.isToday && !d.record?.checkOutTime ? '(Live)' : ''}</strong>
-                          </p>
-                          {d.record?.checkInTime && (
-                            <p className="flex justify-between">
-                              <span className="text-slate-400">In:</span>
-                              <span className="font-mono text-emerald-400 font-medium">{formatTime(d.record.checkInTime)}</span>
-                            </p>
+                      <div className={`absolute bottom-full mb-2.5 z-50 bg-[#16243A] text-white border border-[#223450] p-3 rounded-xl shadow-2xl text-xs min-w-[210px] pointer-events-none animate-in fade-in zoom-in-95 duration-100 ${tooltipAlignClass}`}>
+                        <div className="font-semibold text-slate-100 border-b border-[#223450] pb-1.5 mb-2 flex items-center justify-between gap-2">
+                          <span className="font-medium text-xs text-slate-200">
+                            {d.dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </span>
+                          {d.isToday && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                              TODAY
+                            </span>
                           )}
-                          {d.record?.checkOutTime && (
-                            <p className="flex justify-between">
-                              <span className="text-slate-400">Out:</span>
-                              <span className="font-mono text-amber-400 font-medium">{formatTime(d.record.checkOutTime)}</span>
-                            </p>
+                        </div>
+
+                        <div className="space-y-1.5 text-[11px]">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-medium">Status:</span>
+                            <span className={`font-semibold ${statusColorClass}`}>{statusLabel}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-medium">Check-in:</span>
+                            <span className={`font-mono ${d.record?.checkInTime ? 'text-emerald-400 font-semibold' : 'text-slate-400'}`}>
+                              {checkInDisplay}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-medium">Check-out:</span>
+                            <span className={`font-mono ${d.record?.checkOutTime ? 'text-amber-400 font-semibold' : 'text-slate-400'}`}>
+                              {checkOutDisplay}
+                            </span>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-medium">Working Duration:</span>
+                            <span className={`font-mono ${durationDisplay !== '—' ? 'text-blue-400 font-semibold' : 'text-slate-400'}`}>
+                              {durationDisplay}
+                            </span>
+                          </div>
+
+                          {punctualityDisplay && (
+                            <div className="flex justify-between items-center pt-1 border-t border-[#223450]">
+                              <span className="text-slate-400 font-medium">Punctuality:</span>
+                              <span className={`font-semibold ${d.lateStatus === 'LATE' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                {punctualityDisplay}
+                              </span>
+                            </div>
                           )}
                         </div>
                       </div>

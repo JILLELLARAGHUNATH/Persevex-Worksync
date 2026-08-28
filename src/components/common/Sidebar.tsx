@@ -64,13 +64,13 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#16243A] border-r border-[#223450] transition-colors">
-      <div className="p-4 flex items-center justify-between border-b border-[#223450]">
-        <Link href="/" className="block focus:outline-none">
-          <PersevexLogo size="sm" showWorkSyncTag={true} subtitle={role.replace(/_/g, ' ') + ' PORTAL'} className="!items-start" />
+      <div className="p-3.5 sm:p-4 flex items-center justify-between border-b border-[#223450] min-w-0">
+        <Link href="/" className="block focus:outline-none min-w-0 flex-1">
+          <PersevexLogo size="sm" showWorkSyncTag={true} subtitle={role.replace(/_/g, ' ') + ' PORTAL'} className="!items-start max-w-full" />
         </Link>
 
         {onCloseMobile && (
-          <button onClick={onCloseMobile} className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer">
+          <button onClick={onCloseMobile} className="lg:hidden p-2 ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0" aria-label="Close Navigation">
             <X className="w-5 h-5" />
           </button>
         )}

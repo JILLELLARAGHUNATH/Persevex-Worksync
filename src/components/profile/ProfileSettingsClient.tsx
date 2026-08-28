@@ -40,6 +40,16 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
     if (res.success && res.user) {
       toast.success('Profile details updated successfully!');
       setProfile((prev: any) => ({ ...prev, ...res.user }));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: {
+              type: 'WORKFORCE_UPDATE',
+              payload: { action: 'EMPLOYEE_UPDATED', user: res.user, userId: res.user.id },
+            },
+          })
+        );
+      }
       router.refresh();
     } else {
       toast.error(res.error || 'Failed to update profile.');

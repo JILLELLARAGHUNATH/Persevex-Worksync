@@ -183,7 +183,15 @@ export default function TeamLeadDashboardClient({
     const onTimeEmployees = activeSquadPool.filter((e) => onTimeUsers.has(e.id));
     const lateEmployees = activeSquadPool.filter((e) => lateUsers.has(e.id));
     const leaveEmployees = activeSquadPool.filter((e) => leaveUsers.has(e.id));
+    // Independent Absent count = anyone with no check-in record for selected date
     const absentEmployees = activeSquadPool.filter(
+      (e) => !onTimeUsers.has(e.id) && !lateUsers.has(e.id)
+    );
+    // Unpunched leave employees for unique bar partitioning
+    const unpunchedLeaveEmployees = leaveEmployees.filter(
+      (e) => !onTimeUsers.has(e.id) && !lateUsers.has(e.id)
+    );
+    const unexcusedAbsentEmployees = activeSquadPool.filter(
       (e) => !onTimeUsers.has(e.id) && !lateUsers.has(e.id) && !leaveUsers.has(e.id)
     );
 
@@ -191,6 +199,8 @@ export default function TeamLeadDashboardClient({
     const lateCount = lateEmployees.length;
     const leaveCount = leaveEmployees.length;
     const absentCount = absentEmployees.length;
+    const unpunchedLeaveCount = unpunchedLeaveEmployees.length;
+    const unexcusedAbsentCount = unexcusedAbsentEmployees.length;
     const totalPresent = onTimeCount + lateCount;
     const totalSquad = activeSquadPool.length || 1;
 
@@ -201,6 +211,8 @@ export default function TeamLeadDashboardClient({
         lateCount,
         leaveCount,
         absentCount,
+        unpunchedLeaveCount,
+        unexcusedAbsentCount,
         totalSquad,
       },
       memberBreakdown: {
@@ -208,16 +220,18 @@ export default function TeamLeadDashboardClient({
         late: lateEmployees,
         leave: leaveEmployees,
         absent: absentEmployees,
+        unpunchedLeave: unpunchedLeaveEmployees,
+        unexcusedAbsent: unexcusedAbsentEmployees,
       },
     };
   }, [datePreset, attendances, activeSquadPool, todayStr, customStart, customEnd]);
 
-    const totalSlots = summary.totalSquad;
-    const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
-    const onTimePct = Math.round((summary.onTimeCount / totalSlots) * 100);
-    const latePct = Math.round((summary.lateCount / totalSlots) * 100);
-    const leavePct = Math.round((summary.leaveCount / totalSlots) * 100);
-    const absentPct = Math.max(0, 100 - (onTimePct + latePct + leavePct));
+  const totalSlots = summary.totalSquad;
+  const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
+  const onTimePct = Math.round((summary.onTimeCount / totalSlots) * 100);
+  const latePct = Math.round((summary.lateCount / totalSlots) * 100);
+  const leavePct = Math.round((summary.leaveCount / totalSlots) * 100);
+  const absentPct = Math.round((summary.absentCount / totalSlots) * 100);
 
   const filterTitle =
     datePreset === 'TODAY'
@@ -661,10 +675,10 @@ export default function TeamLeadDashboardClient({
               <div
                 onMouseEnter={() => setHoveredSegment('LEAVE')}
                 onMouseLeave={() => setHoveredSegment(null)}
-                style={{ width: `${(summary.leaveCount / totalSlots) * 100}%` }}
+                style={{ width: `${(summary.unpunchedLeaveCount / totalSlots) * 100}%` }}
                 className={`h-full bg-violet-500 transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
                   summary.onTimeCount === 0 && summary.lateCount === 0 ? 'rounded-l-md' : ''
-                } ${summary.absentCount === 0 ? 'rounded-r-md' : ''} ${
+                } ${summary.unexcusedAbsentCount === 0 ? 'rounded-r-md' : ''} ${
                   hoveredSegment === 'LEAVE' ? 'brightness-110 ring-2 ring-violet-400/50 z-30' : 'hover:brightness-105'
                 }`}
               >
@@ -704,9 +718,9 @@ export default function TeamLeadDashboardClient({
               <div
                 onMouseEnter={() => setHoveredSegment('ABSENT')}
                 onMouseLeave={() => setHoveredSegment(null)}
-                style={{ width: `${(summary.absentCount / totalSlots) * 100}%` }}
+                style={{ width: `${(summary.unexcusedAbsentCount / totalSlots) * 100}%` }}
                 className={`h-full bg-rose-500 rounded-r-md transition-all duration-200 relative group cursor-pointer flex items-center justify-center text-white text-xs font-mono font-bold ${
-                  summary.onTimeCount === 0 && summary.lateCount === 0 && summary.leaveCount === 0 ? 'rounded-l-md' : ''
+                  summary.onTimeCount === 0 && summary.lateCount === 0 && summary.unpunchedLeaveCount === 0 ? 'rounded-l-md' : ''
                 } ${
                   hoveredSegment === 'ABSENT' ? 'brightness-110 ring-2 ring-rose-400/50 z-30' : 'hover:brightness-105'
                 }`}

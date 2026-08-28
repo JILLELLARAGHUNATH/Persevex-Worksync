@@ -4,6 +4,9 @@ import { getSession } from '@/lib/auth';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 import { revalidatePath } from 'next/cache';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const settings = await prisma.systemSetting.findUnique({ where: { id: 'global_config' } });
   return NextResponse.json({ success: true, data: settings || null });

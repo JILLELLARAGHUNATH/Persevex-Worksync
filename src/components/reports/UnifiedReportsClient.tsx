@@ -5,10 +5,12 @@ import { FileSpreadsheet, Download, Loader2 } from 'lucide-react';
 import { exportAttendanceReport, exportWorkforceReport, exportLeaveReport, ReportFilters } from '@/actions/exportActions';
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function UnifiedReportsClient({
   role,
-  teams = [],
-  employees = [],
+  teams = EMPTY_ARRAY,
+  employees = EMPTY_ARRAY,
 }: {
   role: 'MANAGER' | 'TEAM_LEAD' | 'EMPLOYEE';
   teams?: any[];

@@ -61,6 +61,20 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
       if (!memberData?.id) {
         toast.info('Default password set to: Persevex@123', { duration: 6000 });
       }
+      if (typeof window !== 'undefined' && res.data) {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: {
+              type: 'WORKFORCE_UPDATE',
+              payload: {
+                action: memberData?.id ? 'EMPLOYEE_UPDATED' : 'EMPLOYEE_CREATED',
+                user: res.data,
+                userId: res.data.id,
+              },
+            },
+          })
+        );
+      }
       if (onSaved && res.data) {
         onSaved(res.data);
       }

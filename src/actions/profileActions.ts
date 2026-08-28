@@ -1,10 +1,11 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { getSession, updateSessionCookie } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
 import { createSafeAuditLog } from '@/lib/audit';
+import { appEvents, EVENT_TYPES } from '@/lib/events';
 
 export async function updateMyProfileAction(data: {
   fullName: string;
@@ -47,6 +48,18 @@ export async function updateMyProfileAction(data: {
         phone: phone ? phone.trim() : null,
         designation: designation ? designation.trim() : undefined,
       },
+      include: {
+        team: {
+          include: { teamLead: true },
+        },
+      },
+    });
+
+    // Refresh session cookie with updated identity info
+    await updateSessionCookie({
+      ...session,
+      fullName: updated.fullName,
+      email: updated.email,
     });
 
     await createSafeAuditLog({
@@ -57,10 +70,23 @@ export async function updateMyProfileAction(data: {
       details: `User updated profile information: ${fullName} (${cleanEmail})`,
     });
 
+    // Emit realtime workforce update so all connected Manager / Team Lead / Employee screens update immediately
+    appEvents.emit(EVENT_TYPES.WORKFORCE_UPDATE, {
+      action: 'EMPLOYEE_UPDATED',
+      user: updated,
+      userId: session.id,
+    });
+
     revalidatePath('/profile');
     revalidatePath('/manager');
+    revalidatePath('/manager/employees');
+    revalidatePath('/manager/attendance');
+    revalidatePath('/manager/teams');
     revalidatePath('/team-lead');
+    revalidatePath('/team-lead/team-members');
+    revalidatePath('/team-lead/my-attendance');
     revalidatePath('/employee');
+    revalidatePath('/employee/my-attendance');
 
     return { success: true, user: updated };
   } catch (err: any) {

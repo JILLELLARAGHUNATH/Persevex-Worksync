@@ -1,14 +1,25 @@
 import { prisma } from '@/lib/prisma';
 import UnifiedAttendanceTable from '@/components/attendance/UnifiedAttendanceTable';
 
-export default async function ManagerAttendancePage() {
-  const records = await prisma.attendance.findMany({
-    include: { user: { include: { team: true } } },
-    orderBy: { date: 'desc' },
-  });
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  const teams = await prisma.team.findMany({ where: { isActive: true } });
-  const employees = await prisma.user.findMany({ where: { isDeleted: false }, select: { id: true, fullName: true, employeeId: true } });
+export default async function ManagerAttendancePage() {
+  const [records, teams, employees, approvedLeaves] = await Promise.all([
+    prisma.attendance.findMany({
+      include: { user: { include: { team: true } } },
+      orderBy: { date: 'desc' },
+    }),
+    prisma.team.findMany({ where: { isActive: true } }),
+    prisma.user.findMany({
+      where: { isDeleted: false },
+      include: { team: true },
+      orderBy: { fullName: 'asc' },
+    }),
+    prisma.leaveRequest.findMany({
+      where: { currentStage: 'APPROVED' },
+    }),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -23,6 +34,7 @@ export default async function ManagerAttendancePage() {
         initialRecords={records}
         teams={teams}
         employees={employees}
+        approvedLeaves={approvedLeaves}
         showTeamCol={true}
       />
     </div>

@@ -5,14 +5,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ManagerEmployeesPage() {
-
-  const employees = await prisma.user.findMany({
-    where: { isDeleted: false },
-    include: { team: { include: { teamLead: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  const teams = await prisma.team.findMany({ where: { isActive: true } });
+  const [employees, teams] = await Promise.all([
+    prisma.user.findMany({
+      where: { isDeleted: false },
+      include: { team: { include: { teamLead: true } } },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.team.findMany({ where: { isActive: true } }),
+  ]);
 
   return (
     <div className="space-y-4">

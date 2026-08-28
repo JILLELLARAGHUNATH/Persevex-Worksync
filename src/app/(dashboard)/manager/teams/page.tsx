@@ -1,20 +1,24 @@
 import { prisma } from '@/lib/prisma';
 import TeamsManagementClient from '@/components/teams/TeamsManagementClient';
 
-export default async function ManagerTeamsPage() {
-  const teams = await prisma.team.findMany({
-    include: {
-      teamLead: true,
-      members: { where: { isDeleted: false } },
-    },
-    orderBy: { name: 'asc' },
-  });
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  const allUsers = await prisma.user.findMany({
-    where: { isDeleted: false },
-    include: { team: true },
-    orderBy: { fullName: 'asc' },
-  });
+export default async function ManagerTeamsPage() {
+  const [teams, allUsers] = await Promise.all([
+    prisma.team.findMany({
+      include: {
+        teamLead: true,
+        members: { where: { isDeleted: false } },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.user.findMany({
+      where: { isDeleted: false },
+      include: { team: true },
+      orderBy: { fullName: 'asc' },
+    }),
+  ]);
 
   return (
     <div className="space-y-4">

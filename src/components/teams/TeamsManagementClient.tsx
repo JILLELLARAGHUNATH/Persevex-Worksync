@@ -75,6 +75,13 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
     if (res.success) {
       toast.success(editingTeam ? 'Team updated!' : 'Team created!');
       setCreateModalOpen(false);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: { type: 'WORKFORCE_UPDATE', payload: { action: editingTeam ? 'TEAM_UPDATED' : 'TEAM_CREATED' } },
+          })
+        );
+      }
       router.refresh();
     } else {
       toast.error(res.error || 'Failed to save team.');
@@ -83,9 +90,17 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
     setLoading(true);
-    setTeams((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-    const res = await deleteTeamAction(deleteTarget.id);
+    setTeams((prev) => prev.filter((t) => t.id !== targetId));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('persevex-realtime', {
+          detail: { type: 'WORKFORCE_UPDATE', payload: { action: 'TEAM_DELETED', teamId: targetId } },
+        })
+      );
+    }
+    const res = await deleteTeamAction(targetId);
     setLoading(false);
     setDeleteTarget(null);
 
@@ -99,6 +114,13 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
   };
 
   const handleMoveMember = async (userId: string, newTeamId: string | null) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('persevex-realtime', {
+          detail: { type: 'WORKFORCE_UPDATE', payload: { action: 'MEMBER_MOVED', userId, teamId: newTeamId } },
+        })
+      );
+    }
     const res = await moveMemberTeamAction(userId, newTeamId);
     if (res.success) {
       toast.success('Member squad assignment updated.');

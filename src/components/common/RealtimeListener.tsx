@@ -74,6 +74,8 @@ export default function RealtimeListener() {
           } else if (data.type === 'WORKFORCE_UPDATE') {
             if (data.payload?.action === 'EMPLOYEE_CREATED') {
               toast.success('Workforce Updated', { description: `New employee ${data.payload?.user?.fullName || ''} added.` });
+            } else if (data.payload?.action === 'EMPLOYEE_UPDATED') {
+              toast.info('Workforce Updated', { description: `${data.payload?.user?.fullName || 'Employee'} profile was updated.` });
             } else if (data.payload?.action === 'EMPLOYEE_DELETED') {
               toast.info('Workforce Updated', { description: 'An employee record was archived.' });
             }

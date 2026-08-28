@@ -23,10 +23,12 @@ interface AttendanceTableProps {
   subtitle: string;
 }
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function AttendanceTableClient({
   initialRecords,
-  departments = [],
-  teams = [],
+  departments = EMPTY_ARRAY,
+  teams = EMPTY_ARRAY,
   showEmployeeCol = true,
   showDeptCol = true,
   title,

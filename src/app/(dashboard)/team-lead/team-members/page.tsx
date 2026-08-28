@@ -4,6 +4,9 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TLTeamMembersPage() {
   const session = await getSession();
 

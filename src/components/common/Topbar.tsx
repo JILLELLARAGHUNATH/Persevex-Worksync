@@ -20,6 +20,7 @@ interface TopbarProps {
 
 export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState(user);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -29,6 +30,10 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
 
   const notifRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
@@ -101,14 +106,30 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
 
   useEffect(() => {
     fetchNotifications();
-    const handleRealtimeEvent = () => fetchNotifications();
+    const handleRealtimeEvent = (e: Event) => {
+      fetchNotifications();
+      try {
+        const detail = (e as CustomEvent).detail;
+        if (detail?.type === 'WORKFORCE_UPDATE') {
+          const updatedUser = detail.payload?.user;
+          if (updatedUser && updatedUser.id === user.id) {
+            setCurrentUser((prev) => ({
+              ...prev,
+              fullName: updatedUser.fullName,
+              email: updatedUser.email,
+              role: updatedUser.role || prev.role,
+            }));
+          }
+        }
+      } catch {}
+    };
     window.addEventListener('persevex-realtime', handleRealtimeEvent);
     const interval = setInterval(fetchNotifications, 15000);
     return () => {
       window.removeEventListener('persevex-realtime', handleRealtimeEvent);
       clearInterval(interval);
     };
-  }, []);
+  }, [user.id]);
 
   const handleNotificationClick = async (link?: string) => {
     setNotifOpen(false);
@@ -139,8 +160,8 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link href="/" className="lg:hidden flex items-center shrink-0">
-          <PersevexLogo size="sm" showWorkSyncTag={false} />
+        <Link href="/" className="lg:hidden flex items-center shrink-0 focus:outline-none">
+          <PersevexLogo size="sm" showWorkSyncTag={true} contained={true} className="!items-start" />
         </Link>
       </div>
 
@@ -221,19 +242,19 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
             className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs text-white shadow-xs">
-              {user.fullName.charAt(0)}
+              {currentUser.fullName.charAt(0)}
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">{user.fullName}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-mono">{user.employeeId}</p>
+              <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">{currentUser.fullName}</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-mono">{currentUser.employeeId}</p>
             </div>
           </button>
 
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 animate-in fade-in duration-100">
               <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{user.fullName}</p>
-                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono capitalize">{user.role.toLowerCase().replace(/_/g, ' ')}</p>
+                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{currentUser.fullName}</p>
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono capitalize">{currentUser.role.toLowerCase().replace(/_/g, ' ')}</p>
               </div>
               <Link
                 href="/profile"

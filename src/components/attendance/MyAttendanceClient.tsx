@@ -19,16 +19,18 @@ import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } f
 
 import { toast } from 'sonner';
 
+const EMPTY_ARRAY: any[] = [];
+
 interface Props {
   todayAttendance: any;
-  allRecords: any[];
-  employeeName: string;
-  employeeId: string;
+  allRecords?: any[];
+  employeeName?: string;
+  employeeId?: string;
 }
 
 export default function MyAttendanceClient({
   todayAttendance,
-  allRecords = [],
+  allRecords = EMPTY_ARRAY,
 }: Props) {
   const [showHistory, setShowHistory] = useState(false);
   const [todayAtt, setTodayAtt] = useState(todayAttendance);
@@ -117,6 +119,22 @@ export default function MyAttendanceClient({
       if (data?.success) {
         toast.success('Punched in successfully!');
         setTodayAtt(data.data);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === data.data.id || (r.userId === data.data.userId && getIndiaDateKey(r.date) === getIndiaDateKey(data.data.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = data.data;
+            return copy;
+          }
+          return [data.data, ...prev];
+        });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('persevex-realtime', {
+              detail: { type: 'ATTENDANCE_UPDATE', payload: { status: 'CHECKED_IN', attendance: data.data } },
+            })
+          );
+        }
       } else {
         toast.error(data?.error || data?.message || 'Check-in failed');
       }
@@ -139,6 +157,22 @@ export default function MyAttendanceClient({
       if (data?.success) {
         toast.success('Punched out successfully!');
         setTodayAtt(data.data);
+        setRecords((prev) => {
+          const idx = prev.findIndex((r) => r.id === data.data.id || (r.userId === data.data.userId && getIndiaDateKey(r.date) === getIndiaDateKey(data.data.date)));
+          if (idx >= 0) {
+            const copy = [...prev];
+            copy[idx] = data.data;
+            return copy;
+          }
+          return [data.data, ...prev];
+        });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('persevex-realtime', {
+              detail: { type: 'ATTENDANCE_UPDATE', payload: { status: 'CHECKED_OUT', attendance: data.data } },
+            })
+          );
+        }
       } else {
         toast.error(data?.error || data?.message || 'Check-out failed');
       }

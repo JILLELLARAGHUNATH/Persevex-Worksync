@@ -1,21 +1,29 @@
 import { prisma } from '@/lib/prisma';
 import ManagerDashboardClient from '@/components/attendance/ManagerDashboardClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerDashboardPage() {
-  const employees = await prisma.user.findMany({
-    where: { isDeleted: false },
-    include: { team: true },
-  });
-
-  const teams = await prisma.team.findMany({
-    where: { isActive: true },
-    include: { teamLead: true },
-  });
-
-  const attendances = await prisma.attendance.findMany({
-    include: { user: { include: { team: true } } },
-    orderBy: { date: 'desc' },
-  });
+  const [employees, teams, attendances, approvedLeaves] = await Promise.all([
+    prisma.user.findMany({
+      where: { isDeleted: false },
+      include: { team: true },
+    }),
+    prisma.team.findMany({
+      where: { isActive: true },
+      include: { teamLead: true },
+    }),
+    prisma.attendance.findMany({
+      include: { user: { include: { team: true } } },
+      orderBy: { date: 'desc' },
+    }),
+    prisma.leaveRequest.findMany({
+      where: { currentStage: 'APPROVED' },
+      include: { user: { include: { team: true } } },
+      orderBy: { startDate: 'desc' },
+    }),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -30,6 +38,7 @@ export default async function ManagerDashboardPage() {
         initialEmployees={employees}
         initialTeams={teams}
         initialAttendances={attendances}
+        initialApprovedLeaves={approvedLeaves}
       />
     </div>
   );

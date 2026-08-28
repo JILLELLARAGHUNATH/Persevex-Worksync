@@ -3,38 +3,41 @@ import { prisma } from '@/lib/prisma';
 import EmployeeAttendanceHub from '@/components/attendance/EmployeeAttendanceHub';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function EmployeeDashboardPage() {
   const session = await getSession();
   const india = getIndiaWorkdayInfo();
 
-  const todayAttendance = await prisma.attendance.findFirst({
-    where: {
-      userId: session!.id,
-      OR: [
-        { date: india.canonicalDate },
-        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-      ],
-    },
-    include: {
-      user: {
-        include: { team: true },
+  const [todayAttendance, allRecords, userProfile] = await Promise.all([
+    prisma.attendance.findFirst({
+      where: {
+        userId: session!.id,
+        OR: [
+          { date: india.canonicalDate },
+          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        ],
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-
-  const allRecords = await prisma.attendance.findMany({
-    where: { userId: session!.id },
-    orderBy: { date: 'desc' },
-  });
-
-  const userProfile = await prisma.user.findUnique({
-    where: { id: session!.id },
-    include: { team: true },
-  });
+      include: {
+        user: {
+          include: { team: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    prisma.attendance.findMany({
+      where: { userId: session!.id },
+      orderBy: { date: 'desc' },
+    }),
+    prisma.user.findUnique({
+      where: { id: session!.id },
+      include: { team: true },
+    }),
+  ]);
 
   return (
     <div className="space-y-4">

@@ -66,6 +66,19 @@ export default function CreateAnnouncementModal({
 
     if (res.success) {
       toast.success(res.message || 'Announcement published!');
+      if (typeof window !== 'undefined' && (res as any).announcement) {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: {
+              type: 'SYSTEM_ANNOUNCEMENT',
+              payload: {
+                type: 'ANNOUNCEMENT_CREATED',
+                announcement: (res as any).announcement,
+              },
+            },
+          })
+        );
+      }
       onClose();
     } else {
       toast.error(res.error || 'Failed to publish announcement.');

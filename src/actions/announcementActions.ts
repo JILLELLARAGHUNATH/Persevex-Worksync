@@ -5,7 +5,13 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 
-export async function saveAnnouncementAction(formData: FormData): Promise<{ success: boolean; error?: string; message?: string }> {
+export async function saveAnnouncementAction(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+  message?: string;
+  announcement?: any;
+  announcementId?: string;
+}> {
   const session = await getSession();
   if (!session || session.role !== 'MANAGER') {
     return { success: false, error: 'Unauthorized: Only Managers can broadcast announcements.' };
@@ -21,6 +27,7 @@ export async function saveAnnouncementAction(formData: FormData): Promise<{ succ
   if (!title || !content) return { success: false, error: 'Title and content are required.' };
 
   try {
+    let createdAnnouncement: any = undefined;
     if (id) {
       await prisma.announcement.update({
         where: { id },
@@ -30,7 +37,7 @@ export async function saveAnnouncementAction(formData: FormData): Promise<{ succ
     } else {
       const count = await prisma.announcement.count();
       const announcementCode = `ANC-${count + 101}`;
-      const announcement = await prisma.announcement.create({
+      createdAnnouncement = await prisma.announcement.create({
         data: {
           announcementCode,
           title,
@@ -42,13 +49,18 @@ export async function saveAnnouncementAction(formData: FormData): Promise<{ succ
         },
       });
 
-      appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_CREATED', announcement });
+      appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_CREATED', announcement: createdAnnouncement });
     }
 
     revalidatePath('/manager/announcements');
     revalidatePath('/team-lead/announcements');
     revalidatePath('/employee/announcements');
-    return { success: true, message: id ? 'Announcement updated!' : 'Announcement published live!' };
+    return {
+      success: true,
+      message: id ? 'Announcement updated!' : 'Announcement published live!',
+      announcement: createdAnnouncement,
+      announcementId: id || undefined,
+    };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to save announcement' };
   }

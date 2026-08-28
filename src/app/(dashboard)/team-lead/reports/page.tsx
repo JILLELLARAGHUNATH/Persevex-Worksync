@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import UnifiedReportsClient from '@/components/reports/UnifiedReportsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function TLReportsPage() {
   const session = await getSession();
   const team = await prisma.team.findFirst({

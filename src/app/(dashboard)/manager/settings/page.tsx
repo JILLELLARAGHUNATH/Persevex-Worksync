@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import OfficeSettingsClient from '@/components/admin/OfficeSettingsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerSettingsPage() {
   const session = await getSession();
   const config = await prisma.systemSetting.findUnique({ where: { id: 'global_config' } });

@@ -1,9 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import UnifiedReportsClient from '@/components/reports/UnifiedReportsClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerReportsPage() {
-  const teams = await prisma.team.findMany({ where: { isActive: true } });
-  const employees = await prisma.user.findMany({ where: { isDeleted: false }, select: { id: true, fullName: true, employeeId: true } });
+  const [teams, employees] = await Promise.all([
+    prisma.team.findMany({ where: { isActive: true } }),
+    prisma.user.findMany({ where: { isDeleted: false }, select: { id: true, fullName: true, employeeId: true } }),
+  ]);
 
   return (
     <div className="space-y-4">
