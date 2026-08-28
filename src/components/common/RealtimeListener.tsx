@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
 export default function RealtimeListener() {
   const router = useRouter();
@@ -13,26 +12,7 @@ export default function RealtimeListener() {
   const isPollingRef = useRef<boolean>(false);
   const processedEventIdsRef = useRef<Set<string>>(new Set());
 
-  const playChime = () => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.28);
-    } catch {}
-  };
-
-  const handleIncomingEvent = (data: any, isFromSync = false) => {
+  const handleIncomingEvent = (data: any) => {
     if (!data || !data.type || data.type === 'CONNECTED') return;
 
     // Deduplicate rapid duplicate events
@@ -45,16 +25,7 @@ export default function RealtimeListener() {
       processedEventIdsRef.current.delete(eventKey);
     }, 8000);
 
-    // Play chime only for major system broadcasts and urgent notifications
-    if (
-      data.type === 'ANNOUNCEMENT_CREATED' ||
-      data.type === 'SYSTEM_ANNOUNCEMENT' ||
-      data.type === 'NOTIFICATION_RECEIVED'
-    ) {
-      playChime();
-    }
-
-    // Broadcast across local window components (triggers silent state updates for attendance tables, counts, dashboards)
+    // Broadcast across local window components (triggers silent state updates for attendance tables, counts, dashboards, and bell badge)
     window.dispatchEvent(new CustomEvent('persevex-realtime', { detail: data }));
 
     // Broadcast across other browser tabs
@@ -64,25 +35,7 @@ export default function RealtimeListener() {
       }
     } catch {}
 
-    // Show notifications ONLY for relevant non-attendance system events
-    // (Attendance updates are applied silently to dashboards, counts, and tables to prevent notification spam)
-    if (isFromSync || data.origin !== 'local') {
-      if (data.type === 'WORKFORCE_UPDATE') {
-        if (data.payload?.action === 'EMPLOYEE_CREATED') {
-          toast.success('Workforce Updated', { description: `New employee ${data.payload?.user?.fullName || ''} added.` });
-        } else if (data.payload?.action === 'EMPLOYEE_UPDATED') {
-          toast.info('Workforce Updated', { description: `${data.payload?.user?.fullName || 'Employee'} profile was updated.` });
-        } else if (data.payload?.action === 'EMPLOYEE_DELETED') {
-          toast.info('Workforce Updated', { description: 'An employee record was archived.' });
-        }
-      } else if (data.type === 'LEAVE_STATUS_CHANGED') {
-        toast.info('Leave Status Updated', { description: 'A leave request status was updated.' });
-      } else if (data.type === 'SYSTEM_ANNOUNCEMENT') {
-        toast.info('New Announcement', { description: data.payload?.announcement?.title || 'A new announcement was published.' });
-      }
-    }
-
-    // Refresh Server Components tree in background
+    // Refresh Server Components tree in background silently
     router.refresh();
   };
 
@@ -138,7 +91,7 @@ export default function RealtimeListener() {
           try {
             if (!event.data || event.data.startsWith(':')) return;
             const data = JSON.parse(event.data);
-            handleIncomingEvent(data, false);
+            handleIncomingEvent(data);
           } catch (err) {
             console.error('Realtime SSE parse error:', err);
           }
@@ -179,7 +132,7 @@ export default function RealtimeListener() {
 
           if (data.hasChanges && Array.isArray(data.events) && data.events.length > 0) {
             for (const ev of data.events) {
-              handleIncomingEvent(ev, true);
+              handleIncomingEvent(ev);
             }
           }
         }
@@ -190,7 +143,7 @@ export default function RealtimeListener() {
       }
     };
 
-    // Run sync check periodically only if SSE is disconnected or as an occasional heartbeat
+    // Run sync check periodically only if SSE is disconnected
     const syncInterval = setInterval(() => {
       if (!sseActiveRef.current) {
         runSyncCheck();
