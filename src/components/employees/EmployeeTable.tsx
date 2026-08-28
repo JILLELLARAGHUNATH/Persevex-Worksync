@@ -193,12 +193,12 @@ export default function EmployeeTable({
       const idx = prev.findIndex((x) => x.id === savedEmp.id);
       if (idx >= 0) {
         const copy = [...prev];
-        copy[idx] = savedEmp;
+        copy[idx] = { ...copy[idx], ...savedEmp };
         return copy;
       }
+      setTotalCount((c) => c + 1);
       return [savedEmp, ...prev.slice(0, pageSize - 1)];
     });
-    fetchEmployees(page, pageSize, search, teamFilter, roleFilter);
   };
 
   const handleToggleStatus = async (emp: any) => {

@@ -74,11 +74,18 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
 
     if (res.success) {
       toast.success(editingTeam ? 'Team updated!' : 'Team created!');
+      if (res.data) {
+        if (editingTeam) {
+          setTeams((prev) => prev.map((t) => (t.id === res.data.id ? { ...t, ...res.data } : t)));
+        } else {
+          setTeams((prev) => [res.data, ...prev]);
+        }
+      }
       setCreateModalOpen(false);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('persevex-realtime', {
-            detail: { type: 'WORKFORCE_UPDATE', payload: { action: editingTeam ? 'TEAM_UPDATED' : 'TEAM_CREATED' } },
+            detail: { type: 'WORKFORCE_UPDATE', payload: { action: editingTeam ? 'TEAM_UPDATED' : 'TEAM_CREATED', team: res.data } },
           })
         );
       }

@@ -263,20 +263,18 @@ export async function saveEmployeeAction(formData: FormData): Promise<{
         include: { team: true },
       });
 
-      // Create standard leave balances for new employee
+      // Create standard leave balances for new employee in a single batch query
       const leaveTypes = ['CASUAL', 'SICK', 'PAID', 'WORK_FROM_HOME', 'EMERGENCY'];
       const currentYear = new Date().getFullYear();
-      for (const lt of leaveTypes) {
-        await prisma.leaveBalance.create({
-          data: {
-            userId: newUser.id,
-            leaveType: lt,
-            totalQuota: lt === 'PAID' ? 18 : lt === 'CASUAL' ? 12 : 6,
-            usedQuota: 0,
-            year: currentYear,
-          },
-        });
-      }
+      await prisma.leaveBalance.createMany({
+        data: leaveTypes.map((lt) => ({
+          userId: newUser.id,
+          leaveType: lt,
+          totalQuota: lt === 'PAID' ? 18 : lt === 'CASUAL' ? 12 : 6,
+          usedQuota: 0,
+          year: currentYear,
+        })),
+      });
 
       // If created as TEAM_LEAD and teamId provided, link to team
       if (role === 'TEAM_LEAD' && teamId) {

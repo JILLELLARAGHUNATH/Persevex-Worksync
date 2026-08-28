@@ -5,7 +5,7 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 
-export async function createTeamAction(name: string, code: string, teamLeadId?: string | null): Promise<{ success: boolean; error?: string }> {
+export async function createTeamAction(name: string, code: string, teamLeadId?: string | null): Promise<{ success: boolean; error?: string; data?: any }> {
   const session = await getSession();
   if (!session || session.role !== 'MANAGER') return { success: false, error: 'Unauthorized' };
 
@@ -22,6 +22,7 @@ export async function createTeamAction(name: string, code: string, teamLeadId?: 
       code: code.trim().toUpperCase(),
       teamLeadId: teamLeadId || null,
     },
+    include: { teamLead: true, members: true },
   });
 
   if (teamLeadId) {
@@ -31,22 +32,23 @@ export async function createTeamAction(name: string, code: string, teamLeadId?: 
     });
   }
 
-  appEvents.emit(EVENT_TYPES.WORKFORCE_UPDATE, { action: 'TEAM_CREATED', teamId: team.id });
+  appEvents.emit(EVENT_TYPES.WORKFORCE_UPDATE, { action: 'TEAM_CREATED', teamId: team.id, team });
   revalidatePath('/manager/teams');
   revalidatePath('/manager/employees');
-  return { success: true };
+  return { success: true, data: team };
 }
 
-export async function updateTeamAction(id: string, name: string, teamLeadId?: string | null): Promise<{ success: boolean; error?: string }> {
+export async function updateTeamAction(id: string, name: string, teamLeadId?: string | null): Promise<{ success: boolean; error?: string; data?: any }> {
   const session = await getSession();
   if (!session || session.role !== 'MANAGER') return { success: false, error: 'Unauthorized' };
 
-  await prisma.team.update({
+  const updatedTeam = await prisma.team.update({
     where: { id },
     data: {
       name: name.trim(),
       teamLeadId: teamLeadId || null,
     },
+    include: { teamLead: true, members: true },
   });
 
   if (teamLeadId) {
@@ -56,10 +58,10 @@ export async function updateTeamAction(id: string, name: string, teamLeadId?: st
     });
   }
 
-  appEvents.emit(EVENT_TYPES.WORKFORCE_UPDATE, { action: 'TEAM_UPDATED', teamId: id });
+  appEvents.emit(EVENT_TYPES.WORKFORCE_UPDATE, { action: 'TEAM_UPDATED', teamId: id, team: updatedTeam });
   revalidatePath('/manager/teams');
   revalidatePath('/manager/employees');
-  return { success: true };
+  return { success: true, data: updatedTeam };
 }
 
 export async function deleteTeamAction(id: string): Promise<{ success: boolean; error?: string }> {

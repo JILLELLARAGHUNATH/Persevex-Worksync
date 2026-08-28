@@ -79,7 +79,6 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
         onSaved(res.data);
       }
       onClose();
-      router.refresh();
     } else {
       toast.error(res.error || 'Failed to save member.');
     }
