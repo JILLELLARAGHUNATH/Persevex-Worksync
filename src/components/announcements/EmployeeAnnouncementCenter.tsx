@@ -15,15 +15,33 @@ interface FeedProps {
 
 export default function EmployeeAnnouncementCenter({ announcements, currentUserId }: FeedProps) {
   const router = useRouter();
+  const [list, setList] = useState(announcements);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'UNREAD' | 'IMPORTANT'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<any | null>(null);
 
-  // Listen for instant realtime events and immediately refresh feed
   useEffect(() => {
-    const handleRealtime = () => {
-      router.refresh();
+    setList(announcements);
+  }, [announcements]);
+
+  // Listen for instant realtime events and immediately update feed
+  useEffect(() => {
+    const handleRealtime = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail;
+        if (detail?.type === 'SYSTEM_ANNOUNCEMENT') {
+          if (detail.payload?.type === 'ANNOUNCEMENT_CREATED' && detail.payload?.announcement) {
+            setList((prev) => [
+              detail.payload.announcement,
+              ...prev.filter((a) => a.id !== detail.payload.announcement.id),
+            ]);
+          } else if (detail.payload?.type === 'ANNOUNCEMENT_DELETED' && detail.payload?.announcementId) {
+            setList((prev) => prev.filter((a) => a.id !== detail.payload.announcementId));
+          }
+        }
+        router.refresh();
+      } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
@@ -31,7 +49,7 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
   }, [router]);
 
   const filtered = useMemo(() => {
-    return announcements.filter((a) => {
+    return list.filter((a) => {
       const isRead = a.reads?.some((r: any) => r.userId === currentUserId);
       const isImportant =
         a.priority === 'HIGH' ||
@@ -50,9 +68,9 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
 
       return matchSearch && matchCategory;
     });
-  }, [announcements, search, filter, categoryFilter, currentUserId]);
+  }, [list, search, filter, categoryFilter, currentUserId]);
 
-  const unreadCount = announcements.filter((a) => !a.reads?.some((r: any) => r.userId === currentUserId)).length;
+  const unreadCount = list.filter((a) => !a.reads?.some((r: any) => r.userId === currentUserId)).length;
 
   const handleMarkAllRead = async () => {
     await markAllAnnouncementsAsReadAction();

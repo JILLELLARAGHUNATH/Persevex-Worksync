@@ -59,7 +59,11 @@ export default function AttendanceTableClient({
         if (!att) return;
 
         setRecords((prev) => {
-          const idx = prev.findIndex((x) => x.id === att.id);
+          const idx = prev.findIndex(
+            (x) =>
+              x.id === att.id ||
+              (x.userId === att.userId && getIndiaDateKey(x.date) === getIndiaDateKey(att.date))
+          );
           if (idx >= 0) {
             const copy = [...prev];
             copy[idx] = att;

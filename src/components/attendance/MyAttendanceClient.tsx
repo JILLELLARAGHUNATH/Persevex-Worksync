@@ -69,6 +69,8 @@ export default function MyAttendanceClient({
     return () => clearInterval(timer);
   }, []);
 
+  const currentUserId = todayAttendance?.userId || allRecords[0]?.userId;
+
   // Real-time synchronization (strictly isolated to current user)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
@@ -77,7 +79,7 @@ export default function MyAttendanceClient({
         const att = custom.detail.payload?.attendance;
         if (!att) return;
 
-        if (todayAtt?.userId && att.userId !== todayAtt.userId) {
+        if (currentUserId && att.userId !== currentUserId) {
           return;
         }
 
@@ -95,7 +97,7 @@ export default function MyAttendanceClient({
     };
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [todayAtt]);
+  }, [currentUserId]);
 
   const handleCheckIn = async () => {
     setLoading(true);

@@ -264,8 +264,8 @@ export default function LiveAttendanceCard({
 
         toast.error(
           data?.error ||
-            data?.message ||
-            'Check-in failed'
+          data?.message ||
+          'Check-in failed'
         );
       }
     } catch (err: any) {
@@ -273,7 +273,7 @@ export default function LiveAttendanceCard({
 
       toast.error(
         err?.message ||
-          'Check-in failed'
+        'Check-in failed'
       );
     } finally {
       setLoading(false);
@@ -340,8 +340,8 @@ export default function LiveAttendanceCard({
       } else {
         toast.error(
           data?.error ||
-            data?.message ||
-            'Check-out failed'
+          data?.message ||
+          'Check-out failed'
         );
       }
     } catch (err: any) {
@@ -349,7 +349,7 @@ export default function LiveAttendanceCard({
 
       toast.error(
         err?.message ||
-          'Check-out failed'
+        'Check-out failed'
       );
     } finally {
       setLoading(false);
@@ -442,11 +442,11 @@ export default function LiveAttendanceCard({
           >
             {mounted
               ? new Date().toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
               : 'Today'}{' '}
             &middot; Main Shift: 11:00 AM – 8:00 PM (15m Grace)
           </p>

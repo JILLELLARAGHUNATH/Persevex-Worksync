@@ -82,7 +82,16 @@ export default function TeamLeadDashboardClient({
               return [att, ...prev];
             });
           }
-        } else if (detail.type === 'WORKFORCE_UPDATE' || detail.type === 'LEAVE_STATUS_CHANGED') {
+        } else if (detail.type === 'WORKFORCE_UPDATE') {
+          const user = detail.payload?.user;
+          const action = detail.payload?.action;
+          if (action === 'EMPLOYEE_UPDATED' && user) {
+            setMembers((prev) => prev.map((m) => (m.id === user.id ? { ...m, ...user } : m)));
+          } else if (action === 'EMPLOYEE_DELETED' && detail.payload?.userId) {
+            setMembers((prev) => prev.filter((m) => m.id !== detail.payload.userId));
+          }
+          router.refresh();
+        } else if (detail.type === 'LEAVE_STATUS_CHANGED') {
           router.refresh();
         }
       } catch {}

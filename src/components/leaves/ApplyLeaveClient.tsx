@@ -7,11 +7,39 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { formatDate } from '@/lib/utils';
 
 export default function ApplyLeaveClient({ history }: { balances?: any[]; history: any[] }) {
+  const [leaveHistory, setLeaveHistory] = useState(history);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isPending, startTransition] = React.useTransition();
 
-  const filteredHistory = history.filter((h) => {
+  React.useEffect(() => {
+    setLeaveHistory(history);
+  }, [history]);
+
+  React.useEffect(() => {
+    const handleRealtime = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.type === 'LEAVE_STATUS_CHANGED') {
+        const updated = detail.payload?.leave;
+        if (updated) {
+          setLeaveHistory((prev) => {
+            const idx = prev.findIndex((l) => l.id === updated.id);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = { ...copy[idx], ...updated };
+              return copy;
+            }
+            return [updated, ...prev];
+          });
+        }
+      }
+    };
+
+    window.addEventListener('persevex-realtime', handleRealtime);
+    return () => window.removeEventListener('persevex-realtime', handleRealtime);
+  }, []);
+
+  const filteredHistory = leaveHistory.filter((h) => {
     if (statusFilter !== 'ALL' && h.currentStage !== statusFilter) return false;
     return true;
   });

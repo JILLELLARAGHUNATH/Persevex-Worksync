@@ -163,7 +163,7 @@ function LoginForm() {
                   setIdentifier(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="name@persevex.com or EMP-001"
+                placeholder="Email or Employee ID"
                 className={`w-full h-9.5 bg-slate-50 dark:bg-slate-800/70 border rounded-lg pl-9 pr-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition font-mono ${
                   errorMessage ? 'border-rose-500 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-slate-200 dark:border-slate-700 focus:border-blue-500'
                 }`}
