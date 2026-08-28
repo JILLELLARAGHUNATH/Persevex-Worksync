@@ -9,11 +9,18 @@ import { formatDate } from '@/lib/utils';
 export default function ApplyLeaveClient({ history }: { balances?: any[]; history: any[] }) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [isPending, startTransition] = React.useTransition();
 
   const filteredHistory = history.filter((h) => {
     if (statusFilter !== 'ALL' && h.currentStage !== statusFilter) return false;
     return true;
   });
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      await applyLeaveAction(formData);
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -42,7 +49,7 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
           </div>
         </div>
 
-        <form action={applyLeaveAction} className="space-y-3.5 text-xs">
+        <form action={handleSubmit} className="space-y-3.5 text-xs">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Leave Type *</label>
             <select name="leaveType" className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer">
@@ -79,9 +86,18 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
           <div className="pt-2">
             <button
               type="submit"
-              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition shadow-xs text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              disabled={isPending}
+              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition shadow-xs text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send className="w-3.5 h-3.5" /> Submit Application
+              {isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" /> Submit Application
+                </>
+              )}
             </button>
           </div>
         </form>

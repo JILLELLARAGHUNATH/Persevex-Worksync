@@ -318,6 +318,88 @@ export async function saveEmployeeAction(formData: FormData): Promise<{
   }
 }
 
+export async function getEmployeesPaginatedAction(params: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  teamId?: string;
+  role?: string;
+}): Promise<{
+  success: boolean;
+  employees: any[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  error?: string;
+}> {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return {
+        success: false,
+        error: 'Unauthorized',
+        employees: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      };
+    }
+
+    const page = Math.max(1, Number(params?.page) || 1);
+    const pageSize = Math.max(1, Math.min(100, Number(params?.pageSize) || 20));
+    const skip = (page - 1) * pageSize;
+
+    const where: any = { isDeleted: false };
+    if (params?.search?.trim()) {
+      const q = params.search.trim();
+      where.OR = [
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { employeeId: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+    if (params?.teamId) {
+      where.teamId = params.teamId;
+    }
+    if (params?.role) {
+      where.role = params.role;
+    }
+
+    const [totalCount, employees] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        include: { team: { include: { teamLead: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+    ]);
+
+    return {
+      success: true,
+      employees,
+      totalCount,
+      page,
+      pageSize,
+      totalPages: Math.ceil(totalCount / pageSize),
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Failed to fetch employees.',
+      employees: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    };
+  }
+}
+
 // Aliases for seamless component compatibility
 export async function saveMemberAction(formData: FormData) {
   return saveEmployeeAction(formData);
