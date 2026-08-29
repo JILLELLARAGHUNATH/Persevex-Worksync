@@ -54,6 +54,19 @@ export default function AnnouncementManagerClient({
     if (res.success) {
       toast.success('Announcement deleted.');
       setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: {
+              type: 'SYSTEM_ANNOUNCEMENT',
+              payload: {
+                type: 'ANNOUNCEMENT_DELETED',
+                announcementId: id,
+              },
+            },
+          })
+        );
+      }
     } else {
       toast.error(res.error || 'Failed to delete');
     }

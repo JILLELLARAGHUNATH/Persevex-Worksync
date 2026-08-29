@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const now = new Date();
 
     // Query all entities updated since sinceDate in parallel
-    const [attendances, leaves, users, announcements, teams] = await Promise.all([
+    const [attendances, leaves, users, announcements, teams, auditLogs, notifications] = await Promise.all([
       prisma.attendance.findMany({
         where: { updatedAt: { gt: sinceDate } },
         include: {
@@ -59,13 +59,13 @@ export async function GET(req: NextRequest) {
         take: 30,
       }),
       prisma.announcement.findMany({
-        where: { createdAt: { gt: sinceDate } },
+        where: { updatedAt: { gt: sinceDate } },
         include: {
           createdBy: true,
           reads: true,
         },
-        orderBy: { createdAt: 'desc' },
-        take: 15,
+        orderBy: { updatedAt: 'desc' },
+        take: 20,
       }),
       prisma.team.findMany({
         where: { updatedAt: { gt: sinceDate } },
@@ -74,6 +74,22 @@ export async function GET(req: NextRequest) {
           members: true,
         },
         orderBy: { updatedAt: 'desc' },
+        take: 15,
+      }),
+      prisma.auditLog.findMany({
+        where: {
+          timestamp: { gt: sinceDate },
+          action: { in: ['ANNOUNCEMENT_DELETED', 'ANNOUNCEMENT_CREATED', 'TEAM_DELETED', 'EMPLOYEE_DELETED'] },
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 20,
+      }),
+      prisma.notification.findMany({
+        where: {
+          userId: session.id,
+          createdAt: { gt: sinceDate },
+        },
+        orderBy: { createdAt: 'desc' },
         take: 15,
       }),
     ]);
@@ -128,7 +144,32 @@ export async function GET(req: NextRequest) {
           type: 'ANNOUNCEMENT_CREATED',
           announcement: ann,
         },
-        timestamp: ann.createdAt.getTime(),
+        timestamp: ann.updatedAt.getTime(),
+      });
+    }
+
+    // Map audit logs (specifically deletions and critical mutations)
+    for (const log of auditLogs) {
+      if (log.action === 'ANNOUNCEMENT_DELETED') {
+        events.push({
+          type: 'SYSTEM_ANNOUNCEMENT',
+          payload: {
+            type: 'ANNOUNCEMENT_DELETED',
+            announcementId: log.target,
+          },
+          timestamp: log.timestamp.getTime(),
+        });
+      }
+    }
+
+    // Map user notifications
+    for (const notif of notifications) {
+      events.push({
+        type: 'NOTIFICATION_RECEIVED',
+        payload: {
+          notification: notif,
+        },
+        timestamp: notif.createdAt.getTime(),
       });
     }
 

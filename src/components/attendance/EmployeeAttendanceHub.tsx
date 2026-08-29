@@ -13,6 +13,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
+import { getBrowserLocation } from '@/lib/location';
 import { toast } from 'sonner';
 
 const EMPTY_ARRAY: any[] = [];
@@ -105,15 +106,8 @@ export default function EmployeeAttendanceHub({
   const handleCheckIn = async () => {
     setLoading(true);
     try {
-      let coords = null;
-      if (navigator.geolocation) {
-        try {
-          const pos = await new Promise<GeolocationPosition>((res, rej) => {
-            navigator.geolocation.getCurrentPosition(res, rej, { maximumAge: 60000, timeout: 5000 });
-          });
-          coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        } catch {}
-      }
+      const locResult = await getBrowserLocation();
+      const coords = locResult.coords;
 
       const res = await fetch('/api/attendance/check-in-out', {
         method: 'POST',
@@ -141,7 +135,7 @@ export default function EmployeeAttendanceHub({
           );
         }
       } else {
-        toast.error(data?.error || data?.message || 'Check-in failed');
+        toast.error(data?.error || data?.message || (locResult.error ? locResult.error : 'Check-in failed'));
       }
     } catch (err: any) {
       toast.error(err?.message || 'Check-in failed');

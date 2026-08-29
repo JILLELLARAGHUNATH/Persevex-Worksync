@@ -65,6 +65,23 @@ export default function LeaveRequestsClient({
 
     if (res.success) {
       toast.success(action === 'APPROVE' ? 'Leave approved successfully!' : 'Leave application rejected.');
+      if (res.leave) {
+        setLeaves((prev) => prev.map((l) => (l.id === id ? { ...l, ...res.leave } : l)));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('persevex-realtime', {
+            detail: {
+              type: 'LEAVE_STATUS_CHANGED',
+              payload: {
+                leaveId: id,
+                stage: nextStage,
+                leave: res.leave || { id, currentStage: nextStage },
+              },
+            },
+          })
+        );
+      }
       router.refresh();
     } else {
       toast.error(res.error || 'Action failed');
@@ -85,7 +102,7 @@ export default function LeaveRequestsClient({
   }, [leaves, filterStage, role]);
 
   const pendingCount = leaves.filter((l) =>
-    role === 'TEAM_LEAD' ? l.currentStage === 'PENDING_TL' : l.currentStage === 'PENDING_MANAGER'
+    role === 'TEAM_LEAD' ? l.currentStage === 'PENDING_TL' : (l.currentStage === 'PENDING_MANAGER' || l.currentStage === 'PENDING_TL')
   ).length;
 
   return (
@@ -168,7 +185,7 @@ export default function LeaveRequestsClient({
                       {formatDate(l.startDate)} &rarr; {formatDate(l.endDate)}
                     </td>
                     <td className="py-3 px-4 font-mono font-semibold text-slate-700 dark:text-slate-300">
-                      {l.daysCount} days
+                      {l.numberOfDays ?? l.daysCount ?? 1} days
                     </td>
                     <td className="py-3 px-4 max-w-xs truncate text-slate-500 dark:text-slate-400" title={l.reason}>
                       {l.reason}

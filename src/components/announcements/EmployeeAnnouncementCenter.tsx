@@ -73,8 +73,32 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
   const unreadCount = list.filter((a) => !a.reads?.some((r: any) => r.userId === currentUserId)).length;
 
   const handleMarkAllRead = async () => {
+    setList((prev) =>
+      prev.map((a) => ({
+        ...a,
+        reads: a.reads?.some((r: any) => r.userId === currentUserId)
+          ? a.reads
+          : [...(a.reads || []), { userId: currentUserId }],
+      }))
+    );
     await markAllAnnouncementsAsReadAction();
     toast.success('All announcements marked as read.');
+  };
+
+  const handleSelectAnnouncement = (a: any) => {
+    setSelectedAnnouncement(a);
+    setList((prev) =>
+      prev.map((item) =>
+        item.id === a.id
+          ? {
+              ...item,
+              reads: item.reads?.some((r: any) => r.userId === currentUserId)
+                ? item.reads
+                : [...(item.reads || []), { userId: currentUserId }],
+            }
+          : item
+      )
+    );
   };
 
   return (
@@ -115,7 +139,7 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
                 onClick={() => setFilter('ALL')}
                 className={'px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ' + (filter === 'ALL' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200')}
               >
-                All ({announcements.length})
+                All ({list.length})
               </button>
               <button
                 onClick={() => setFilter('UNREAD')}
@@ -163,7 +187,7 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
             return (
               <div
                 key={a.id}
-                onClick={() => setSelectedAnnouncement(a)}
+                onClick={() => handleSelectAnnouncement(a)}
                 className={'bg-white dark:bg-slate-900 border rounded-xl p-4 sm:p-5 shadow-xs hover:border-blue-400/60 dark:hover:border-blue-600/60 transition-all duration-150 cursor-pointer ' + (!isRead ? 'border-blue-500/40 bg-blue-50/20 dark:bg-blue-950/20' : 'border-slate-200 dark:border-slate-800')}
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">

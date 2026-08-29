@@ -29,11 +29,12 @@ export async function saveAnnouncementAction(formData: FormData): Promise<{
   try {
     let createdAnnouncement: any = undefined;
     if (id) {
-      await prisma.announcement.update({
+      createdAnnouncement = await prisma.announcement.update({
         where: { id },
         data: { title, content, priority, targetType, targetId },
+        include: { createdBy: true, reads: true },
       });
-      appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_UPDATED', announcementId: id });
+      appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_UPDATED', announcementId: id, announcement: createdAnnouncement });
     } else {
       const count = await prisma.announcement.count();
       const announcementCode = `ANC-${count + 101}`;
@@ -47,9 +48,55 @@ export async function saveAnnouncementAction(formData: FormData): Promise<{
           targetId,
           createdById: session.id,
         },
+        include: { createdBy: true, reads: true },
       });
 
+      // Target users for notification delivery
+      let targetUsers: { id: string }[] = [];
+      if (targetType === 'TEAM' && targetId) {
+        targetUsers = await prisma.user.findMany({
+          where: { isDeleted: false, teamId: targetId, id: { not: session.id } },
+          select: { id: true },
+        });
+      } else if (targetType === 'SPECIFIC_EMPLOYEES' && targetId) {
+        targetUsers = await prisma.user.findMany({
+          where: { isDeleted: false, id: targetId },
+          select: { id: true },
+        });
+      } else {
+        targetUsers = await prisma.user.findMany({
+          where: { isDeleted: false, id: { not: session.id } },
+          select: { id: true },
+        });
+      }
+
+      if (targetUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: targetUsers.map((u) => ({
+            userId: u.id,
+            title: `New Announcement: ${title}`,
+            message: content.length > 120 ? `${content.slice(0, 117)}...` : content,
+            type: 'ANNOUNCEMENT',
+            link: '/employee/announcements',
+            isRead: false,
+          })),
+        });
+      }
+
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: session.id,
+            role: session.role,
+            action: 'ANNOUNCEMENT_CREATED',
+            target: createdAnnouncement.id,
+            details: JSON.stringify({ code: announcementCode, title }),
+          },
+        });
+      } catch {}
+
       appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_CREATED', announcement: createdAnnouncement });
+      appEvents.emit(EVENT_TYPES.NOTIFICATION_RECEIVED, { announcementId: createdAnnouncement.id });
     }
 
     revalidatePath('/manager/announcements');
@@ -71,6 +118,18 @@ export const createAnnouncementAction = saveAnnouncementAction;
 export async function deleteAnnouncementAction(id: string): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
   if (!session || session.role !== 'MANAGER') return { success: false, error: 'Unauthorized' };
+
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: session.id,
+        role: session.role,
+        action: 'ANNOUNCEMENT_DELETED',
+        target: id,
+        details: JSON.stringify({ announcementId: id }),
+      },
+    });
+  } catch {}
 
   await prisma.announcementRead.deleteMany({ where: { announcementId: id } });
   await prisma.announcement.delete({ where: { id } });

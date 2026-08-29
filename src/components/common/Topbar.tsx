@@ -131,11 +131,35 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
     };
   }, [user.id]);
 
-  const handleNotificationClick = async (link?: string) => {
+  const handleNotificationClick = (notif: any) => {
     setNotifOpen(false);
-    await fetch('/api/notifications', { method: 'PATCH' });
+    
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
+    );
+    if (!notif.isRead) {
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    }
+
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: notif.id }),
+    }).catch(() => {});
+
+    if (notif.link) router.push(notif.link);
+  };
+
+  const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
-    if (link) router.push(link);
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'ALL' }),
+    }).catch(() => {});
   };
 
   const handleLogout = async () => {
@@ -170,7 +194,7 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition border border-slate-200 dark:border-slate-700 cursor-pointer flex items-center justify-center"
+          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:white transition border border-slate-200 dark:border-slate-700 cursor-pointer flex items-center justify-center"
           title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {mounted && isDark ? (
@@ -205,6 +229,14 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">Activity Feed</h4>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">{unreadCount} unread updates</p>
                 </div>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  >
+                    Mark all read
+                  </button>
+                )}
               </div>
 
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -214,15 +246,32 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      onClick={() => handleNotificationClick(n.link || '/employee/announcements')}
-                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition flex items-start gap-2.5 cursor-pointer"
+                      onClick={() => handleNotificationClick(n)}
+                      className={`p-3 transition flex items-start gap-2.5 cursor-pointer ${
+                        !n.isRead
+                          ? 'bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/70 dark:hover:bg-blue-950/40'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-80'
+                      }`}
                     >
-                      <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0">
+                      <div className={`p-1.5 rounded-md mt-0.5 shrink-0 ${
+                        !n.isRead
+                          ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      }`}>
                         <CalendarCheck className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{n.title}</p>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                        <div className="flex items-center justify-between gap-1">
+                          <p className={`text-xs truncate ${!n.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                            {n.title}
+                          </p>
+                          {!n.isRead && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                          )}
+                        </div>
+                        <p className={`text-[11px] mt-0.5 line-clamp-2 leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+                          {n.message}
+                        </p>
                       </div>
                     </div>
                   ))

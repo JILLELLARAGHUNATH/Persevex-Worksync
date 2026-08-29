@@ -15,7 +15,7 @@ export default function RealtimeListener() {
   const handleIncomingEvent = (data: any) => {
     if (!data || !data.type || data.type === 'CONNECTED') return;
 
-    // Deduplicate rapid duplicate events
+    // Deduplicate rapid duplicate events (1.5s window)
     const eventKey = `${data.type}-${JSON.stringify(data.payload || {})}`;
     if (processedEventIdsRef.current.has(eventKey)) {
       return;
@@ -23,7 +23,7 @@ export default function RealtimeListener() {
     processedEventIdsRef.current.add(eventKey);
     setTimeout(() => {
       processedEventIdsRef.current.delete(eventKey);
-    }, 8000);
+    }, 1500);
 
     // Broadcast across local window components (triggers silent state updates for attendance tables, counts, dashboards, and bell badge)
     window.dispatchEvent(new CustomEvent('persevex-realtime', { detail: data }));
@@ -112,7 +112,7 @@ export default function RealtimeListener() {
 
     connectSSE();
 
-    // 3. Setup Universal DB Sync Engine (Fallback for Serverless + Tab Focus)
+    // 3. Setup Universal DB Sync Engine (Continuous for Serverless + Multi-container synchronization)
     const runSyncCheck = async () => {
       if (isPollingRef.current || document.hidden) return;
       isPollingRef.current = true;
@@ -143,12 +143,10 @@ export default function RealtimeListener() {
       }
     };
 
-    // Run sync check periodically only if SSE is disconnected
+    // Run lightweight sync check every 2 seconds to guarantee cross-container/Vercel synchronization
     const syncInterval = setInterval(() => {
-      if (!sseActiveRef.current) {
-        runSyncCheck();
-      }
-    }, 4000);
+      runSyncCheck();
+    }, 2000);
 
     // Run sync check immediately when tab regains focus or visibility
     const onVisibilityChange = () => {

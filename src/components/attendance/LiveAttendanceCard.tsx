@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDurationHMSFormatted } from '@/lib/utils';
+import { getBrowserLocation } from '@/lib/location';
 
 
 export default function LiveAttendanceCard({
@@ -165,34 +166,8 @@ export default function LiveAttendanceCard({
     setLoading(true);
 
     try {
-      let coords = null;
-
-      if (navigator.geolocation) {
-        try {
-          const pos =
-            await new Promise<GeolocationPosition>(
-              (resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(
-                  resolve,
-                  reject,
-                  {
-                    maximumAge: 60000,
-                    timeout: 6000,
-                  }
-                );
-              }
-            );
-
-          coords = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-        } catch {
-          /*
-           * Location is optional depending on settings.
-           */
-        }
-      }
+      const locResult = await getBrowserLocation();
+      const coords = locResult.coords;
 
       const res = await fetch(
         '/api/attendance/check-in-out',

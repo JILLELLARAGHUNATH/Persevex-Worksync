@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { CalendarPlus, Clock, X, History, Send, Loader2 } from 'lucide-react';
 import { applyLeaveAction } from '@/actions/leaveActions';
 import StatusBadge from '@/components/common/StatusBadge';
 import { formatDate } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function ApplyLeaveClient({ history }: { balances?: any[]; history: any[] }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [leaveHistory, setLeaveHistory] = useState(history);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -46,7 +48,30 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
-      await applyLeaveAction(formData);
+      const res = await applyLeaveAction(formData);
+      if (res?.success) {
+        toast.success(res.message || 'Leave application submitted successfully!');
+        formRef.current?.reset();
+        if (res.leave) {
+          setLeaveHistory((prev) => [res.leave, ...prev.filter((l) => l.id !== res.leave.id)]);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('persevex-realtime', {
+                detail: {
+                  type: 'LEAVE_STATUS_CHANGED',
+                  payload: {
+                    leaveId: res.leave.id,
+                    stage: res.leave.currentStage,
+                    leave: res.leave,
+                  },
+                },
+              })
+            );
+          }
+        }
+      } else {
+        toast.error(res?.error || 'Failed to submit leave request');
+      }
     });
   };
 
@@ -77,7 +102,7 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
           </div>
         </div>
 
-        <form action={handleSubmit} className="space-y-3.5 text-xs">
+        <form ref={formRef} action={handleSubmit} className="space-y-3.5 text-xs">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Leave Type *</label>
             <select name="leaveType" className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-blue-500 cursor-pointer">

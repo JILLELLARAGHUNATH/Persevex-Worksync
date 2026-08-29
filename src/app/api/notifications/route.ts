@@ -22,14 +22,26 @@ export async function GET() {
   return NextResponse.json({ notifications, unreadCount });
 }
 
-export async function PATCH() {
+export async function PATCH(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false }, { status: 401 });
 
-  await prisma.notification.updateMany({
-    where: { userId: session.id, isRead: false },
-    data: { isRead: true },
-  });
+  try {
+    const body = await req.json().catch(() => ({}));
+    if (body?.id && body.id !== 'ALL') {
+      await prisma.notification.updateMany({
+        where: { id: body.id, userId: session.id },
+        data: { isRead: true },
+      });
+    } else {
+      await prisma.notification.updateMany({
+        where: { userId: session.id, isRead: false },
+        data: { isRead: true },
+      });
+    }
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
