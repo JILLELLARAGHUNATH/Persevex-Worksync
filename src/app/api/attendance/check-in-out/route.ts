@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 import { checkInAction, checkOutAction } from '@/actions/attendanceActions';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,9 @@ export async function GET(_request: NextRequest) {
         }
       );
     }
+
+    // Auto-finalize any past or late-night forgotten checkouts for this user
+    await autoFinalizeForgottenAttendance(session.id);
 
     const now = new Date();
     const india = getIndiaWorkdayInfo(now);

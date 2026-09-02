@@ -5,9 +5,9 @@ class AppEventEmitter extends EventEmitter {}
 const globalForEvents = globalThis as unknown as { appEvents: AppEventEmitter | undefined };
 
 export const appEvents = globalForEvents.appEvents ?? new AppEventEmitter();
-appEvents.setMaxListeners(300);
+appEvents.setMaxListeners(500);
 
-if (process.env.NODE_ENV !== 'production') globalForEvents.appEvents = appEvents;
+globalForEvents.appEvents = appEvents;
 
 export const EVENT_TYPES = {
   ATTENDANCE_UPDATE: 'ATTENDANCE_UPDATE',

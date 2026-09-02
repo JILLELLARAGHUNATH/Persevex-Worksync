@@ -1,10 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import ManagerDashboardClient from '@/components/attendance/ManagerDashboardClient';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ManagerDashboardPage() {
+  await autoFinalizeForgottenAttendance();
+
   const [employees, teams, attendances, approvedLeaves] = await Promise.all([
     prisma.user.findMany({
       where: { isDeleted: false },

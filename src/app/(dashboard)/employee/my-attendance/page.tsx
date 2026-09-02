@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import UnifiedAttendanceTable from '@/components/attendance/UnifiedAttendanceTable';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,6 +9,8 @@ export const revalidate = 0;
 export default async function EmployeeMyAttendancePage() {
   const session = await getSession();
   if (!session) return null;
+
+  await autoFinalizeForgottenAttendance(session.id);
 
   const history = await prisma.attendance.findMany({
     where: { userId: session.id },

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
 import { getSession } from '@/lib/auth';
-import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+import { getIndiaWorkdayInfo, getIndiaDateKey } from '@/lib/attendanceDate';
 
 
 export interface ReportFilters {
@@ -43,7 +43,7 @@ export async function exportWorkforceReport(filters?: ReportFilters): Promise<{ 
     'Role': e.role,
     'Team': e.team?.name || 'Unassigned',
     'Status': e.accountStatus,
-    'Joined Date': e.createdAt.toISOString().split('T')[0],
+    'Joined Date': getIndiaDateKey(e.createdAt),
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
@@ -52,61 +52,56 @@ export async function exportWorkforceReport(filters?: ReportFilters): Promise<{ 
   const bookType = filters?.format === 'csv' ? 'csv' : 'xlsx';
   const base64 = XLSX.write(workbook, { type: 'base64', bookType });
   const ext = filters?.format === 'csv' ? 'csv' : 'xlsx';
-  return { base64, fileName: 'Persevex_Workforce_' + new Date().toISOString().split('T')[0] + '.' + ext };
+  return { base64, fileName: 'Persevex_Workforce_' + getIndiaDateKey(new Date()) + '.' + ext };
 }
 
 export async function exportAttendanceReport(filters?: ReportFilters): Promise<{ base64: string; fileName: string }> {
   const session = await getSession();
   if (!session) throw new Error('Unauthorized');
 
+  const india = getIndiaWorkdayInfo();
   const whereClause: any = {};
+
   if (session.role === 'TEAM_LEAD') {
-    whereClause.user = { teamId: session.teamId, role: { not: 'MANAGER' } };
+    whereClause.user = { teamId: session.teamId };
   } else if (session.role === 'EMPLOYEE') {
     whereClause.userId = session.id;
   } else {
-    whereClause.user = { role: { not: 'MANAGER' } };
-    if (filters?.teamId) whereClause.user.teamId = filters.teamId;
+    if (filters?.teamId) {
+      whereClause.user = { teamId: filters.teamId };
+    }
     if (filters?.employeeId) {
-      delete whereClause.user;
       whereClause.userId = filters.employeeId;
     }
   }
 
-
   if (filters?.status) {
-    if (filters.status === 'PRESENT') {
-      whereClause.status = 'PRESENT';
-    } else if (filters.status === 'LATE') {
-      whereClause.status = 'PRESENT';
-      whereClause.lateStatus = 'LATE';
-    } else if (filters.status === 'ON_TIME') {
-      whereClause.status = 'PRESENT';
-      whereClause.lateStatus = 'ON_TIME';
-    } else {
+    if (filters.status === 'LATE' || filters.status === 'ON_TIME') {
+      whereClause.lateStatus = filters.status;
+    } else if (filters.status === 'ABSENT' || filters.status === 'HALF_DAY' || filters.status === 'PRESENT' || filters.status === 'ON_LEAVE') {
       whereClause.status = filters.status;
     }
   }
 
   if (filters?.datePreset) {
-    const india = getIndiaWorkdayInfo();
-    const now = new Date();
     if (filters.datePreset === 'TODAY') {
       whereClause.date = { gte: india.startOfDayIST, lte: india.endOfDayIST };
+    } else if (filters.datePreset === 'YESTERDAY') {
+      const start = new Date(Date.UTC(india.year, india.month - 1, india.day - 1, -5, -30, 0, 0));
+      const end = new Date(Date.UTC(india.year, india.month - 1, india.day - 1, 18, 29, 59, 999));
+      whereClause.date = { gte: start, lte: end };
     } else if (filters.datePreset === 'THIS_WEEK') {
-      const start = new Date(india.startOfDayIST.getTime() - 6 * 24 * 60 * 60 * 1000);
+      const start = new Date(Date.UTC(india.year, india.month - 1, india.day - 6, -5, -30, 0, 0));
       whereClause.date = { gte: start, lte: india.endOfDayIST };
     } else if (filters.datePreset === 'LAST_WEEK') {
-      const start = new Date(india.startOfDayIST.getTime() - 13 * 24 * 60 * 60 * 1000);
-      const end = new Date(india.startOfDayIST.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const start = new Date(Date.UTC(india.year, india.month - 1, india.day - 13, -5, -30, 0, 0));
+      const end = new Date(Date.UTC(india.year, india.month - 1, india.day - 7, 18, 29, 59, 999));
       whereClause.date = { gte: start, lte: end };
     } else if (filters.datePreset === 'THIS_MONTH') {
       const start = new Date(Date.UTC(india.year, india.month - 1, 1, -5, -30, 0, 0));
       whereClause.date = { gte: start, lte: india.endOfDayIST };
     } else if (filters.datePreset === 'LAST_MONTH') {
-      const prevMonthYear = india.month === 1 ? india.year - 1 : india.year;
-      const prevMonth = india.month === 1 ? 12 : india.month - 1;
-      const start = new Date(Date.UTC(prevMonthYear, prevMonth - 1, 1, -5, -30, 0, 0));
+      const start = new Date(Date.UTC(india.year, india.month - 2, 1, -5, -30, 0, 0));
       const end = new Date(Date.UTC(india.year, india.month - 1, 0, 18, 29, 59, 999));
       whereClause.date = { gte: start, lte: end };
     } else if (filters.datePreset === 'CUSTOM' && (filters.customStart || filters.customEnd)) {
@@ -129,7 +124,7 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
   });
 
   let data = records.map((r) => ({
-    'Date': r.date.toISOString().split('T')[0],
+    'Date': getIndiaDateKey(r.date),
     'Employee ID': r.user.employeeId,
     'Employee Name': r.user.fullName,
     'Team': r.user.team?.name || 'General',
@@ -140,13 +135,11 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
     'Status': r.status,
   }));
 
-  // If exporting single day (TODAY, YESTERDAY, or ALL/ABSENT filter), synthesize missing active employees
   if (session.role === 'MANAGER' || session.role === 'TEAM_LEAD') {
     const isSingleDay = !filters?.datePreset || filters.datePreset === 'TODAY' || filters.datePreset === 'YESTERDAY' || (filters.datePreset === 'CUSTOM' && filters.customStart && filters.customStart === filters.customEnd);
     if (isSingleDay) {
-      const india = getIndiaWorkdayInfo();
-      const canonicalStr = typeof india.canonicalDate === 'string' ? india.canonicalDate : new Date(india.canonicalDate).toISOString().split('T')[0];
-      const targetDateStr: string = filters?.datePreset === 'YESTERDAY' ? new Date(Date.now() - 86400000).toISOString().split('T')[0] : (filters?.customStart ? String(filters.customStart) : canonicalStr);
+      const canonicalStr = india.dateKey;
+      const targetDateStr: string = filters?.datePreset === 'YESTERDAY' ? getIndiaDateKey(new Date(Date.now() - 86400000)) : (filters?.customStart ? String(filters.customStart) : canonicalStr);
 
       const empWhere: any = { isDeleted: false, accountStatus: { not: 'SUSPENDED' }, role: { not: 'MANAGER' } };
       if (session.role === 'TEAM_LEAD') {
@@ -194,7 +187,7 @@ export async function exportAttendanceReport(filters?: ReportFilters): Promise<{
   const bookType = filters?.format === 'csv' ? 'csv' : 'xlsx';
   const base64 = XLSX.write(workbook, { type: 'base64', bookType });
   const ext = filters?.format === 'csv' ? 'csv' : 'xlsx';
-  return { base64, fileName: 'Persevex_Attendance_' + new Date().toISOString().split('T')[0] + '.' + ext };
+  return { base64, fileName: 'Persevex_Attendance_' + getIndiaDateKey(new Date()) + '.' + ext };
 }
 
 export async function exportLeaveReport(filters?: ReportFilters): Promise<{ base64: string; fileName: string }> {
@@ -230,12 +223,12 @@ export async function exportLeaveReport(filters?: ReportFilters): Promise<{ base
     'Employee Name': l.user.fullName,
     'Team': l.user.team?.name || 'General',
     'Leave Type': l.leaveType,
-    'From Date': l.startDate.toISOString().split('T')[0],
-    'To Date': l.endDate.toISOString().split('T')[0],
+    'From Date': getIndiaDateKey(l.startDate),
+    'To Date': getIndiaDateKey(l.endDate),
     'Days': l.numberOfDays,
     'Reason': l.reason,
     'Status': l.currentStage,
-    'Applied Date': l.createdAt.toISOString().split('T')[0],
+    'Applied Date': getIndiaDateKey(l.createdAt),
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(data);
@@ -244,5 +237,5 @@ export async function exportLeaveReport(filters?: ReportFilters): Promise<{ base
   const bookType = filters?.format === 'csv' ? 'csv' : 'xlsx';
   const base64 = XLSX.write(workbook, { type: 'base64', bookType });
   const ext = filters?.format === 'csv' ? 'csv' : 'xlsx';
-  return { base64, fileName: 'Persevex_Leaves_' + new Date().toISOString().split('T')[0] + '.' + ext };
+  return { base64, fileName: 'Persevex_Leaves_' + getIndiaDateKey(new Date()) + '.' + ext };
 }

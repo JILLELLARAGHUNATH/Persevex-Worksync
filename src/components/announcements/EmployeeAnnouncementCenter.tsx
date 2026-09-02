@@ -40,7 +40,6 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
             setList((prev) => prev.filter((a) => a.id !== detail.payload.announcementId));
           }
         }
-        router.refresh();
       } catch {}
     };
 

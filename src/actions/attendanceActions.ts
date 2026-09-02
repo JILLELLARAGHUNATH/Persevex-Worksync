@@ -8,7 +8,7 @@ import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 import { assertWithinOfficeGeofence } from '@/lib/geofence';
 
 export async function checkInAction(
-  coords?: { lat: number; lng: number } | null
+  coords?: { lat: number; lng: number; accuracy?: number } | null
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   const session = await getSession();
 
@@ -80,22 +80,38 @@ export async function checkInAction(
   let attendanceRecord: any;
 
   if (existing) {
-    // Update existing placeholder record (e.g. from roster/leave)
-    attendanceRecord = await prisma.attendance.update({
-      where: { id: existing.id },
+    // Atomic update: only update if checkInTime is still null (prevents concurrent double-click race condition)
+    const updateResult = await prisma.attendance.updateMany({
+      where: {
+        id: existing.id,
+        checkInTime: null,
+      },
       data: {
         checkInTime: now,
         status: 'PRESENT',
         lateStatus,
       },
-      include: {
-        user: {
-          include: { team: true },
-        },
-      },
+    });
+
+    if (updateResult.count === 0) {
+      // Concurrently checked in by another request
+      const latest = await prisma.attendance.findUnique({
+        where: { id: existing.id },
+        include: { user: { include: { team: true } } },
+      });
+      return {
+        success: false,
+        error: 'You have already checked in for today.',
+        data: latest,
+      };
+    }
+
+    attendanceRecord = await prisma.attendance.findUnique({
+      where: { id: existing.id },
+      include: { user: { include: { team: true } } },
     });
   } else {
-    // Create new attendance record for today
+    // Create new attendance record for today with unique constraint protection
     try {
       attendanceRecord = await prisma.attendance.create({
         data: {
@@ -112,25 +128,13 @@ export async function checkInAction(
         },
       });
     } catch {
-      // Handle unique constraint race condition fallback
-      attendanceRecord = await prisma.attendance.upsert({
+      // Handle unique constraint race condition: fetch existing record without overwriting checkInTime
+      const raceExisting = await prisma.attendance.findUnique({
         where: {
           userId_date: {
             userId: session.id,
             date: india.canonicalDate,
           },
-        },
-        update: {
-          checkInTime: now,
-          status: 'PRESENT',
-          lateStatus,
-        },
-        create: {
-          userId: session.id,
-          date: india.canonicalDate,
-          checkInTime: now,
-          status: 'PRESENT',
-          lateStatus,
         },
         include: {
           user: {
@@ -138,7 +142,41 @@ export async function checkInAction(
           },
         },
       });
+
+      if (raceExisting && raceExisting.checkInTime) {
+        return {
+          success: false,
+          error: 'You have already checked in for today.',
+          data: raceExisting,
+        };
+      }
+
+      if (raceExisting) {
+        await prisma.attendance.updateMany({
+          where: {
+            id: raceExisting.id,
+            checkInTime: null,
+          },
+          data: {
+            checkInTime: now,
+            status: 'PRESENT',
+            lateStatus,
+          },
+        });
+
+        attendanceRecord = await prisma.attendance.findUnique({
+          where: { id: raceExisting.id },
+          include: { user: { include: { team: true } } },
+        });
+      }
     }
+  }
+
+  if (!attendanceRecord) {
+    return {
+      success: false,
+      error: 'Unable to complete check-in. Please try again.',
+    };
   }
 
   appEvents.emit(EVENT_TYPES.ATTENDANCE_UPDATE, {
@@ -199,12 +237,34 @@ export async function checkOutAction(): Promise<{ success: boolean; error?: stri
   const diffMs = now.getTime() - new Date(record.checkInTime).getTime();
   const totalHours = parseFloat((Math.max(0, diffMs) / (1000 * 60 * 60)).toFixed(2));
 
-  const updated = await prisma.attendance.update({
-    where: { id: record.id },
+  // Atomic conditional update: ensure checkOutTime is only updated if it is currently null
+  const updateResult = await prisma.attendance.updateMany({
+    where: {
+      id: record.id,
+      checkInTime: { not: null },
+      checkOutTime: null,
+    },
     data: {
       checkOutTime: now,
       totalHours,
     },
+  });
+
+  if (updateResult.count === 0) {
+    // Already checked out concurrently by another request
+    const latest = await prisma.attendance.findUnique({
+      where: { id: record.id },
+      include: { user: { include: { team: true } } },
+    });
+    return {
+      success: false,
+      error: 'You have already completed clock-out for today.',
+      data: latest,
+    };
+  }
+
+  const updated = await prisma.attendance.findUnique({
+    where: { id: record.id },
     include: {
       user: {
         include: { team: true },

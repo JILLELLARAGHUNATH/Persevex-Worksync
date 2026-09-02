@@ -163,7 +163,6 @@ export default function UnifiedAttendanceTable({
           } else if (stage !== 'APPROVED' && leaveId) {
             setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
           }
-          router.refresh();
         }
       } catch {}
     };

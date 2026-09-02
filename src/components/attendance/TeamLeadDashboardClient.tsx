@@ -90,9 +90,6 @@ export default function TeamLeadDashboardClient({
           } else if (action === 'EMPLOYEE_DELETED' && detail.payload?.userId) {
             setMembers((prev) => prev.filter((m) => m.id !== detail.payload.userId));
           }
-          router.refresh();
-        } else if (detail.type === 'LEAVE_STATUS_CHANGED') {
-          router.refresh();
         }
       } catch {}
     };

@@ -107,6 +107,11 @@ export default function EmployeeAttendanceHub({
     setLoading(true);
     try {
       const locResult = await getBrowserLocation();
+      if (locResult.isDenied) {
+        toast.error(locResult.error || 'Location permission was denied in your browser.');
+        setLoading(false);
+        return;
+      }
       const coords = locResult.coords;
 
       const res = await fetch('/api/attendance/check-in-out', {
@@ -135,6 +140,9 @@ export default function EmployeeAttendanceHub({
           );
         }
       } else {
+        if (data?.data && data?.error?.toLowerCase().includes('already checked in')) {
+          setTodayAtt(data.data);
+        }
         toast.error(data?.error || data?.message || (locResult.error ? locResult.error : 'Check-in failed'));
       }
     } catch (err: any) {
@@ -173,6 +181,9 @@ export default function EmployeeAttendanceHub({
           );
         }
       } else {
+        if (data?.data && data?.error?.toLowerCase().includes('already completed clock-out')) {
+          setTodayAtt(data.data);
+        }
         toast.error(data?.error || data?.message || 'Check-out failed');
       }
     } catch (err: any) {

@@ -119,7 +119,6 @@ export default function ManagerDashboardClient({
           } else if (stage !== 'APPROVED' && leaveId) {
             setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
           }
-          router.refresh();
         }
       } catch {}
     };

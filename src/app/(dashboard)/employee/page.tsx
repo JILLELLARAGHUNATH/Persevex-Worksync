@@ -2,12 +2,16 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import EmployeeAttendanceHub from '@/components/attendance/EmployeeAttendanceHub';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function EmployeeDashboardPage() {
   const session = await getSession();
+  if (session?.id) {
+    await autoFinalizeForgottenAttendance(session.id);
+  }
   const india = getIndiaWorkdayInfo();
 
   const [todayAttendance, allRecords, userProfile] = await Promise.all([

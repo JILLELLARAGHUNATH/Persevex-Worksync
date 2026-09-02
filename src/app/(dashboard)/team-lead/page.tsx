@@ -3,12 +3,16 @@ import { prisma } from '@/lib/prisma';
 import TeamLeadDashboardClient from '@/components/attendance/TeamLeadDashboardClient';
 import Link from 'next/link';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function TeamLeadDashboardPage() {
   const session = await getSession();
+  if (session?.id) {
+    await autoFinalizeForgottenAttendance();
+  }
   const india = getIndiaWorkdayInfo();
 
   const [currentUser, tlAttendance, ledTeams] = await Promise.all([

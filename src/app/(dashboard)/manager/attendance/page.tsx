@@ -1,10 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import UnifiedAttendanceTable from '@/components/attendance/UnifiedAttendanceTable';
+import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ManagerAttendancePage() {
+  await autoFinalizeForgottenAttendance();
+
   const [records, teams, employees, approvedLeaves] = await Promise.all([
     prisma.attendance.findMany({
       include: { user: { include: { team: true } } },

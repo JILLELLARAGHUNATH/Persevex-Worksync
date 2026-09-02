@@ -11,6 +11,7 @@ export default function RealtimeListener() {
   const sseActiveRef = useRef<boolean>(false);
   const isPollingRef = useRef<boolean>(false);
   const processedEventIdsRef = useRef<Set<string>>(new Set());
+  const lastFocusRefreshRef = useRef<number>(0);
 
   const handleIncomingEvent = (data: any) => {
     if (!data || !data.type || data.type === 'CONNECTED') return;
@@ -25,18 +26,15 @@ export default function RealtimeListener() {
       processedEventIdsRef.current.delete(eventKey);
     }, 1500);
 
-    // Broadcast across local window components (triggers silent state updates for attendance tables, counts, dashboards, and bell badge)
+    // Broadcast across local window components (triggers immediate targeted state updates)
     window.dispatchEvent(new CustomEvent('persevex-realtime', { detail: data }));
 
-    // Broadcast across other browser tabs
+    // Broadcast across other browser tabs via BroadcastChannel
     try {
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.postMessage(data);
       }
     } catch {}
-
-    // Refresh Server Components tree in background silently
-    router.refresh();
   };
 
   useEffect(() => {
@@ -48,7 +46,6 @@ export default function RealtimeListener() {
         channel.onmessage = (event) => {
           if (event.data) {
             window.dispatchEvent(new CustomEvent('persevex-realtime', { detail: event.data }));
-            router.refresh();
           }
         };
       }
@@ -112,9 +109,9 @@ export default function RealtimeListener() {
 
     connectSSE();
 
-    // 3. Setup Universal DB Sync Engine (Continuous for Serverless + Multi-container synchronization)
+    // 3. Setup Universal DB Sync Engine (Efficient for multi-container/Vercel serverless cross-instance sync)
     const runSyncCheck = async () => {
-      if (isPollingRef.current || document.hidden) return;
+      if (isPollingRef.current || (typeof document !== 'undefined' && document.hidden)) return;
       isPollingRef.current = true;
 
       try {
@@ -143,32 +140,34 @@ export default function RealtimeListener() {
       }
     };
 
-    // Run lightweight sync check every 2 seconds to guarantee cross-container/Vercel synchronization
+    // Run lightweight sync check every 4 seconds (pauses automatically if tab is in background or hidden)
     const syncInterval = setInterval(() => {
       runSyncCheck();
-    }, 2000);
+    }, 4000);
 
-    // Run sync check immediately when tab regains focus or visibility
-    const onVisibilityChange = () => {
+    // Run sync check and debounced server revalidation when tab regains focus or visibility
+    const onVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible') {
         runSyncCheck();
-        router.refresh();
+
+        const now = Date.now();
+        // Debounce server component revalidation to at most once every 15 seconds
+        if (now - lastFocusRefreshRef.current > 15000) {
+          lastFocusRefreshRef.current = now;
+          router.refresh();
+        }
       }
     };
-    const onWindowFocus = () => {
-      runSyncCheck();
-      router.refresh();
-    };
 
-    window.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('focus', onWindowFocus);
+    window.addEventListener('visibilitychange', onVisibilityOrFocus);
+    window.addEventListener('focus', onVisibilityOrFocus);
 
     return () => {
       clearTimeout(reconnectTimeout);
       clearInterval(syncInterval);
       window.removeEventListener('persevex-realtime', handleLocalDispatch);
-      window.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', onWindowFocus);
+      window.removeEventListener('visibilitychange', onVisibilityOrFocus);
+      window.removeEventListener('focus', onVisibilityOrFocus);
 
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -181,3 +180,4 @@ export default function RealtimeListener() {
 
   return null;
 }
+

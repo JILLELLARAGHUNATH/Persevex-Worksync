@@ -107,10 +107,21 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
   useEffect(() => {
     fetchNotifications();
     const handleRealtimeEvent = (e: Event) => {
-      fetchNotifications();
       try {
         const detail = (e as CustomEvent).detail;
-        if (detail?.type === 'WORKFORCE_UPDATE') {
+        if (!detail) return;
+
+        // Only fetch notifications if the event is a notification, announcement, leave status update, or targeted to this user
+        if (
+          detail.type === 'NOTIFICATION_RECEIVED' ||
+          detail.type === 'SYSTEM_ANNOUNCEMENT' ||
+          detail.type === 'LEAVE_STATUS_CHANGED' ||
+          (detail.payload?.userId && detail.payload.userId === user.id)
+        ) {
+          fetchNotifications();
+        }
+
+        if (detail.type === 'WORKFORCE_UPDATE') {
           const updatedUser = detail.payload?.user;
           if (updatedUser && updatedUser.id === user.id) {
             setCurrentUser((prev) => ({
@@ -124,7 +135,7 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
       } catch {}
     };
     window.addEventListener('persevex-realtime', handleRealtimeEvent);
-    const interval = setInterval(fetchNotifications, 15000);
+    const interval = setInterval(fetchNotifications, 20000);
     return () => {
       window.removeEventListener('persevex-realtime', handleRealtimeEvent);
       clearInterval(interval);

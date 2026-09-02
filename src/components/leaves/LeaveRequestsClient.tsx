@@ -42,7 +42,6 @@ export default function LeaveRequestsClient({
               return [updated, ...prev];
             });
           }
-          router.refresh();
         }
       } catch {}
     };
