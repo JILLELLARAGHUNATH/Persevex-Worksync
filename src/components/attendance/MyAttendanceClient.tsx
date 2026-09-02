@@ -70,7 +70,7 @@ export default function MyAttendanceClient({
     return () => clearInterval(timer);
   }, []);
 
-  const currentUserId = todayAttendance?.userId || allRecords[0]?.userId;
+  const targetUserId = (todayAttendance && todayAttendance.userId) || (allRecords && allRecords[0]?.userId);
 
   // Real-time synchronization (strictly isolated to current user)
   useEffect(() => {
@@ -78,9 +78,10 @@ export default function MyAttendanceClient({
       const custom = e as CustomEvent;
       if (custom.detail?.type === 'ATTENDANCE_UPDATE') {
         const att = custom.detail.payload?.attendance;
-        if (!att) return;
+        if (!att || !att.userId) return;
 
-        if (currentUserId && att.userId !== currentUserId) {
+        // Strictly ignore events that do not belong to this employee
+        if (!targetUserId || att.userId !== targetUserId) {
           return;
         }
 
@@ -98,7 +99,7 @@ export default function MyAttendanceClient({
     };
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [currentUserId]);
+  }, [targetUserId]);
 
   const handleCheckIn = async () => {
     setLoading(true);

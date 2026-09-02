@@ -100,8 +100,11 @@ export default function UnifiedAttendanceTable({
           const att = detail.payload?.attendance;
           if (att) {
             // For personal view (My Attendance), strictly filter out records for other users
-            if (!showTeamCol && currentUserId && att.userId !== currentUserId) {
-              return;
+            if (!showTeamCol) {
+              const targetUserId = currentUserId || (records && records[0]?.userId);
+              if (!targetUserId || !att.userId || att.userId !== targetUserId) {
+                return;
+              }
             }
 
             setRecords((prev) => {

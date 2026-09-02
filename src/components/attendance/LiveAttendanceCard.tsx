@@ -82,6 +82,9 @@ export default function LiveAttendanceCard({
     };
   }, [refreshAttendance]);
 
+  // Resolve the target user ID for this component instance
+  const targetUserId = currentUserId || initialAttendance?.userId;
+
   /*
    * Realtime event support with strict user isolation.
    */
@@ -96,17 +99,12 @@ export default function LiveAttendanceCard({
         ) {
           const att = detail.payload.attendance;
 
-          // Strictly filter out events belonging to other employees
-          if (currentUserId && att.userId !== currentUserId) {
+          // Strictly ignore events that do not belong to this employee
+          if (!targetUserId || !att.userId || att.userId !== targetUserId) {
             return;
           }
 
-          setAttendance((currentAttendance: any) => {
-            if (currentAttendance?.userId && att.userId !== currentAttendance.userId) {
-              return currentAttendance;
-            }
-            return att;
-          });
+          setAttendance(att);
         }
       } catch (error) {
         console.error('Realtime attendance update error:', error);
@@ -118,7 +116,7 @@ export default function LiveAttendanceCard({
     return () => {
       window.removeEventListener('persevex-realtime', handleRealtime);
     };
-  }, [currentUserId]);
+  }, [targetUserId]);
 
 
   const [nowTick, setNowTick] = useState<Date>(new Date());

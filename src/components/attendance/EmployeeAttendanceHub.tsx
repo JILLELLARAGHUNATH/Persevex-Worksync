@@ -72,16 +72,19 @@ export default function EmployeeAttendanceHub({
     return () => clearInterval(timer);
   }, []);
 
+  // Resolve target user ID for this component instance
+  const targetUserId = currentUserId || initialTodayAttendance?.userId || (allRecords && allRecords[0]?.userId);
+
   // Real-time synchronization via SSE (strictly isolated to current user)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       const custom = e as CustomEvent;
       if (custom.detail?.type === 'ATTENDANCE_UPDATE') {
         const att = custom.detail.payload?.attendance;
-        if (!att) return;
+        if (!att || !att.userId) return;
 
-        // Ignore events for other users
-        if (currentUserId && att.userId !== currentUserId) {
+        // Strictly ignore events that do not belong to this employee
+        if (!targetUserId || att.userId !== targetUserId) {
           return;
         }
 
@@ -99,7 +102,7 @@ export default function EmployeeAttendanceHub({
     };
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [currentUserId]);
+  }, [targetUserId]);
 
 
   // Punch in / out actions
