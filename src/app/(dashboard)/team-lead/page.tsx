@@ -11,7 +11,7 @@ export const revalidate = 0;
 export default async function TeamLeadDashboardPage() {
   const session = await getSession();
   if (session?.id) {
-    await autoFinalizeForgottenAttendance();
+    await autoFinalizeForgottenAttendance(session.id);
   }
   const india = getIndiaWorkdayInfo();
 

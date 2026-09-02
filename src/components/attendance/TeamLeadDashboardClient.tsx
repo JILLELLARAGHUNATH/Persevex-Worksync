@@ -98,19 +98,6 @@ export default function TeamLeadDashboardClient({
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
   }, [router, members, currentUserId]);
 
-  // Background refresh on window focus
-  useEffect(() => {
-    const onFocus = () => router.refresh();
-    window.addEventListener('focus', onFocus);
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') router.refresh();
-    });
-
-    return () => {
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [router]);
-
   const now = new Date();
   const todayStr = getIndiaDateKey(now);
 

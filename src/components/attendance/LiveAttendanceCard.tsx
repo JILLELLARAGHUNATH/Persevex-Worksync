@@ -24,63 +24,16 @@ export default function LiveAttendanceCard({
   const [loading, setLoading] = useState(false);
   const [attendance, setAttendance] = useState(initialAttendance);
   const [mounted, setMounted] = useState(false);
-  const [refreshingAttendance, setRefreshingAttendance] = useState(true);
 
-  /*
-   * Always fetch the latest attendance record from the server for the active user.
-   */
-  const refreshAttendance = useCallback(async () => {
-    try {
-      setRefreshingAttendance(true);
-
-      const response = await fetch('/api/attendance/check-in-out', {
-        method: 'GET',
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          Pragma: 'no-cache',
-        },
+  useEffect(() => {
+    if (initialAttendance) {
+      setAttendance((prev: any) => {
+        if (prev?.checkOutTime && !initialAttendance.checkOutTime) return prev;
+        if (prev?.checkInTime && !initialAttendance.checkInTime) return prev;
+        return initialAttendance;
       });
-
-      if (!response.ok) {
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result?.success) {
-        setAttendance(result.data || null);
-      }
-    } catch (error) {
-      console.error('Failed to refresh attendance:', error);
-    } finally {
-      setRefreshingAttendance(false);
     }
-  }, []);
-
-  useEffect(() => {
-    setAttendance(initialAttendance);
   }, [initialAttendance]);
-
-  useEffect(() => {
-    refreshAttendance();
-  }, [refreshAttendance]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refreshAttendance();
-      }
-    };
-
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
-    };
-  }, [refreshAttendance]);
 
   // Resolve the target user ID for this component instance
   const targetUserId = currentUserId || initialAttendance?.userId;
@@ -117,7 +70,6 @@ export default function LiveAttendanceCard({
       window.removeEventListener('persevex-realtime', handleRealtime);
     };
   }, [targetUserId]);
-
 
   const [nowTick, setNowTick] = useState<Date>(new Date());
 
@@ -156,7 +108,6 @@ export default function LiveAttendanceCard({
     return formatDurationHMSFormatted(attendance.checkInTime, null, nowTick);
   }, [attendance, nowTick]);
 
-
   /*
    * CLOCK IN
    */
@@ -165,45 +116,34 @@ export default function LiveAttendanceCard({
 
     try {
       const locResult = await getBrowserLocation();
+      if (locResult.isDenied) {
+        toast.error(locResult.error || 'Location permission was denied in your browser.');
+        setLoading(false);
+        return;
+      }
       const coords = locResult.coords;
 
-      const res = await fetch(
-        '/api/attendance/check-in-out',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-          },
-
-          body: JSON.stringify({
-            coords,
-          }),
-
-          cache: 'no-store',
-        }
-      );
+      const res = await fetch('/api/attendance/check-in-out', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        body: JSON.stringify({ coords }),
+        cache: 'no-store',
+      });
 
       const data = await res.json();
 
       if (data?.success) {
         toast.success('Punch in recorded successfully!');
-
-        /*
-         * Immediately update local state.
-         */
         setAttendance(data.data);
 
-        /*
-         * Keep existing realtime event.
-         */
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('persevex-realtime', {
               detail: {
                 type: 'ATTENDANCE_UPDATE',
-
                 payload: {
                   status: 'CHECKED_IN',
                   attendance: data.data,
@@ -212,42 +152,15 @@ export default function LiveAttendanceCard({
             })
           );
         }
-
-        /*
-         * Fetch again from database.
-         * Ensures deployed Vercel version has latest data.
-         */
-        await refreshAttendance();
       } else {
-        /*
-         * Important recovery:
-         *
-         * If server says "already checked in",
-         * fetch the existing attendance record.
-         *
-         * This directly fixes Siva's issue.
-         */
-        if (
-          data?.error?.toLowerCase().includes(
-            'already checked in'
-          )
-        ) {
-          await refreshAttendance();
+        if (data?.data && data?.error?.toLowerCase().includes('already checked in')) {
+          setAttendance(data.data);
         }
-
-        toast.error(
-          data?.error ||
-          data?.message ||
-          'Check-in failed'
-        );
+        toast.error(data?.error || data?.message || (locResult.error ? locResult.error : 'Check-in failed'));
       }
     } catch (err: any) {
       console.error(err);
-
-      toast.error(
-        err?.message ||
-        'Check-in failed'
-      );
+      toast.error(err?.message || 'Check-in failed');
     } finally {
       setLoading(false);
     }
@@ -260,43 +173,29 @@ export default function LiveAttendanceCard({
     setLoading(true);
 
     try {
-      const res = await fetch(
-        '/api/attendance/check-in-out',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-          },
-
-          body: JSON.stringify({
-            op: 'checkout',
-          }),
-
-          cache: 'no-store',
-        }
-      );
+      const res = await fetch('/api/attendance/check-in-out', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        body: JSON.stringify({
+          op: 'checkout',
+        }),
+        cache: 'no-store',
+      });
 
       const data = await res.json();
 
       if (data?.success) {
         toast.success('Punch out recorded successfully!');
-
-        /*
-         * Immediately update UI.
-         */
         setAttendance(data.data);
 
-        /*
-         * Existing realtime event.
-         */
         if (typeof window !== 'undefined') {
           window.dispatchEvent(
             new CustomEvent('persevex-realtime', {
               detail: {
                 type: 'ATTENDANCE_UPDATE',
-
                 payload: {
                   status: 'CHECKED_OUT',
                   attendance: data.data,
@@ -305,25 +204,15 @@ export default function LiveAttendanceCard({
             })
           );
         }
-
-        /*
-         * Confirm latest database state.
-         */
-        await refreshAttendance();
       } else {
-        toast.error(
-          data?.error ||
-          data?.message ||
-          'Check-out failed'
-        );
+        if (data?.data && data?.error?.toLowerCase().includes('already completed clock-out')) {
+          setAttendance(data.data);
+        }
+        toast.error(data?.error || data?.message || 'Check-out failed');
       }
     } catch (err: any) {
       console.error(err);
-
-      toast.error(
-        err?.message ||
-        'Check-out failed'
-      );
+      toast.error(err?.message || 'Check-out failed');
     } finally {
       setLoading(false);
     }
@@ -346,24 +235,10 @@ export default function LiveAttendanceCard({
   /*
    * Attendance state.
    */
-  const isCheckedIn = Boolean(
-    attendance?.checkInTime
-  );
-
-  const isCheckedOut = Boolean(
-    attendance?.checkOutTime
-  );
+  const isCheckedIn = Boolean(attendance?.checkInTime);
+  const isCheckedOut = Boolean(attendance?.checkOutTime);
 
   const getStatusBadge = () => {
-    if (refreshingAttendance) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[10px] border border-slate-200 dark:border-slate-700">
-          <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
-          Checking Status
-        </span>
-      );
-    }
-
     if (isCheckedIn && isCheckedOut) {
       return (
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-semibold text-[10px] border border-emerald-200 dark:border-emerald-800/60">
@@ -466,7 +341,7 @@ export default function LiveAttendanceCard({
         <div className="flex items-center gap-1.5">
           {/* CLOCK IN */}
           <button
-            disabled={isCheckedIn || loading || refreshingAttendance}
+            disabled={isCheckedIn || loading}
             onClick={handleCheckIn}
             className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
@@ -480,7 +355,7 @@ export default function LiveAttendanceCard({
 
           {/* CLOCK OUT */}
           <button
-            disabled={!isCheckedIn || isCheckedOut || loading || refreshingAttendance}
+            disabled={!isCheckedIn || isCheckedOut || loading}
             onClick={handleCheckOut}
             className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
