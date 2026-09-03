@@ -89,6 +89,8 @@ export default function UnifiedAttendanceTable({
     setLeavesList(approvedLeaves);
   }, [approvedLeaves]);
 
+  const todayStr = getIndiaDateKey(now);
+
   // Real-time synchronization
   useEffect(() => {
     const handleRealtime = (e: Event) => {
@@ -98,15 +100,30 @@ export default function UnifiedAttendanceTable({
 
         if (detail.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
-          if (att) {
-            // For personal view (My Attendance), strictly filter out records for other users
-            if (!showTeamCol) {
-              const targetUserId = currentUserId || (records && records[0]?.userId);
-              if (!targetUserId || !att.userId || att.userId !== targetUserId) {
-                return;
-              }
-            }
+          const status = detail.payload?.status;
+          const userId = detail.payload?.userId || att?.userId;
+          const attId = detail.payload?.attendanceId || att?.id;
 
+          // For personal view (My Attendance), strictly filter out records for other users
+          if (!showTeamCol) {
+            const targetUserId = currentUserId || (records && records[0]?.userId);
+            if (!targetUserId || userId !== targetUserId) {
+              return;
+            }
+          }
+
+          if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+            setRecords((prev) =>
+              prev.filter(
+                (r) =>
+                  r.id !== attId &&
+                  !(r.userId === userId && getIndiaDateKey(r.date) === todayStr)
+              )
+            );
+            return;
+          }
+
+          if (att) {
             setRecords((prev) => {
               const idx = prev.findIndex(
                 (r) =>
@@ -132,9 +149,6 @@ export default function UnifiedAttendanceTable({
               }
               return [fullAtt, ...prev];
             });
-
-            // Smooth background refresh
-            router.refresh();
           }
         } else if (detail.type === 'WORKFORCE_UPDATE') {
           const user = detail.payload?.user;
@@ -158,7 +172,13 @@ export default function UnifiedAttendanceTable({
           const leave = detail.payload?.leave;
           const stage = detail.payload?.stage || leave?.currentStage;
           const leaveId = detail.payload?.leaveId || leave?.id;
-          if (stage === 'APPROVED' && leave) {
+          const type = detail.payload?.type;
+
+          if (type === 'LEAVE_DELETED' || stage === 'DELETED') {
+            if (leaveId) {
+              setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
+            }
+          } else if (stage === 'APPROVED' && leave) {
             setLeavesList((prev) => {
               const filtered = prev.filter((l) => l.id !== leaveId);
               return [leave, ...filtered];
@@ -166,15 +186,39 @@ export default function UnifiedAttendanceTable({
           } else if (stage !== 'APPROVED' && leaveId) {
             setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
           }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.todayAttendanceMap) {
+          const todayMap = detail.snapshot.todayAttendanceMap;
+          setRecords((prev) => {
+            const otherDays = prev.filter((r) => getIndiaDateKey(r.date) !== todayStr);
+            const todayRecords = prev.filter((r) => getIndiaDateKey(r.date) === todayStr);
+            const updatedToday = todayRecords
+              .filter((r) => Boolean(todayMap[r.userId]))
+              .map((r) => {
+                const snap = todayMap[r.userId];
+                return snap ? { ...r, ...snap } : r;
+              });
+
+            Object.values(todayMap).forEach((snapAtt: any) => {
+              if (!showTeamCol) {
+                const targetUserId = currentUserId || (records && records[0]?.userId);
+                if (targetUserId && snapAtt.userId !== targetUserId) return;
+              }
+              if (!updatedToday.some((r) => r.userId === snapAtt.userId)) {
+                const user = employeeList.find((e) => e.id === snapAtt.userId);
+                updatedToday.push({ ...snapAtt, user });
+              }
+            });
+
+            return [...updatedToday, ...otherDays];
+          });
         }
       } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [employeeList, router, showTeamCol, currentUserId]);
+  }, [employeeList, router, showTeamCol, currentUserId, todayStr]);
 
-  const todayStr = getIndiaDateKey(now);
   const yesterdayStr = getIndiaDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
   const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
   const startOfLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);

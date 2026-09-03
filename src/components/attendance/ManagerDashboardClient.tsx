@@ -50,6 +50,9 @@ export default function ManagerDashboardClient({
   const [currentDateStr, setCurrentDateStr] = useState<string>('');
   const [hoveredSegment, setHoveredSegment] = useState<'PRESENT' | 'LATE' | 'ABSENT' | 'LEAVE' | null>(null);
 
+  const now = new Date();
+  const todayStr = getIndiaDateKey(now);
+
   // Sync with props when server refreshes
   useEffect(() => {
     setEmployees(initialEmployees);
@@ -76,6 +79,21 @@ export default function ManagerDashboardClient({
 
         if (detail.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
+          const status = detail.payload?.status;
+          const userId = detail.payload?.userId;
+          const attId = detail.payload?.attendanceId || att?.id;
+
+          if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+            setAttendances((prev) =>
+              prev.filter(
+                (r) =>
+                  r.id !== attId &&
+                  !(r.userId === userId && getIndiaDateKey(r.date) === todayStr)
+              )
+            );
+            return;
+          }
+
           if (att) {
             setAttendances((prev) => {
               const idx = prev.findIndex(
@@ -83,12 +101,22 @@ export default function ManagerDashboardClient({
                   r.id === att.id ||
                   (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
               );
+              // Preserve or hydrate user if missing
+              let userObj = att.user;
+              if (!userObj && idx >= 0 && prev[idx].user) {
+                userObj = prev[idx].user;
+              } else if (!userObj) {
+                const foundEmp = employees.find((emp) => emp.id === att.userId);
+                if (foundEmp) userObj = foundEmp;
+              }
+              const fullAtt = { ...att, user: userObj || att.user };
+
               if (idx >= 0) {
                 const copy = [...prev];
-                copy[idx] = { ...copy[idx], ...att };
+                copy[idx] = { ...copy[idx], ...fullAtt };
                 return copy;
               }
-              return [att, ...prev];
+              return [fullAtt, ...prev];
             });
           }
         } else if (detail.type === 'WORKFORCE_UPDATE') {
@@ -111,7 +139,13 @@ export default function ManagerDashboardClient({
           const leave = detail.payload?.leave;
           const stage = detail.payload?.stage || leave?.currentStage;
           const leaveId = detail.payload?.leaveId || leave?.id;
-          if (stage === 'APPROVED' && leave) {
+          const type = detail.payload?.type;
+
+          if (type === 'LEAVE_DELETED' || stage === 'DELETED') {
+            if (leaveId) {
+              setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
+            }
+          } else if (stage === 'APPROVED' && leave) {
             setLeavesList((prev) => {
               const filtered = prev.filter((l) => l.id !== leaveId);
               return [leave, ...filtered];
@@ -119,13 +153,41 @@ export default function ManagerDashboardClient({
           } else if (stage !== 'APPROVED' && leaveId) {
             setLeavesList((prev) => prev.filter((l) => l.id !== leaveId));
           }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot) {
+          if (detail.snapshot.todayAttendanceMap) {
+            const todayMap = detail.snapshot.todayAttendanceMap;
+            setAttendances((prev) => {
+              const otherDays = prev.filter((r) => getIndiaDateKey(r.date) !== todayStr);
+              const todayRecords = prev.filter((r) => getIndiaDateKey(r.date) === todayStr);
+              const updatedToday = todayRecords
+                .filter((r) => Boolean(todayMap[r.userId]))
+                .map((r) => {
+                  const snap = todayMap[r.userId];
+                  return snap ? { ...r, ...snap } : r;
+                });
+
+              Object.values(todayMap).forEach((snapAtt: any) => {
+                if (!updatedToday.some((r) => r.userId === snapAtt.userId)) {
+                  const user = employees.find((e) => e.id === snapAtt.userId);
+                  updatedToday.push({ ...snapAtt, user });
+                }
+              });
+
+              return [...updatedToday, ...otherDays];
+            });
+          }
+
+          if (detail.snapshot.activeLeaveIds) {
+            const activeIds = new Set(detail.snapshot.activeLeaveIds);
+            setLeavesList((prev) => prev.filter((l) => activeIds.has(l.id)));
+          }
         }
       } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [router]);
+  }, [router, employees, todayStr]);
 
   // Periodic background refresh (when window regains focus or visibility)
   useEffect(() => {
@@ -166,10 +228,6 @@ export default function ManagerDashboardClient({
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const now = new Date();
-  const todayStr = getIndiaDateKey(now);
-
 
   // Active Employee Pool (Team Leads and Employees only - Managers do not mark shift attendance)
   const activeEmployeePool = useMemo(() => {

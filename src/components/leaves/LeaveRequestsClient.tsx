@@ -29,7 +29,20 @@ export default function LeaveRequestsClient({
     const handleRealtime = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail;
-        if (detail?.type === 'LEAVE_STATUS_CHANGED') {
+        if (!detail) return;
+
+        if (detail.type === 'LEAVE_STATUS_CHANGED') {
+          const type = detail.payload?.type;
+          const stage = detail.payload?.stage;
+          const leaveId = detail.payload?.leaveId;
+
+          if (type === 'LEAVE_DELETED' || stage === 'DELETED') {
+            if (leaveId) {
+              setLeaves((prev) => prev.filter((l) => l.id !== leaveId));
+            }
+            return;
+          }
+
           if (detail.payload?.leave) {
             const updated = detail.payload.leave;
             setLeaves((prev) => {
@@ -42,6 +55,9 @@ export default function LeaveRequestsClient({
               return [updated, ...prev];
             });
           }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.activeLeaveIds) {
+          const activeIds = new Set(detail.snapshot.activeLeaveIds);
+          setLeaves((prev) => prev.filter((l) => activeIds.has(l.id)));
         }
       } catch {}
     };

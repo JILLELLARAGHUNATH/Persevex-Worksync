@@ -121,6 +121,18 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
           fetchNotifications();
         }
 
+        if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot) {
+          if (typeof detail.snapshot.unreadNotificationCount === 'number') {
+            setUnreadCount((prev) => {
+              if (prev !== detail.snapshot.unreadNotificationCount) {
+                fetchNotifications();
+                return detail.snapshot.unreadNotificationCount;
+              }
+              return prev;
+            });
+          }
+        }
+
         if (detail.type === 'WORKFORCE_UPDATE') {
           const updatedUser = detail.payload?.user;
           if (updatedUser && updatedUser.id === user.id) {

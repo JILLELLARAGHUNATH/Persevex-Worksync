@@ -54,23 +54,63 @@ export default function AttendanceTableClient({
       try {
         const custom = e as CustomEvent;
         const data = custom.detail;
-        if (!data || data.type !== 'ATTENDANCE_UPDATE') return;
-        const att = data.payload?.attendance;
-        if (!att) return;
+        if (!data) return;
 
-        setRecords((prev) => {
-          const idx = prev.findIndex(
-            (x) =>
-              x.id === att.id ||
-              (x.userId === att.userId && getIndiaDateKey(x.date) === getIndiaDateKey(att.date))
-          );
-          if (idx >= 0) {
-            const copy = [...prev];
-            copy[idx] = att;
-            return copy;
+        if (data.type === 'ATTENDANCE_UPDATE') {
+          const att = data.payload?.attendance;
+          const status = data.payload?.status;
+          const userId = data.payload?.userId || att?.userId;
+          const attId = data.payload?.attendanceId || att?.id;
+          const todayKey = getIndiaDateKey(new Date());
+
+          if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+            setRecords((prev) =>
+              prev.filter(
+                (x) =>
+                  x.id !== attId &&
+                  !(x.userId === userId && getIndiaDateKey(x.date) === todayKey)
+              )
+            );
+            return;
           }
-          return [att, ...prev];
-        });
+
+          if (att) {
+            setRecords((prev) => {
+              const idx = prev.findIndex(
+                (x) =>
+                  x.id === att.id ||
+                  (x.userId === att.userId && getIndiaDateKey(x.date) === getIndiaDateKey(att.date))
+              );
+              if (idx >= 0) {
+                const copy = [...prev];
+                copy[idx] = { ...copy[idx], ...att };
+                return copy;
+              }
+              return [att, ...prev];
+            });
+          }
+        } else if (data.type === 'SNAPSHOT_SYNC' && data.snapshot?.todayAttendanceMap) {
+          const todayMap = data.snapshot.todayAttendanceMap;
+          const todayKey = getIndiaDateKey(new Date());
+          setRecords((prev) => {
+            const otherDays = prev.filter((r) => getIndiaDateKey(r.date) !== todayKey);
+            const todayRecords = prev.filter((r) => getIndiaDateKey(r.date) === todayKey);
+            const updatedToday = todayRecords
+              .filter((r) => Boolean(todayMap[r.userId]))
+              .map((r) => {
+                const snap = todayMap[r.userId];
+                return snap ? { ...r, ...snap } : r;
+              });
+
+            Object.values(todayMap).forEach((snapAtt: any) => {
+              if (!updatedToday.some((r) => r.userId === snapAtt.userId)) {
+                updatedToday.push(snapAtt);
+              }
+            });
+
+            return [...updatedToday, ...otherDays];
+          });
+        }
       } catch (err) {
         console.error('Attendance realtime handler error', err);
       }

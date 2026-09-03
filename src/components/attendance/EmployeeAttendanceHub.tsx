@@ -75,29 +75,60 @@ export default function EmployeeAttendanceHub({
   // Resolve target user ID for this component instance
   const targetUserId = currentUserId || initialTodayAttendance?.userId || (allRecords && allRecords[0]?.userId);
 
-  // Real-time synchronization via SSE (strictly isolated to current user)
+  // Real-time synchronization via SSE / Fast Sync (strictly isolated to current user)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       const custom = e as CustomEvent;
-      if (custom.detail?.type === 'ATTENDANCE_UPDATE') {
-        const att = custom.detail.payload?.attendance;
-        if (!att || !att.userId) return;
+      const detail = custom.detail;
+      if (!detail) return;
+
+      if (detail.type === 'ATTENDANCE_UPDATE') {
+        const att = detail.payload?.attendance;
+        const status = detail.payload?.status;
+        const userId = detail.payload?.userId || att?.userId;
+        const todayKey = getIndiaDateKey(new Date());
 
         // Strictly ignore events that do not belong to this employee
-        if (!targetUserId || att.userId !== targetUserId) {
+        if (!targetUserId || userId !== targetUserId) {
           return;
         }
 
-        setTodayAtt(att);
-        setRecords((prev) => {
-          const idx = prev.findIndex((r) => r.id === att.id || (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date)));
-          if (idx >= 0) {
-            const copy = [...prev];
-            copy[idx] = att;
-            return copy;
+        if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+          setTodayAtt(null);
+          setRecords((prev) =>
+            prev.filter(
+              (r) =>
+                !(r.userId === targetUserId && getIndiaDateKey(r.date) === todayKey)
+            )
+          );
+          return;
+        }
+
+        if (att) {
+          setTodayAtt(att);
+          setRecords((prev) => {
+            const idx = prev.findIndex(
+              (r) =>
+                r.id === att.id ||
+                (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
+            );
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = { ...copy[idx], ...att };
+              return copy;
+            }
+            return [att, ...prev];
+          });
+        }
+      } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.todayAttendanceMap) {
+        if (targetUserId) {
+          const snap = detail.snapshot.todayAttendanceMap[targetUserId];
+          if (snap) {
+            setTodayAtt((prev: any) => ({ ...(prev || {}), ...snap }));
+          } else {
+            setTodayAtt(null);
           }
-          return [att, ...prev];
-        });
+        }
       }
     };
     window.addEventListener('persevex-realtime', handleRealtime);

@@ -39,25 +39,41 @@ export default function LiveAttendanceCard({
   const targetUserId = currentUserId || initialAttendance?.userId;
 
   /*
-   * Realtime event support with strict user isolation.
+   * Realtime event support with strict user isolation and deletion handling.
    */
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail;
+        if (!detail) return;
 
-        if (
-          detail?.type === 'ATTENDANCE_UPDATE' &&
-          detail.payload?.attendance
-        ) {
-          const att = detail.payload.attendance;
+        if (detail.type === 'ATTENDANCE_UPDATE') {
+          const att = detail.payload?.attendance;
+          const status = detail.payload?.status;
+          const userId = detail.payload?.userId || att?.userId;
 
           // Strictly ignore events that do not belong to this employee
-          if (!targetUserId || !att.userId || att.userId !== targetUserId) {
+          if (!targetUserId || userId !== targetUserId) {
             return;
           }
 
-          setAttendance(att);
+          if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+            setAttendance(null);
+            return;
+          }
+
+          if (att) {
+            setAttendance(att);
+          }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.todayAttendanceMap) {
+          if (targetUserId) {
+            const snap = detail.snapshot.todayAttendanceMap[targetUserId];
+            if (snap) {
+              setAttendance((prev: any) => ({ ...(prev || {}), ...snap }));
+            } else {
+              setAttendance(null);
+            }
+          }
         }
       } catch (error) {
         console.error('Realtime attendance update error:', error);

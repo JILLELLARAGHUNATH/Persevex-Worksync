@@ -54,7 +54,10 @@ export default function TeamLeadDashboardClient({
     setAttendances(initialAttendances);
   }, [initialAttendances]);
 
-  // Real-time synchronization via SSE (strictly scoped to Squad + TL)
+  const now = new Date();
+  const todayStr = getIndiaDateKey(now);
+
+  // Real-time synchronization via SSE / Polling (strictly scoped to Squad + TL)
   useEffect(() => {
     const handleRealtime = (e: Event) => {
       try {
@@ -63,23 +66,49 @@ export default function TeamLeadDashboardClient({
 
         if (detail.type === 'ATTENDANCE_UPDATE') {
           const att = detail.payload?.attendance;
-          if (att) {
-            // Only accept if this user is in the Team Lead's squad or is the TL themselves
-            const isSquadMember = members.some((m) => m.id === att.userId) || att.userId === currentUserId;
-            if (!isSquadMember) return;
+          const status = detail.payload?.status;
+          const userId = detail.payload?.userId;
+          const attId = detail.payload?.attendanceId || att?.id;
 
+          const isSquadUser =
+            (userId && (members.some((m) => m.id === userId) || userId === currentUserId)) ||
+            (att && (members.some((m) => m.id === att.userId) || att.userId === currentUserId));
+
+          if (!isSquadUser) return;
+
+          if (status === 'ATTENDANCE_DELETED' || (!att && userId)) {
+            setAttendances((prev) =>
+              prev.filter(
+                (r) =>
+                  r.id !== attId &&
+                  !(r.userId === userId && getIndiaDateKey(r.date) === todayStr)
+              )
+            );
+            return;
+          }
+
+          if (att) {
             setAttendances((prev) => {
               const idx = prev.findIndex(
                 (r) =>
                   r.id === att.id ||
                   (r.userId === att.userId && getIndiaDateKey(r.date) === getIndiaDateKey(att.date))
               );
+              let userObj = att.user;
+              if (!userObj && idx >= 0 && prev[idx].user) {
+                userObj = prev[idx].user;
+              } else if (!userObj) {
+                const foundMember = members.find((m) => m.id === att.userId);
+                if (foundMember) userObj = foundMember;
+              }
+              const fullAtt = { ...att, user: userObj || att.user };
+
               if (idx >= 0) {
                 const copy = [...prev];
-                copy[idx] = { ...copy[idx], ...att };
+                copy[idx] = { ...copy[idx], ...fullAtt };
                 return copy;
               }
-              return [att, ...prev];
+              return [fullAtt, ...prev];
             });
           }
         } else if (detail.type === 'WORKFORCE_UPDATE') {
@@ -90,17 +119,36 @@ export default function TeamLeadDashboardClient({
           } else if (action === 'EMPLOYEE_DELETED' && detail.payload?.userId) {
             setMembers((prev) => prev.filter((m) => m.id !== detail.payload.userId));
           }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.todayAttendanceMap) {
+          const todayMap = detail.snapshot.todayAttendanceMap;
+          setAttendances((prev) => {
+            const otherDays = prev.filter((r) => getIndiaDateKey(r.date) !== todayStr);
+            const todayRecords = prev.filter((r) => getIndiaDateKey(r.date) === todayStr);
+            const updatedToday = todayRecords
+              .filter((r) => Boolean(todayMap[r.userId]))
+              .map((r) => {
+                const snap = todayMap[r.userId];
+                return snap ? { ...r, ...snap } : r;
+              });
+
+            Object.values(todayMap).forEach((snapAtt: any) => {
+              const isSquadMember =
+                members.some((m) => m.id === snapAtt.userId) || snapAtt.userId === currentUserId;
+              if (isSquadMember && !updatedToday.some((r) => r.userId === snapAtt.userId)) {
+                const user = members.find((m) => m.id === snapAtt.userId);
+                updatedToday.push({ ...snapAtt, user });
+              }
+            });
+
+            return [...updatedToday, ...otherDays];
+          });
         }
       } catch {}
     };
 
     window.addEventListener('persevex-realtime', handleRealtime);
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
-  }, [router, members, currentUserId]);
-
-  const now = new Date();
-  const todayStr = getIndiaDateKey(now);
-
+  }, [router, members, currentUserId, todayStr]);
 
   // Active squad pool (Squad members + Team Lead; Managers excluded)
   const activeSquadPool = useMemo(() => {

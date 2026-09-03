@@ -2,16 +2,22 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSupabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function RealtimeListener() {
   const router = useRouter();
   const eventSourceRef = useRef<EventSource | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
   const lastSyncTimeRef = useRef<number>(0);
-  const sseActiveRef = useRef<boolean>(false);
   const isPollingRef = useRef<boolean>(false);
   const processedEventIdsRef = useRef<Set<string>>(new Set());
   const lastFocusRefreshRef = useRef<number>(0);
+
+  // Snapshot tracking refs for direct Supabase deletion detection
+  const prevTodayAttUserIdsRef = useRef<Set<string>>(new Set());
+  const prevActiveAnnouncementIdsRef = useRef<Set<string>>(new Set());
+  const prevActiveLeaveIdsRef = useRef<Set<string>>(new Set());
+  const isFirstSyncRef = useRef<boolean>(true);
 
   const handleIncomingEvent = (data: any) => {
     if (!data || !data.type || data.type === 'CONNECTED') return;
@@ -39,7 +45,132 @@ export default function RealtimeListener() {
 
   useEffect(() => {
     if (lastSyncTimeRef.current === 0) {
-      lastSyncTimeRef.current = Date.now() - 10000;
+      lastSyncTimeRef.current = Date.now() - 15000;
+    }
+
+    // 0. Setup Direct Supabase Realtime WebSocket Connection (Postgres Changes)
+    let supabaseChannel: any = null;
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (supabase) {
+        supabaseChannel = supabase
+          .channel('persevex-realtime-db')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'Attendance' },
+            (payload: any) => {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                handleIncomingEvent({
+                  type: 'ATTENDANCE_UPDATE',
+                  payload: {
+                    status: payload.new?.checkOutTime ? 'CHECKED_OUT' : 'CHECKED_IN',
+                    attendance: payload.new,
+                    userId: payload.new?.userId,
+                  },
+                  timestamp: Date.now(),
+                });
+              } else if (payload.eventType === 'DELETE') {
+                handleIncomingEvent({
+                  type: 'ATTENDANCE_UPDATE',
+                  payload: {
+                    status: 'ATTENDANCE_DELETED',
+                    userId: payload.old?.userId,
+                    attendanceId: payload.old?.id,
+                    attendance: null,
+                  },
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'LeaveRequest' },
+            (payload: any) => {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                handleIncomingEvent({
+                  type: 'LEAVE_STATUS_CHANGED',
+                  payload: {
+                    leaveId: payload.new?.id,
+                    stage: payload.new?.currentStage,
+                    leave: payload.new,
+                  },
+                  timestamp: Date.now(),
+                });
+              } else if (payload.eventType === 'DELETE') {
+                handleIncomingEvent({
+                  type: 'LEAVE_STATUS_CHANGED',
+                  payload: {
+                    type: 'LEAVE_DELETED',
+                    leaveId: payload.old?.id,
+                    stage: 'DELETED',
+                  },
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'Announcement' },
+            (payload: any) => {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                handleIncomingEvent({
+                  type: 'SYSTEM_ANNOUNCEMENT',
+                  payload: {
+                    type: 'ANNOUNCEMENT_CREATED',
+                    announcement: payload.new,
+                  },
+                  timestamp: Date.now(),
+                });
+              } else if (payload.eventType === 'DELETE') {
+                handleIncomingEvent({
+                  type: 'SYSTEM_ANNOUNCEMENT',
+                  payload: {
+                    type: 'ANNOUNCEMENT_DELETED',
+                    announcementId: payload.old?.id,
+                  },
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'Notification' },
+            (payload: any) => {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                handleIncomingEvent({
+                  type: 'NOTIFICATION_RECEIVED',
+                  payload: {
+                    notification: payload.new,
+                  },
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'User' },
+            (payload: any) => {
+              if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                handleIncomingEvent({
+                  type: 'WORKFORCE_UPDATE',
+                  payload: {
+                    action: payload.new?.isDeleted ? 'EMPLOYEE_DELETED' : 'EMPLOYEE_UPDATED',
+                    user: payload.new,
+                    userId: payload.new?.id,
+                  },
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          )
+          .subscribe();
+      }
+    } catch (err) {
+      console.warn('Supabase Realtime subscription error:', err);
     }
 
     // 1. Setup BroadcastChannel for 0ms cross-tab synchronization
@@ -70,7 +201,7 @@ export default function RealtimeListener() {
     };
     window.addEventListener('persevex-realtime', handleLocalDispatch);
 
-    // 2. Setup Server-Sent Events (SSE)
+    // 2. Setup Server-Sent Events (SSE) for environments supporting long-lived streams
     let reconnectTimeout: any = null;
     let backoffDelay = 3000;
 
@@ -84,9 +215,7 @@ export default function RealtimeListener() {
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {
-          sseActiveRef.current = true;
           backoffDelay = 3000;
-          scheduleNextSync(false);
         };
 
         eventSource.onmessage = (event) => {
@@ -100,21 +229,18 @@ export default function RealtimeListener() {
         };
 
         eventSource.onerror = () => {
-          sseActiveRef.current = false;
           eventSource.close();
           clearTimeout(reconnectTimeout);
           reconnectTimeout = setTimeout(connectSSE, backoffDelay);
           backoffDelay = Math.min(backoffDelay * 1.5, 15000);
-          scheduleNextSync(true);
         };
       } catch (err) {
-        sseActiveRef.current = false;
-        scheduleNextSync(true);
         console.warn('SSE connection init error:', err);
       }
     };
 
-    // 3. Setup Universal DB Sync Engine (Adaptive: 30s when SSE healthy, 4s when SSE down, paused when hidden)
+    // 3. Setup High-Performance Universal DB Sync Engine
+    // Polls every 1.5s when active/visible, pauses when hidden, immediate on visibility/focus
     let syncTimeout: any = null;
 
     const runSyncCheck = async () => {
@@ -134,13 +260,79 @@ export default function RealtimeListener() {
             lastSyncTimeRef.current = data.serverTimestamp - 1000;
           }
 
+          // Process incremental delta events
           if (data.hasChanges && Array.isArray(data.events) && data.events.length > 0) {
             for (const ev of data.events) {
               handleIncomingEvent(ev);
             }
           }
+
+          // Direct Supabase Deletion & Snapshot Reconciliation
+          if (data.snapshot) {
+            const currentAttUserIds = new Set<string>(data.snapshot.todayAttendanceUserIds || []);
+            const currentAnnouncementIds = new Set<string>(data.snapshot.activeAnnouncementIds || []);
+            const currentLeaveIds = new Set<string>(data.snapshot.activeLeaveIds || []);
+
+            if (!isFirstSyncRef.current) {
+              // Detect deleted attendances for today
+              for (const prevUserId of prevTodayAttUserIdsRef.current) {
+                if (!currentAttUserIds.has(prevUserId)) {
+                  handleIncomingEvent({
+                    type: 'ATTENDANCE_UPDATE',
+                    payload: {
+                      status: 'ATTENDANCE_DELETED',
+                      userId: prevUserId,
+                      attendance: null,
+                    },
+                  });
+                }
+              }
+
+              // Detect deleted announcements
+              for (const prevAnnId of prevActiveAnnouncementIdsRef.current) {
+                if (!currentAnnouncementIds.has(prevAnnId)) {
+                  handleIncomingEvent({
+                    type: 'SYSTEM_ANNOUNCEMENT',
+                    payload: {
+                      type: 'ANNOUNCEMENT_DELETED',
+                      announcementId: prevAnnId,
+                    },
+                  });
+                }
+              }
+
+              // Detect deleted leaves
+              for (const prevLeaveId of prevActiveLeaveIdsRef.current) {
+                if (!currentLeaveIds.has(prevLeaveId)) {
+                  handleIncomingEvent({
+                    type: 'LEAVE_STATUS_CHANGED',
+                    payload: {
+                      type: 'LEAVE_DELETED',
+                      leaveId: prevLeaveId,
+                      stage: 'DELETED',
+                    },
+                  });
+                }
+              }
+            }
+
+            prevTodayAttUserIdsRef.current = currentAttUserIds;
+            prevActiveAnnouncementIdsRef.current = currentAnnouncementIds;
+            prevActiveLeaveIdsRef.current = currentLeaveIds;
+            isFirstSyncRef.current = false;
+
+            // Broadcast snapshot sync to components
+            window.dispatchEvent(
+              new CustomEvent('persevex-realtime', {
+                detail: {
+                  type: 'SNAPSHOT_SYNC',
+                  snapshot: data.snapshot,
+                },
+              })
+            );
+          }
         }
-      } catch (err) {
+      } catch {
         // Silently swallow network jitter
       } finally {
         isPollingRef.current = false;
@@ -158,12 +350,11 @@ export default function RealtimeListener() {
         return;
       }
 
-      // Safe fallback reconciliation: 30s when SSE is healthy, 4s when SSE is disconnected/fallback
-      const delay = sseActiveRef.current ? 30000 : 4000;
+      // Fast, ultra-lightweight 1.5s active sync interval
       syncTimeout = setTimeout(async () => {
         await runSyncCheck();
         scheduleNextSync(false);
-      }, delay);
+      }, 1500);
     };
 
     connectSSE();
@@ -193,6 +384,12 @@ export default function RealtimeListener() {
       window.removeEventListener('visibilitychange', onVisibilityOrFocus);
       window.removeEventListener('focus', onVisibilityOrFocus);
 
+      if (supabaseChannel) {
+        try {
+          const supabase = getSupabaseBrowserClient();
+          supabase?.removeChannel(supabaseChannel);
+        } catch {}
+      }
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
@@ -204,4 +401,5 @@ export default function RealtimeListener() {
 
   return null;
 }
+
 

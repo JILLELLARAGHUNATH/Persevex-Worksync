@@ -30,7 +30,9 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
     const handleRealtime = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail;
-        if (detail?.type === 'SYSTEM_ANNOUNCEMENT') {
+        if (!detail) return;
+
+        if (detail.type === 'SYSTEM_ANNOUNCEMENT') {
           if (detail.payload?.type === 'ANNOUNCEMENT_CREATED' && detail.payload?.announcement) {
             setList((prev) => [
               detail.payload.announcement,
@@ -39,6 +41,9 @@ export default function EmployeeAnnouncementCenter({ announcements, currentUserI
           } else if (detail.payload?.type === 'ANNOUNCEMENT_DELETED' && detail.payload?.announcementId) {
             setList((prev) => prev.filter((a) => a.id !== detail.payload.announcementId));
           }
+        } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.activeAnnouncementIds) {
+          const activeSet = new Set(detail.snapshot.activeAnnouncementIds);
+          setList((prev) => prev.filter((a) => activeSet.has(a.id)));
         }
       } catch {}
     };

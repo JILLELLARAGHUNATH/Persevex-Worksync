@@ -21,7 +21,20 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
   React.useEffect(() => {
     const handleRealtime = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail?.type === 'LEAVE_STATUS_CHANGED') {
+      if (!detail) return;
+
+      if (detail.type === 'LEAVE_STATUS_CHANGED') {
+        const type = detail.payload?.type;
+        const stage = detail.payload?.stage;
+        const leaveId = detail.payload?.leaveId;
+
+        if (type === 'LEAVE_DELETED' || stage === 'DELETED') {
+          if (leaveId) {
+            setLeaveHistory((prev) => prev.filter((l) => l.id !== leaveId));
+          }
+          return;
+        }
+
         const updated = detail.payload?.leave;
         if (updated) {
           setLeaveHistory((prev) => {
@@ -34,6 +47,9 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
             return [updated, ...prev];
           });
         }
+      } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.activeLeaveIds) {
+        const activeIds = new Set(detail.snapshot.activeLeaveIds);
+        setLeaveHistory((prev) => prev.filter((l) => activeIds.has(l.id)));
       }
     };
 

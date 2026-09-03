@@ -32,12 +32,17 @@ export default function AnnouncementManagerClient({
   React.useEffect(() => {
     const handleRealtime = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail?.type === 'SYSTEM_ANNOUNCEMENT') {
+      if (!detail) return;
+
+      if (detail.type === 'SYSTEM_ANNOUNCEMENT') {
         if (detail.payload?.type === 'ANNOUNCEMENT_CREATED' && detail.payload?.announcement) {
           setAnnouncements((prev) => [detail.payload.announcement, ...prev.filter((a) => a.id !== detail.payload.announcement.id)]);
         } else if (detail.payload?.type === 'ANNOUNCEMENT_DELETED' && detail.payload?.announcementId) {
           setAnnouncements((prev) => prev.filter((a) => a.id !== detail.payload.announcementId));
         }
+      } else if (detail.type === 'SNAPSHOT_SYNC' && detail.snapshot?.activeAnnouncementIds) {
+        const activeSet = new Set(detail.snapshot.activeAnnouncementIds);
+        setAnnouncements((prev) => prev.filter((a) => activeSet.has(a.id)));
       }
     };
     window.addEventListener('persevex-realtime', handleRealtime);
