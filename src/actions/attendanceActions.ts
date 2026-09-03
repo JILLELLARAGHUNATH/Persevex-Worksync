@@ -23,25 +23,32 @@ export async function checkInAction(
   const now = new Date();
   const india = getIndiaWorkdayInfo(now);
 
-  // Check if an attendance record already exists for today's Indian workday
-  const existing = await prisma.attendance.findFirst({
-    where: {
-      userId: session.id,
-      OR: [
-        { date: india.canonicalDate },
-        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-      ],
-    },
-    include: {
-      user: {
-        include: { team: true },
+  // Parallelize attendance record check and office settings lookup
+  const [existing, settings] = await Promise.all([
+    prisma.attendance.findFirst({
+      where: {
+        userId: session.id,
+        OR: [
+          { date: india.canonicalDate },
+          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        ],
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      include: {
+        user: {
+          include: { team: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    prisma.systemSetting.findUnique({
+      where: {
+        id: 'global_config',
+      },
+    }),
+  ]);
 
   if (existing && existing.checkInTime) {
     return {
@@ -51,24 +58,8 @@ export async function checkInAction(
     };
   }
 
-  // Retrieve office configuration
-  const settings = await prisma.systemSetting.findUnique({
-    where: {
-      id: 'global_config',
-    },
-  });
-
   // Geofence validation
   const geofenceResult = assertWithinOfficeGeofence(settings, coords);
-  console.info('[attendance-geofence]', {
-    operation: 'CHECK_IN',
-    userId: session.id,
-    enforced: Boolean(settings?.enableLocationCheck),
-    allowed: geofenceResult.ok,
-    distanceMeters: geofenceResult.distance,
-    radiusMeters: settings?.officeRadiusMeters ?? null,
-    accuracyMeters: coords?.accuracy ?? null,
-  });
   if (!geofenceResult.ok) {
     return {
       success: false,
@@ -195,13 +186,6 @@ export async function checkInAction(
     teamLeadId: session.teamId,
   });
 
-  revalidatePath('/employee');
-  revalidatePath('/employee/my-attendance');
-  revalidatePath('/team-lead');
-  revalidatePath('/team-lead/my-attendance');
-  revalidatePath('/manager');
-  revalidatePath('/manager/attendance');
-
   return {
     success: true,
     data: attendanceRecord,
@@ -217,25 +201,28 @@ export async function checkOutAction(
   const now = new Date();
   const india = getIndiaWorkdayInfo(now);
 
-  // Locate the existing attendance record for today's Indian workday
-  const record = await prisma.attendance.findFirst({
-    where: {
-      userId: session.id,
-      OR: [
-        { date: india.canonicalDate },
-        { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-      ],
-    },
-    include: {
-      user: {
-        include: { team: true },
+  // Parallelize attendance record check and office settings lookup
+  const [record, settings] = await Promise.all([
+    prisma.attendance.findFirst({
+      where: {
+        userId: session.id,
+        OR: [
+          { date: india.canonicalDate },
+          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
+        ],
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+      include: {
+        user: {
+          include: { team: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }),
+    prisma.systemSetting.findUnique({ where: { id: 'global_config' } }),
+  ]);
 
   if (!record || !record.checkInTime) {
     return { success: false, error: 'Cannot clock out without prior clock-in today.' };
@@ -245,18 +232,7 @@ export async function checkOutAction(
     return { success: false, error: 'You have already completed clock-out for today.', data: record };
   }
 
-  // Read the same live configuration used by check-in before any attendance mutation.
-  const settings = await prisma.systemSetting.findUnique({ where: { id: 'global_config' } });
   const geofenceResult = assertWithinOfficeGeofence(settings, coords);
-  console.info('[attendance-geofence]', {
-    operation: 'CHECK_OUT',
-    userId: session.id,
-    enforced: Boolean(settings?.enableLocationCheck),
-    allowed: geofenceResult.ok,
-    distanceMeters: geofenceResult.distance,
-    radiusMeters: settings?.officeRadiusMeters ?? null,
-    accuracyMeters: coords?.accuracy ?? null,
-  });
   if (!geofenceResult.ok) {
     return { success: false, error: geofenceResult.error };
   }
@@ -305,13 +281,6 @@ export async function checkOutAction(
     userId: session.id,
     teamLeadId: session.teamId,
   });
-
-  revalidatePath('/employee');
-  revalidatePath('/employee/my-attendance');
-  revalidatePath('/team-lead');
-  revalidatePath('/team-lead/my-attendance');
-  revalidatePath('/manager');
-  revalidatePath('/manager/attendance');
 
   return { success: true, data: updated };
 }

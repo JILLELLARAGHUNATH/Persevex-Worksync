@@ -120,25 +120,49 @@ export async function deleteAnnouncementAction(id: string): Promise<{ success: b
   if (!session || session.role !== 'MANAGER') return { success: false, error: 'Unauthorized' };
 
   try {
-    await prisma.auditLog.create({
-      data: {
-        userId: session.id,
-        role: session.role,
-        action: 'ANNOUNCEMENT_DELETED',
-        target: id,
-        details: JSON.stringify({ announcementId: id }),
+    const existing = await prisma.announcement.findUnique({ where: { id } });
+    if (!existing) {
+      // Idempotent: already deleted
+      return { success: true };
+    }
+
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: session.id,
+          role: session.role,
+          action: 'ANNOUNCEMENT_DELETED',
+          target: id,
+          details: JSON.stringify({ announcementId: id, title: existing.title }),
+        },
+      });
+    } catch {}
+
+    // Clean up corresponding notification records to prevent orphan bells
+    await prisma.notification.deleteMany({
+      where: {
+        type: 'ANNOUNCEMENT',
+        OR: [
+          { title: `New Announcement: ${existing.title}` },
+          { link: { contains: id } },
+          { link: '/employee/announcements' },
+        ],
       },
     });
-  } catch {}
 
-  await prisma.announcementRead.deleteMany({ where: { announcementId: id } });
-  await prisma.announcement.delete({ where: { id } });
+    await prisma.announcementRead.deleteMany({ where: { announcementId: id } });
+    await prisma.announcement.deleteMany({ where: { id } });
 
-  appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_DELETED', announcementId: id });
-  revalidatePath('/manager/announcements');
-  revalidatePath('/team-lead/announcements');
-  revalidatePath('/employee/announcements');
-  return { success: true };
+    appEvents.emit(EVENT_TYPES.SYSTEM_ANNOUNCEMENT, { type: 'ANNOUNCEMENT_DELETED', announcementId: id });
+    appEvents.emit(EVENT_TYPES.NOTIFICATION_RECEIVED, { type: 'ANNOUNCEMENT_DELETED', announcementId: id });
+    
+    revalidatePath('/manager/announcements');
+    revalidatePath('/team-lead/announcements');
+    revalidatePath('/employee/announcements');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to delete announcement' };
+  }
 }
 
 export async function archiveAnnouncementAction(id: string): Promise<{ success: boolean; error?: string }> {

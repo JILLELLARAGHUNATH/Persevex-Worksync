@@ -128,13 +128,13 @@ export default function LiveAttendanceCard({
    * CLOCK IN
    */
   const handleCheckIn = async () => {
+    if (loading) return;
     setLoading(true);
 
     try {
       const locResult = await getBrowserLocation();
       if (locResult.isDenied || !locResult.coords) {
         toast.error(locResult.error || 'Location access is required to check in. Please allow location access in your browser.');
-        setLoading(false);
         return;
       }
       const coords = locResult.coords;
@@ -186,6 +186,7 @@ export default function LiveAttendanceCard({
    * CLOCK OUT
    */
   const handleCheckOut = async () => {
+    if (loading) return;
     setLoading(true);
 
     try {
