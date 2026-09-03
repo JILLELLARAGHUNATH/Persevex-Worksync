@@ -87,6 +87,22 @@ export function getIndiaDateKey(dateInput: Date | string | number | null | undef
 }
 
 /**
+ * Returns the timezone-safe "YYYY-MM-DD" key in Asia/Kolkata for today.
+ */
+export function getTodayIndiaDateKey(nowDate: Date = new Date()): string {
+  return getIndiaDateKey(nowDate);
+}
+
+/**
+ * Returns the timezone-safe "YYYY-MM-DD" key in Asia/Kolkata for yesterday.
+ */
+export function getYesterdayIndiaDateKey(nowDate: Date = new Date()): string {
+  const india = getIndiaWorkdayInfo(nowDate);
+  const yesterdayDate = new Date(Date.UTC(india.year, india.month - 1, india.day - 1, 12, 0, 0, 0));
+  return getIndiaDateKey(yesterdayDate);
+}
+
+/**
  * Checks if two timestamps represent the same Indian business day.
  */
 export function isSameIndiaWorkday(
@@ -97,3 +113,4 @@ export function isSameIndiaWorkday(
   const keyB = getIndiaDateKey(dateB);
   return Boolean(keyA && keyB && keyA === keyB);
 }
+

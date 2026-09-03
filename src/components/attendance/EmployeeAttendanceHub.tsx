@@ -10,9 +10,12 @@ import {
   Check,
   AlertTriangle,
   LogIn,
-  LogOut
+  LogOut,
+  CalendarDays,
+  RotateCcw
 } from 'lucide-react';
 import { formatDate, formatTime, getIndiaDateKey, formatDurationHMSFormatted } from '@/lib/utils';
+import { getYesterdayIndiaDateKey } from '@/lib/attendanceDate';
 import { getBrowserLocation } from '@/lib/location';
 import { toast } from 'sonner';
 
@@ -34,6 +37,9 @@ export default function EmployeeAttendanceHub({
   const [records, setRecords] = useState(allRecords);
 
   const currentDate = new Date();
+  const [dayPreset, setDayPreset] = useState<'TODAY' | 'YESTERDAY' | 'DATE'>('TODAY');
+  const [selectedSingleDate, setSelectedSingleDate] = useState<string>(getIndiaDateKey(currentDate));
+
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
 
@@ -264,6 +270,82 @@ export default function EmployeeAttendanceHub({
     return formatDurationHMSFormatted(todayAtt.checkInTime, null, nowTick);
   }, [todayAtt, nowTick]);
 
+  const todayDateKey = getIndiaDateKey(nowTick);
+  const yesterdayDateKey = getYesterdayIndiaDateKey(nowTick);
+
+  const activeDateKey = useMemo(() => {
+    if (dayPreset === 'TODAY') return todayDateKey;
+    if (dayPreset === 'YESTERDAY') return yesterdayDateKey;
+    return selectedSingleDate || todayDateKey;
+  }, [dayPreset, selectedSingleDate, todayDateKey, yesterdayDateKey]);
+
+  const isViewingToday = activeDateKey === todayDateKey;
+
+  // The specific record for the active date (today or historical)
+  const activeDayRecord = useMemo(() => {
+    if (isViewingToday) {
+      return todayAtt;
+    }
+    return records.find((r) => getIndiaDateKey(r.date) === activeDateKey) || null;
+  }, [isViewingToday, todayAtt, records, activeDateKey]);
+
+  // Active status badge for selected day
+  const activeDayStatus = useMemo(() => {
+    if (isViewingToday) {
+      if (todayAtt?.checkInTime && todayAtt?.checkOutTime) return { label: 'Shift Completed', color: 'emerald' };
+      if (todayAtt?.checkInTime) return { label: 'On Duty', color: 'blue' };
+      return { label: 'Ready for Check-in', color: 'slate' };
+    }
+
+    if (!activeDayRecord) {
+      const parts = activeDateKey.split('-');
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        if (d.getDay() === 3) {
+          return { label: 'Weekly Off (Wed)', color: 'slate' };
+        }
+      }
+      return { label: 'Absent', color: 'rose' };
+    }
+
+    if (activeDayRecord.status === 'ON_LEAVE') return { label: 'Approved Leave', color: 'violet' };
+    if (activeDayRecord.checkInTime && activeDayRecord.checkOutTime) {
+      return {
+        label: activeDayRecord.lateStatus === 'LATE' ? 'Completed (Late)' : 'Shift Completed',
+        color: activeDayRecord.lateStatus === 'LATE' ? 'amber' : 'emerald',
+      };
+    }
+    if (activeDayRecord.checkInTime) return { label: 'Punched In', color: 'blue' };
+    return { label: 'Absent', color: 'rose' };
+  }, [isViewingToday, todayAtt, activeDayRecord, activeDateKey]);
+
+  const activeInDisplay = useMemo(() => {
+    if (isViewingToday) {
+      return mounted && todayAtt?.checkInTime ? formatTime(todayAtt.checkInTime) : '--:--';
+    }
+    return activeDayRecord?.checkInTime ? formatTime(activeDayRecord.checkInTime) : '--:--';
+  }, [isViewingToday, mounted, todayAtt, activeDayRecord]);
+
+  const activeOutDisplay = useMemo(() => {
+    if (isViewingToday) {
+      return mounted && todayAtt?.checkOutTime ? formatTime(todayAtt.checkOutTime) : '--:--';
+    }
+    return activeDayRecord?.checkOutTime ? formatTime(activeDayRecord.checkOutTime) : '--:--';
+  }, [isViewingToday, mounted, todayAtt, activeDayRecord]);
+
+  const activeDurationDisplay = useMemo(() => {
+    if (isViewingToday) {
+      return mounted ? todayLiveDuration : '00h 00m 00s';
+    }
+    if (activeDayRecord?.checkInTime && activeDayRecord?.checkOutTime) {
+      return formatDurationHMSFormatted(activeDayRecord.checkInTime, activeDayRecord.checkOutTime, activeDayRecord.totalHours);
+    }
+    if (activeDayRecord?.totalHours) {
+      return `${activeDayRecord.totalHours}h`;
+    }
+    return '00h 00m 00s';
+  }, [isViewingToday, mounted, todayLiveDuration, activeDayRecord]);
+
 
   // Calculate daily dataset with explicit status colors for every day
   const { trendData, stats } = useMemo(() => {
@@ -378,11 +460,64 @@ export default function EmployeeAttendanceHub({
   return (
     <div className="space-y-4">
       {/* ========================================================================= */}
+      {/* 0. FILTER TOOLBAR: TODAY, YESTERDAY, SELECT DATE                          */}
+      {/* ========================================================================= */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+            {(['TODAY', 'YESTERDAY', 'DATE'] as const).map((preset) => (
+              <button
+                key={preset}
+                onClick={() => setDayPreset(preset)}
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
+                  dayPreset === preset
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
+              >
+                {preset === 'TODAY' ? 'Today' : preset === 'YESTERDAY' ? 'Yesterday' : 'Select Date'}
+              </button>
+            ))}
+          </div>
+
+          {/* Specific Date Picker */}
+          {dayPreset === 'DATE' && (
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs">
+              <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+              <input
+                type="date"
+                value={selectedSingleDate}
+                onChange={(e) => setSelectedSingleDate(e.target.value)}
+                className="bg-transparent text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none cursor-pointer"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-slate-500 dark:text-slate-400">
+            Viewing: <strong className="text-slate-900 dark:text-slate-100 font-semibold">{dayPreset === 'TODAY' ? 'Today' : dayPreset === 'YESTERDAY' ? 'Yesterday' : activeDateKey}</strong>
+          </span>
+          {dayPreset !== 'TODAY' && (
+            <button
+              onClick={() => {
+                setDayPreset('TODAY');
+                setSelectedSingleDate(todayDateKey);
+              }}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer flex items-center gap-1"
+            >
+              <RotateCcw className="w-3 h-3" /> Back to Today
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
       {/* 1. TOP HERO: ATTENDANCE PUNCH & SHIFT OVERVIEW                            */}
       {/* ========================================================================= */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          {/* Live Clock & Shift Details */}
+          {/* Live Clock / Date & Shift Details */}
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
               <Clock className="w-4 h-4" />
@@ -391,10 +526,10 @@ export default function EmployeeAttendanceHub({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight" suppressHydrationWarning>
-                  {mounted ? time : '--:--:--'}
+                  {isViewingToday ? (mounted ? time : '--:--:--') : activeDateKey}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-                  &middot; {todayAtt?.date ? new Date(todayAtt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'}
+                  &middot; {isViewingToday ? 'Today' : (dayPreset === 'YESTERDAY' ? 'Yesterday' : 'Selected Date')}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -403,19 +538,33 @@ export default function EmployeeAttendanceHub({
             </div>
 
             <div className="hidden sm:block pl-2">
-              {isCheckedIn && isCheckedOut ? (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 font-semibold text-[10px] border border-emerald-200 dark:border-emerald-800/60">
-                  <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Shift Completed
-                </span>
-              ) : isCheckedIn ? (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 font-semibold text-[10px] border border-blue-200 dark:border-blue-800/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> On Duty
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-[10px] border border-slate-200 dark:border-slate-700">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Ready for Check-in
-                </span>
-              )}
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-semibold text-[10px] border ${
+                  activeDayStatus.color === 'emerald'
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60'
+                    : activeDayStatus.color === 'amber'
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border-amber-200 dark:border-amber-800/60'
+                    : activeDayStatus.color === 'violet'
+                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400 border-violet-200 dark:border-violet-800/60'
+                    : activeDayStatus.color === 'rose'
+                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border-rose-200 dark:border-rose-800/60'
+                    : activeDayStatus.color === 'blue'
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border-blue-200 dark:border-blue-800/60'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                {activeDayStatus.color === 'emerald' ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    activeDayStatus.color === 'blue' ? 'bg-blue-500' :
+                    activeDayStatus.color === 'amber' ? 'bg-amber-500' :
+                    activeDayStatus.color === 'violet' ? 'bg-violet-500' :
+                    activeDayStatus.color === 'rose' ? 'bg-rose-500' : 'bg-slate-400'
+                  }`} />
+                )}
+                {activeDayStatus.label}
+              </span>
             </div>
           </div>
 
@@ -425,45 +574,54 @@ export default function EmployeeAttendanceHub({
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">In: </span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
-                  {mounted && todayAtt?.checkInTime ? formatTime(todayAtt.checkInTime) : '--:--'}
+                  {activeInDisplay}
                 </span>
               </div>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Out: </span>
                 <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">
-                  {mounted && todayAtt?.checkOutTime ? formatTime(todayAtt.checkOutTime) : '--:--'}
+                  {activeOutDisplay}
                 </span>
               </div>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <div>
                 <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Duration: </span>
                 <span className="font-semibold text-blue-600 dark:text-blue-400 font-mono" suppressHydrationWarning>
-                  {mounted ? todayLiveDuration : '00h 00m 00s'}
+                  {activeDurationDisplay}
                 </span>
               </div>
             </div>
 
-            {/* Punch Buttons */}
-            <div className="flex items-center gap-1.5">
-              <button
-                disabled={isCheckedIn || loading}
-                onClick={handleCheckIn}
-                className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
-              >
-                {loading && !isCheckedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
-              </button>
+            {/* Punch Buttons or History Indicator */}
+            {isViewingToday ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  disabled={isCheckedIn || loading}
+                  onClick={handleCheckIn}
+                  className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {loading && !isCheckedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
+                </button>
 
-              <button
-                disabled={!isCheckedIn || isCheckedOut || loading}
-                onClick={handleCheckOut}
-                className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
-              >
-                {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
-              </button>
-            </div>
+                <button
+                  disabled={!isCheckedIn || isCheckedOut || loading}
+                  onClick={handleCheckOut}
+                  className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                  <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <span className="h-8 px-3 rounded-lg font-medium text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+                  <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Historical Record</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -602,7 +760,11 @@ export default function EmployeeAttendanceHub({
                     key={d.dateKey}
                     onMouseEnter={() => setHoveredDate(d.dateKey)}
                     onMouseLeave={() => setHoveredDate(null)}
-                    onClick={() => setHoveredDate(hoveredDate === d.dateKey ? null : d.dateKey)}
+                    onClick={() => {
+                      setHoveredDate(hoveredDate === d.dateKey ? null : d.dateKey);
+                      setSelectedSingleDate(d.dateKey);
+                      setDayPreset(d.isToday ? 'TODAY' : 'DATE');
+                    }}
                     className="flex-1 flex flex-col items-center gap-1 h-full justify-end group cursor-pointer relative min-w-0"
                   >
                     {/* Professional Tooltip on Hover / Touch */}

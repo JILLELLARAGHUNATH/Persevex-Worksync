@@ -60,6 +60,10 @@ export async function GET(req: NextRequest) {
     let activeAnnouncementsPromise: Promise<any[]>;
     let activeLeavesPromise: Promise<any[]>;
     let unreadCountPromise: Promise<number>;
+    let activeNotificationsPromise: Promise<any[]> = prisma.notification.findMany({
+      where: { userId: session.id },
+      select: { id: true },
+    });
 
     if (role === 'EMPLOYEE') {
       attendancesPromise = prisma.attendance.findMany({
@@ -326,6 +330,7 @@ export async function GET(req: NextRequest) {
       activeAnnouncements,
       activeLeaves,
       unreadNotificationCount,
+      activeNotifications,
     ] = await Promise.all([
       attendancesPromise,
       leavesPromise,
@@ -338,6 +343,7 @@ export async function GET(req: NextRequest) {
       activeAnnouncementsPromise,
       activeLeavesPromise,
       unreadCountPromise,
+      activeNotificationsPromise,
     ]);
 
     const events: Array<{ type: string; payload: any; timestamp: number }> = [];
@@ -454,6 +460,7 @@ export async function GET(req: NextRequest) {
           todayAttendanceUserIds: todayAttendances.map((a) => a.userId),
           activeAnnouncementIds: activeAnnouncements.map((a) => a.id),
           activeLeaveIds: activeLeaves.map((l) => l.id),
+          activeNotificationIds: activeNotifications.map((n: any) => n.id),
           unreadNotificationCount,
         },
       },

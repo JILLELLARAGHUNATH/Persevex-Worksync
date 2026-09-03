@@ -16,6 +16,7 @@ import LiveAttendanceCard from './LiveAttendanceCard';
 import { useRouter } from 'next/navigation';
 
 import { getIndiaDateKey } from '@/lib/utils';
+import { getYesterdayIndiaDateKey } from '@/lib/attendanceDate';
 
 export default function TeamLeadDashboardClient({
   teamMembers,
@@ -36,10 +37,15 @@ export default function TeamLeadDashboardClient({
   const [members, setMembers] = useState<any[]>(teamMembers);
   const [attendances, setAttendances] = useState<any[]>(initialAttendances);
 
-  // 1. Filter States: TODAY, WEEK, MONTH, YEAR, CUSTOM
-  const [datePreset, setDatePreset] = useState<'TODAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM'>('TODAY');
+  const now = new Date();
+  const todayStr = getIndiaDateKey(now);
+
+  // 1. Filter States: TODAY, YESTERDAY, WEEK, MONTH, YEAR, DATE, CUSTOM
+  const [datePreset, setDatePreset] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'DATE' | 'CUSTOM'>('TODAY');
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [customStart, setCustomStart] = useState<string>('');
   const [customEnd, setCustomEnd] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [displayMode, setDisplayMode] = useState<'COUNT' | 'PERCENTAGE'>('COUNT');
 
@@ -53,9 +59,6 @@ export default function TeamLeadDashboardClient({
   useEffect(() => {
     setAttendances(initialAttendances);
   }, [initialAttendances]);
-
-  const now = new Date();
-  const todayStr = getIndiaDateKey(now);
 
   // Real-time synchronization via SSE / Polling (strictly scoped to Squad + TL)
   useEffect(() => {
@@ -150,16 +153,26 @@ export default function TeamLeadDashboardClient({
     return () => window.removeEventListener('persevex-realtime', handleRealtime);
   }, [router, members, currentUserId, todayStr]);
 
-  // Active squad pool (Squad members + Team Lead; Managers excluded)
+  // Active squad pool (Squad members + Team Lead; Managers excluded, filtered by selectedEmployee if chosen)
   const activeSquadPool = useMemo(() => {
+    let valid = members.filter((m) => !m.isDeleted && m.accountStatus !== 'SUSPENDED' && m.role !== 'MANAGER');
+    if (selectedEmployee) {
+      valid = valid.filter((m) => m.id === selectedEmployee);
+    }
+    return valid;
+  }, [members, selectedEmployee]);
+
+  // Squad members for the Employee Dropdown
+  const squadMembersForDropdown = useMemo(() => {
     return members.filter((m) => !m.isDeleted && m.accountStatus !== 'SUSPENDED' && m.role !== 'MANAGER');
   }, [members]);
 
-
   const resetFilters = () => {
     setDatePreset('TODAY');
+    setSelectedDate(todayStr);
     setCustomStart('');
     setCustomEnd('');
+    setSelectedEmployee('');
     setStatusFilter('');
     setDisplayMode('COUNT');
     setHoveredSegment(null);
@@ -171,35 +184,55 @@ export default function TeamLeadDashboardClient({
       return activeSquadPool.some((m) => m.id === r.userId);
     });
 
-    if (datePreset === 'TODAY') {
-      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
-    } else if (datePreset === 'WEEK') {
+    let startRangeKey = todayStr;
+    let endRangeKey = todayStr;
 
+    if (datePreset === 'TODAY') {
+      startRangeKey = todayStr;
+      endRangeKey = todayStr;
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
+    } else if (datePreset === 'YESTERDAY') {
+      const yesterdayKey = getYesterdayIndiaDateKey(now);
+      startRangeKey = yesterdayKey;
+      endRangeKey = yesterdayKey;
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === yesterdayKey);
+    } else if (datePreset === 'DATE') {
+      const targetDateKey = selectedDate || todayStr;
+      startRangeKey = targetDateKey;
+      endRangeKey = targetDateKey;
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === targetDateKey);
+    } else if (datePreset === 'WEEK') {
       const dayOfWeek = now.getDay();
       const distanceToMonday = (dayOfWeek + 6) % 7;
       const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(monday);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= monday && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'MONTH') {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(startOfMonth);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= startOfMonth && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'YEAR') {
       const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+      startRangeKey = getIndiaDateKey(startOfYear);
+      endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= startOfYear && d <= now;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     } else if (datePreset === 'CUSTOM') {
-      const s = customStart ? new Date(customStart) : new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
-      const e = customEnd ? new Date(customEnd) : new Date(now);
+      startRangeKey = customStart || getIndiaDateKey(new Date(now.getTime() - 6 * 86400000));
+      endRangeKey = customEnd || todayStr;
       matchingRecords = matchingRecords.filter((r) => {
-        const d = new Date(r.date);
-        return d >= s && d <= e;
+        const k = getIndiaDateKey(r.date);
+        return k >= startRangeKey && k <= endRangeKey;
       });
     }
 
@@ -265,7 +298,7 @@ export default function TeamLeadDashboardClient({
         unexcusedAbsent: unexcusedAbsentEmployees,
       },
     };
-  }, [datePreset, attendances, activeSquadPool, todayStr, customStart, customEnd]);
+  }, [datePreset, selectedDate, selectedEmployee, attendances, activeSquadPool, todayStr, customStart, customEnd]);
 
   const totalSlots = summary.totalSquad;
   const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
@@ -277,6 +310,10 @@ export default function TeamLeadDashboardClient({
   const filterTitle =
     datePreset === 'TODAY'
       ? 'Today'
+      : datePreset === 'YESTERDAY'
+      ? 'Yesterday'
+      : datePreset === 'DATE'
+      ? (selectedDate ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' }) : 'Selected Date')
       : datePreset === 'WEEK'
       ? 'This Week'
       : datePreset === 'MONTH'
@@ -290,12 +327,12 @@ export default function TeamLeadDashboardClient({
       {/* 1. Attendance Punch Marker for Team Lead */}
       <LiveAttendanceCard initialAttendance={tlAttendance} currentUserId={currentUserId} />
 
-      {/* 2. Compact Filter Toolbar (Today, Week, Month, Year, Custom) */}
+      {/* 2. Advanced Filter Toolbar (Today, Yesterday, Week, Month, Year, Date, Custom, Assigned Employee, Status) */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
         {/* Left: Date Presets */}
         <div className="flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-            {(['TODAY', 'WEEK', 'MONTH', 'YEAR', 'CUSTOM'] as const).map((preset) => (
+            {(['TODAY', 'YESTERDAY', 'WEEK', 'MONTH', 'YEAR', 'DATE', 'CUSTOM'] as const).map((preset) => (
               <button
                 key={preset}
                 onClick={() => {
@@ -310,16 +347,33 @@ export default function TeamLeadDashboardClient({
               >
                 {preset === 'TODAY'
                   ? 'Today'
+                  : preset === 'YESTERDAY'
+                  ? 'Yesterday'
                   : preset === 'WEEK'
                   ? 'Week'
                   : preset === 'MONTH'
                   ? 'Month'
                   : preset === 'YEAR'
                   ? 'Year'
+                  : preset === 'DATE'
+                  ? 'Date'
                   : 'Custom'}
               </button>
             ))}
           </div>
+
+          {/* Specific Date Picker */}
+          {datePreset === 'DATE' && (
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs">
+              <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none cursor-pointer"
+              />
+            </div>
+          )}
 
           {/* Custom Date Pickers */}
           {datePreset === 'CUSTOM' && (
@@ -341,13 +395,27 @@ export default function TeamLeadDashboardClient({
           )}
         </div>
 
-        {/* Right: Status, Display Mode & Reset */}
+        {/* Right: Assigned Employee, Status, Display Mode & Reset */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Assigned Squad Member Filter */}
+          <select
+            value={selectedEmployee}
+            onChange={(e) => setSelectedEmployee(e.target.value)}
+            className="h-8 max-w-[180px] truncate bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="">All Squad Members ({squadMembersForDropdown.length})</option>
+            {squadMembersForDropdown.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.fullName} {m.employeeId ? `(${m.employeeId})` : ''} {m.id === currentUserId ? '(You)' : ''}
+              </option>
+            ))}
+          </select>
+
           {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="PRESENT">Present</option>

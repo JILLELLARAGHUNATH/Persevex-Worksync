@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function applyLeaveAction(formData: FormData): Promise<{
   success: boolean;
@@ -69,7 +68,7 @@ export async function applyLeaveAction(formData: FormData): Promise<{
       include: { user: { include: { team: true } } },
     });
 
-    // Notify reviewer (Team Lead or Managers)
+    // Notify reviewer with deterministic leave ID reference in link
     if (initialStage === 'PENDING_TL' && user?.team?.teamLeadId) {
       await prisma.notification.create({
         data: {
@@ -77,7 +76,7 @@ export async function applyLeaveAction(formData: FormData): Promise<{
           title: 'New Leave Request',
           message: `${session.fullName} submitted a ${leaveType.replace(/_/g, ' ')} leave request (${diffDays} days).`,
           type: 'LEAVE',
-          link: '/team-lead/leave-requests',
+          link: `/team-lead/leave-requests?id=${leave.id}`,
           isRead: false,
         },
       });
@@ -93,7 +92,7 @@ export async function applyLeaveAction(formData: FormData): Promise<{
             title: 'New Leave Request',
             message: `${session.fullName} submitted a ${leaveType.replace(/_/g, ' ')} leave request (${diffDays} days).`,
             type: 'LEAVE',
-            link: '/manager/leave-requests',
+            link: `/manager/leave-requests?id=${leave.id}`,
             isRead: false,
           })),
         });
@@ -179,22 +178,47 @@ export async function processLeaveApprovalAction(
     include: { user: { include: { team: true } } },
   });
 
-  // Notify applicant
+  // 1. Resolve / clean up all pending reviewer notifications for this specific leave request
+  try {
+    await prisma.notification.deleteMany({
+      where: {
+        type: 'LEAVE',
+        OR: [
+          { link: `/manager/leave-requests?id=${leaveId}` },
+          { link: `/team-lead/leave-requests?id=${leaveId}` },
+          { link: { contains: leaveId } },
+          {
+            link: { in: ['/manager/leave-requests', '/team-lead/leave-requests'] },
+            message: { contains: leave.user?.fullName || '' },
+            isRead: false,
+          },
+        ],
+      },
+    });
+  } catch (cleanupErr) {
+    console.warn('Pending leave notification cleanup warning:', cleanupErr);
+  }
+
+  // 2. Notify applicant with the decision
   try {
     await prisma.notification.create({
       data: {
         userId: leave.userId,
-        title: action === 'APPROVE' ? 'Leave Request Approved' : 'Leave Request Rejected',
+        title: action === 'APPROVE'
+          ? (nextStage === 'APPROVED' ? 'Leave Request Approved' : 'Leave Request Recommended')
+          : 'Leave Request Rejected',
         message: action === 'APPROVE'
-          ? (nextStage === 'APPROVED' ? `Your ${leave.leaveType.replace(/_/g, ' ')} leave request was approved.` : `Your leave request was recommended by ${session.fullName} and forwarded to Management.`)
+          ? (nextStage === 'APPROVED'
+              ? `Your ${leave.leaveType.replace(/_/g, ' ')} leave request was approved.`
+              : `Your leave request was recommended by ${session.fullName} and forwarded to Management.`)
           : `Your ${leave.leaveType.replace(/_/g, ' ')} leave request was rejected.`,
         type: 'LEAVE',
-        link: '/employee/apply-leave',
+        link: '/employee/my-leaves',
         isRead: false,
       },
     });
 
-    // If forwarded to manager, also notify manager
+    // 3. If forwarded to manager, notify manager with deterministic link
     if (nextStage === 'PENDING_MANAGER') {
       const managers = await prisma.user.findMany({
         where: { role: 'MANAGER', isDeleted: false },
@@ -207,16 +231,18 @@ export async function processLeaveApprovalAction(
             title: 'Leave Request Pending Final Approval',
             message: `${leave.user?.fullName}'s leave request was approved by Team Lead and awaits your review.`,
             type: 'LEAVE',
-            link: '/manager/leave-requests',
+            link: `/manager/leave-requests?id=${leaveId}`,
             isRead: false,
           })),
         });
       }
     }
-  } catch {}
+  } catch (notifErr) {
+    console.warn('Applicant notification creation warning:', notifErr);
+  }
 
   appEvents.emit(EVENT_TYPES.LEAVE_STATUS_CHANGED, { leaveId, stage: nextStage, leave: updatedLeave });
-  appEvents.emit(EVENT_TYPES.NOTIFICATION_RECEIVED, { leaveId });
+  appEvents.emit(EVENT_TYPES.NOTIFICATION_RECEIVED, { leaveId, action, stage: nextStage });
 
   revalidatePath('/manager/leave-requests');
   revalidatePath('/manager/attendance');

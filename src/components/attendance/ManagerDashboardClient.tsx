@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { getIndiaDateKey } from '@/lib/utils';
+import { getYesterdayIndiaDateKey } from '@/lib/attendanceDate';
 
 const EMPTY_ARRAY: any[] = [];
 
@@ -37,11 +38,16 @@ export default function ManagerDashboardClient({
   const [attendances, setAttendances] = useState<any[]>(initialAttendances);
   const [leavesList, setLeavesList] = useState<any[]>(initialApprovedLeaves);
 
-  // 1. Filter States: TODAY, WEEK, MONTH, YEAR, CUSTOM
-  const [datePreset, setDatePreset] = useState<'TODAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'CUSTOM'>('TODAY');
+  const now = new Date();
+  const todayStr = getIndiaDateKey(now);
+
+  // 1. Filter States: TODAY, YESTERDAY, WEEK, MONTH, YEAR, DATE, CUSTOM
+  const [datePreset, setDatePreset] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'DATE' | 'CUSTOM'>('TODAY');
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [customStart, setCustomStart] = useState<string>('');
   const [customEnd, setCustomEnd] = useState<string>('');
   const [selectedTeam, setSelectedTeam] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [displayMode, setDisplayMode] = useState<'COUNT' | 'PERCENTAGE'>('COUNT');
 
@@ -49,9 +55,6 @@ export default function ManagerDashboardClient({
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDateStr, setCurrentDateStr] = useState<string>('');
   const [hoveredSegment, setHoveredSegment] = useState<'PRESENT' | 'LATE' | 'ABSENT' | 'LEAVE' | null>(null);
-
-  const now = new Date();
-  const todayStr = getIndiaDateKey(now);
 
   // Sync with props when server refreshes
   useEffect(() => {
@@ -229,21 +232,46 @@ export default function ManagerDashboardClient({
     return () => clearInterval(interval);
   }, []);
 
-  // Active Employee Pool (Team Leads and Employees only - Managers do not mark shift attendance)
-  const activeEmployeePool = useMemo(() => {
-    const valid = employees.filter((e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED' && e.role !== 'MANAGER');
+  // Available Employees for Dropdown (filtered by selectedTeam if chosen)
+  const availableEmployeesForDropdown = useMemo(() => {
+    const pool = employees.filter((e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED' && e.role !== 'MANAGER');
     if (selectedTeam) {
-      return valid.filter((e) => e.teamId === selectedTeam);
+      return pool.filter((e) => e.teamId === selectedTeam);
+    }
+    return pool;
+  }, [employees, selectedTeam]);
+
+  // Active Employee Pool for Calculations (filtered by selectedTeam AND selectedEmployee)
+  const activeEmployeePool = useMemo(() => {
+    let valid = employees.filter((e) => !e.isDeleted && e.accountStatus !== 'SUSPENDED' && e.role !== 'MANAGER');
+    if (selectedTeam) {
+      valid = valid.filter((e) => e.teamId === selectedTeam);
+    }
+    if (selectedEmployee) {
+      valid = valid.filter((e) => e.id === selectedEmployee);
     }
     return valid;
-  }, [employees, selectedTeam]);
+  }, [employees, selectedTeam, selectedEmployee]);
+
+  // Team Change Handler (resets employee if selected employee not in new team)
+  const handleTeamChange = (teamId: string) => {
+    setSelectedTeam(teamId);
+    if (selectedEmployee) {
+      const emp = employees.find((e) => e.id === selectedEmployee);
+      if (emp && teamId && emp.teamId !== teamId) {
+        setSelectedEmployee('');
+      }
+    }
+  };
 
   // Reset Filters
   const resetFilters = () => {
     setDatePreset('TODAY');
+    setSelectedDate(todayStr);
     setCustomStart('');
     setCustomEnd('');
     setSelectedTeam('');
+    setSelectedEmployee('');
     setStatusFilter('');
     setDisplayMode('COUNT');
     setHoveredSegment(null);
@@ -256,6 +284,7 @@ export default function ManagerDashboardClient({
     let matchingRecords = attendances.filter((r) => {
       if (r.user?.role === 'MANAGER') return false;
       if (selectedTeam && r.user?.teamId !== selectedTeam) return false;
+      if (selectedEmployee && r.userId !== selectedEmployee) return false;
       return true;
     });
 
@@ -266,6 +295,16 @@ export default function ManagerDashboardClient({
       startRangeKey = todayStr;
       endRangeKey = todayStr;
       matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === todayStr);
+    } else if (datePreset === 'YESTERDAY') {
+      const yesterdayKey = getYesterdayIndiaDateKey(now);
+      startRangeKey = yesterdayKey;
+      endRangeKey = yesterdayKey;
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === yesterdayKey);
+    } else if (datePreset === 'DATE') {
+      const targetDateKey = selectedDate || todayStr;
+      startRangeKey = targetDateKey;
+      endRangeKey = targetDateKey;
+      matchingRecords = matchingRecords.filter((r) => getIndiaDateKey(r.date) === targetDateKey);
     } else if (datePreset === 'WEEK') {
       const dayOfWeek = now.getDay();
       const distanceToMonday = (dayOfWeek + 6) % 7;
@@ -373,7 +412,7 @@ export default function ManagerDashboardClient({
         unexcusedAbsent: unexcusedAbsentEmployees,
       },
     };
-  }, [datePreset, attendances, leavesList, activeEmployeePool, todayStr, selectedTeam, customStart, customEnd]);
+  }, [datePreset, selectedDate, selectedEmployee, attendances, leavesList, activeEmployeePool, todayStr, selectedTeam, customStart, customEnd]);
 
   const totalSlots = summary.totalWorkforce;
   const presentPct = Math.round((summary.totalPresent / totalSlots) * 100);
@@ -386,6 +425,10 @@ export default function ManagerDashboardClient({
   const filterTitle =
     datePreset === 'TODAY'
       ? 'Today'
+      : datePreset === 'YESTERDAY'
+      ? 'Yesterday'
+      : datePreset === 'DATE'
+      ? (selectedDate ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' }) : 'Selected Date')
       : datePreset === 'WEEK'
       ? 'This Week'
       : datePreset === 'MONTH'
@@ -422,7 +465,7 @@ export default function ManagerDashboardClient({
 
         <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
           <Users className="w-3.5 h-3.5 text-blue-500" />
-          <span>Workforce: <strong className="text-slate-900 dark:text-slate-100 font-semibold">{activeEmployeePool.length}</strong> Employees</span>
+          <span>Workforce: <strong className="text-slate-900 dark:text-slate-100 font-semibold">{activeEmployeePool.length}</strong> {selectedEmployee ? 'Employee (Filtered)' : 'Employees'}</span>
           {selectedTeam && (
             <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
               {teams.find((t) => t.id === selectedTeam)?.name}
@@ -432,13 +475,13 @@ export default function ManagerDashboardClient({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. COMPACT TOOLBAR (FEW FILTERS ONLY: TODAY, WEEK, MONTH, YEAR, CUSTOM)   */}
+      {/* 2. ADVANCED TOOLBAR (TODAY, YESTERDAY, WEEK, MONTH, YEAR, DATE, CUSTOM)    */}
       {/* ========================================================================= */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
         {/* Left: Date Presets */}
         <div className="flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-            {(['TODAY', 'WEEK', 'MONTH', 'YEAR', 'CUSTOM'] as const).map((preset) => (
+            {(['TODAY', 'YESTERDAY', 'WEEK', 'MONTH', 'YEAR', 'DATE', 'CUSTOM'] as const).map((preset) => (
               <button
                 key={preset}
                 onClick={() => {
@@ -453,16 +496,33 @@ export default function ManagerDashboardClient({
               >
                 {preset === 'TODAY'
                   ? 'Today'
+                  : preset === 'YESTERDAY'
+                  ? 'Yesterday'
                   : preset === 'WEEK'
                   ? 'Week'
                   : preset === 'MONTH'
                   ? 'Month'
                   : preset === 'YEAR'
                   ? 'Year'
+                  : preset === 'DATE'
+                  ? 'Date'
                   : 'Custom'}
               </button>
             ))}
           </div>
+
+          {/* Specific Date Picker */}
+          {datePreset === 'DATE' && (
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1 text-xs">
+              <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none cursor-pointer"
+              />
+            </div>
+          )}
 
           {/* Custom Date Pickers */}
           {datePreset === 'CUSTOM' && (
@@ -484,13 +544,13 @@ export default function ManagerDashboardClient({
           )}
         </div>
 
-        {/* Right: Team, Status, Display Mode & Reset */}
+        {/* Right: Team, Employee, Status, Display Mode & Reset */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Team Filter */}
           <select
             value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
-            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) => handleTeamChange(e.target.value)}
+            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
           >
             <option value="">All Teams</option>
             {teams.map((t) => (
@@ -500,11 +560,25 @@ export default function ManagerDashboardClient({
             ))}
           </select>
 
+          {/* Employee Filter */}
+          <select
+            value={selectedEmployee}
+            onChange={(e) => setSelectedEmployee(e.target.value)}
+            className="h-8 max-w-[180px] truncate bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="">All Employees ({availableEmployeesForDropdown.length})</option>
+            {availableEmployeesForDropdown.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.fullName} {emp.employeeId ? `(${emp.employeeId})` : ''}
+              </option>
+            ))}
+          </select>
+
           {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-8 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-slate-700 dark:text-slate-300 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="PRESENT">Present</option>

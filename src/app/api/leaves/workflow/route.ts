@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { appEvents, EVENT_TYPES } from '@/lib/events';
+import { processLeaveApprovalAction } from '@/actions/leaveActions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -40,38 +40,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const { id, action, comments } = await request.json();
-    const leave = await prisma.leaveRequest.findUnique({ where: { id }, include: { user: true } });
-    if (!leave) return NextResponse.json({ success: false, message: 'Leave not found' }, { status: 404 });
+    const normalizedAction = String(action).toUpperCase() === 'REJECT' ? 'REJECT' : 'APPROVE';
 
-    const normalizedAction = String(action).toUpperCase();
-    let nextStage = leave.currentStage;
-
-    if (normalizedAction === 'REJECT') {
-      nextStage = 'REJECTED';
-    } else {
-      if (session.role === 'TEAM_LEAD' && leave.currentStage === 'PENDING_TL') {
-        nextStage = 'PENDING_MANAGER';
-      } else if (session.role === 'MANAGER') {
-        nextStage = 'APPROVED';
-      }
+    const res = await processLeaveApprovalAction(id, normalizedAction, comments);
+    if (!res.success) {
+      return NextResponse.json({ success: false, message: res.error || 'Failed to process leave' }, { status: 400 });
     }
 
-    if (nextStage === 'APPROVED') {
-      await prisma.leaveBalance.updateMany({
-        where: { userId: leave.userId, leaveType: leave.leaveType, year: new Date().getFullYear() },
-        data: { usedQuota: { increment: leave.numberOfDays } },
-      });
-    }
-
-    const updated = await prisma.leaveRequest.update({
-      where: { id },
-      data: { currentStage: nextStage },
-      include: { user: { include: { team: true } } },
-    });
-
-    appEvents.emit(EVENT_TYPES.LEAVE_STATUS_CHANGED, { leaveId: id, stage: nextStage, leave: updated });
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({ success: true, data: res.leave });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: 'Failed to process leave' }, { status: 500 });
+    return NextResponse.json({ success: false, message: error?.message || 'Failed to process leave' }, { status: 500 });
   }
 }

@@ -17,6 +17,7 @@ export default function RealtimeListener() {
   const prevTodayAttUserIdsRef = useRef<Set<string>>(new Set());
   const prevActiveAnnouncementIdsRef = useRef<Set<string>>(new Set());
   const prevActiveLeaveIdsRef = useRef<Set<string>>(new Set());
+  const prevActiveNotificationIdsRef = useRef<Set<string>>(new Set());
   const isFirstSyncRef = useRef<boolean>(true);
 
   const handleIncomingEvent = (data: any) => {
@@ -147,6 +148,15 @@ export default function RealtimeListener() {
                   },
                   timestamp: Date.now(),
                 });
+              } else if (payload.eventType === 'DELETE') {
+                handleIncomingEvent({
+                  type: 'NOTIFICATION_RECEIVED',
+                  payload: {
+                    type: 'NOTIFICATION_DELETED',
+                    notificationId: payload.old?.id,
+                  },
+                  timestamp: Date.now(),
+                });
               }
             }
           )
@@ -272,6 +282,7 @@ export default function RealtimeListener() {
             const currentAttUserIds = new Set<string>(data.snapshot.todayAttendanceUserIds || []);
             const currentAnnouncementIds = new Set<string>(data.snapshot.activeAnnouncementIds || []);
             const currentLeaveIds = new Set<string>(data.snapshot.activeLeaveIds || []);
+            const currentNotificationIds = new Set<string>(data.snapshot.activeNotificationIds || []);
 
             if (!isFirstSyncRef.current) {
               // Detect deleted attendances for today
@@ -314,11 +325,25 @@ export default function RealtimeListener() {
                   });
                 }
               }
+
+              // Detect deleted notifications
+              for (const prevNotifId of prevActiveNotificationIdsRef.current) {
+                if (!currentNotificationIds.has(prevNotifId)) {
+                  handleIncomingEvent({
+                    type: 'NOTIFICATION_RECEIVED',
+                    payload: {
+                      type: 'NOTIFICATION_DELETED',
+                      notificationId: prevNotifId,
+                    },
+                  });
+                }
+              }
             }
 
             prevTodayAttUserIdsRef.current = currentAttUserIds;
             prevActiveAnnouncementIdsRef.current = currentAnnouncementIds;
             prevActiveLeaveIdsRef.current = currentLeaveIds;
+            prevActiveNotificationIdsRef.current = currentNotificationIds;
             isFirstSyncRef.current = false;
 
             // Broadcast snapshot sync to components
