@@ -42,14 +42,14 @@ const resultInside = assertWithinOfficeGeofence(settings, {
 });
 assert(resultInside.ok === true && (resultInside.distance ?? 0) <= 100, 'Inside office (45m) is accepted', resultInside);
 
-// Test 3: User near boundary with indoor building GPS drift (distance = 115m, accuracy ±35m, radius 100m)
-const deltaLat115m = 115 / 111139; // ~115 meters
+// Test 3: A reading outside the configured radius must never be admitted by GPS accuracy.
+const deltaLat103m = 103 / 111139; // ~103 meters
 const resultDrift = assertWithinOfficeGeofence(settings, {
-  lat: DEFAULT_OFFICE_LAT + deltaLat115m,
+  lat: DEFAULT_OFFICE_LAT + deltaLat103m,
   lng: DEFAULT_OFFICE_LNG,
-  accuracy: 35,
+  accuracy: 15,
 });
-assert(resultDrift.ok === true, 'Indoor GPS drift near boundary (115m, accuracy ±35m, radius 100m) is accepted without false rejection', resultDrift);
+assert(resultDrift.ok === false, 'Outside radius (103m, accuracy ±15m, radius 100m) is rejected', resultDrift);
 
 // Test 4: User genuinely far outside down the street (distance = 160m, accuracy ±20m, radius 100m)
 const deltaLat160m = 160 / 111139; // ~160 meters
@@ -69,13 +69,13 @@ const resultRemote = assertWithinOfficeGeofence(settings, {
 });
 assert(resultRemote.ok === false, 'Remote user 5 km away is rejected firmly', resultRemote);
 
-// Test 6: Coarse IP-based geolocation with extreme uncertainty (accuracy ±2500m)
+// Test 6: Accuracy does not alter the configured distance perimeter.
 const resultCoarseIP = assertWithinOfficeGeofence(settings, {
   lat: DEFAULT_OFFICE_LAT + deltaLat45m,
   lng: DEFAULT_OFFICE_LNG,
   accuracy: 2500,
 });
-assert(resultCoarseIP.ok === false && (resultCoarseIP as any).error.includes('accuracy is too low'), 'Coarse IP location (±2500m) is rejected requiring high accuracy GPS', resultCoarseIP);
+assert(resultCoarseIP.ok === true, 'In-radius location is accepted regardless of reported accuracy', resultCoarseIP);
 
 // Test 7: Location check disabled setting
 const settingsDisabled = { enableLocationCheck: false };

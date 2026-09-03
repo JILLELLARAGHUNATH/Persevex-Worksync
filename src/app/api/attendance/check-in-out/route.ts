@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     // CLOCK OUT
     if (op === 'checkout' || op === 'check_out' || op === 'check-out') {
-      const res = await checkOutAction();
+      const res = await checkOutAction(body?.coords || null);
       return NextResponse.json(res, {
         status: res?.success ? 200 : 400,
         headers: {

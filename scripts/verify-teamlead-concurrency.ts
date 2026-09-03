@@ -316,8 +316,8 @@ async function runComprehensiveTeamLeadAnd100UserSuite() {
           await Promise.race(executing);
           // Remove settled promises
           for (let i = executing.length - 1; i >= 0; i--) {
-            // @ts-ignore
-            if (executing[i].status === 'fulfilled' || executing[i].status === 'rejected') {
+            const pAny = executing[i] as any;
+            if (pAny.status === 'fulfilled' || pAny.status === 'rejected') {
               executing.splice(i, 1);
             }
           }

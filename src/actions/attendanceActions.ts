@@ -60,6 +60,15 @@ export async function checkInAction(
 
   // Geofence validation
   const geofenceResult = assertWithinOfficeGeofence(settings, coords);
+  console.info('[attendance-geofence]', {
+    operation: 'CHECK_IN',
+    userId: session.id,
+    enforced: Boolean(settings?.enableLocationCheck),
+    allowed: geofenceResult.ok,
+    distanceMeters: geofenceResult.distance,
+    radiusMeters: settings?.officeRadiusMeters ?? null,
+    accuracyMeters: coords?.accuracy ?? null,
+  });
   if (!geofenceResult.ok) {
     return {
       success: false,
@@ -199,7 +208,9 @@ export async function checkInAction(
   };
 }
 
-export async function checkOutAction(): Promise<{ success: boolean; error?: string; data?: any }> {
+export async function checkOutAction(
+  coords?: { lat: number; lng: number; accuracy?: number } | null
+): Promise<{ success: boolean; error?: string; data?: any }> {
   const session = await getSession();
   if (!session) return { success: false, error: 'Unauthorized: Please log in.' };
 
@@ -232,6 +243,22 @@ export async function checkOutAction(): Promise<{ success: boolean; error?: stri
 
   if (record.checkOutTime) {
     return { success: false, error: 'You have already completed clock-out for today.', data: record };
+  }
+
+  // Read the same live configuration used by check-in before any attendance mutation.
+  const settings = await prisma.systemSetting.findUnique({ where: { id: 'global_config' } });
+  const geofenceResult = assertWithinOfficeGeofence(settings, coords);
+  console.info('[attendance-geofence]', {
+    operation: 'CHECK_OUT',
+    userId: session.id,
+    enforced: Boolean(settings?.enableLocationCheck),
+    allowed: geofenceResult.ok,
+    distanceMeters: geofenceResult.distance,
+    radiusMeters: settings?.officeRadiusMeters ?? null,
+    accuracyMeters: coords?.accuracy ?? null,
+  });
+  if (!geofenceResult.ok) {
+    return { success: false, error: geofenceResult.error };
   }
 
   const diffMs = now.getTime() - new Date(record.checkInTime).getTime();

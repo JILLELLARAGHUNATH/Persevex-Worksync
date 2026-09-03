@@ -153,10 +153,16 @@ export default function MyAttendanceClient({
   const handleCheckOut = async () => {
     setLoading(true);
     try {
+      const locResult = await getBrowserLocation();
+      if (locResult.isDenied || !locResult.coords) {
+        toast.error(locResult.error || 'Location access is required to check out. Please allow location access in your browser.');
+        return;
+      }
+
       const res = await fetch('/api/attendance/check-in-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ op: 'checkout' }),
+        body: JSON.stringify({ op: 'checkout', coords: locResult.coords }),
       });
       const data = await res.json();
       if (data?.success) {

@@ -25,73 +25,176 @@ export async function GET(req: NextRequest) {
     }
 
     const now = new Date();
+    const role = session.role;
+    const teamId = session.teamId;
 
-    // Query all entities updated since sinceDate in parallel
-    const [attendances, leaves, users, announcements, teams, auditLogs, notifications] = await Promise.all([
-      prisma.attendance.findMany({
-        where: { updatedAt: { gt: sinceDate } },
-        include: {
-          user: {
-            include: { team: true },
-          },
-        },
+    // Role-optimized parallel delta queries
+    let attendancesPromise: Promise<any[]>;
+    let leavesPromise: Promise<any[]>;
+    let usersPromise: Promise<any[]> = Promise.resolve([]);
+    let announcementsPromise: Promise<any[]>;
+    let teamsPromise: Promise<any[]> = Promise.resolve([]);
+    let auditLogsPromise: Promise<any[]>;
+    let notificationsPromise: Promise<any[]>;
+
+    if (role === 'EMPLOYEE') {
+      // Employees only query own attendance, own leaves, targeted announcements, and own notifications
+      attendancesPromise = prisma.attendance.findMany({
+        where: { userId: session.id, updatedAt: { gt: sinceDate } },
+        include: { user: { include: { team: true } } },
         orderBy: { updatedAt: 'desc' },
-        take: 30,
-      }),
-      prisma.leaveRequest.findMany({
-        where: { updatedAt: { gt: sinceDate } },
-        include: {
-          user: {
-            include: { team: true },
-          },
-        },
+        take: 10,
+      });
+
+      leavesPromise = prisma.leaveRequest.findMany({
+        where: { userId: session.id, updatedAt: { gt: sinceDate } },
+        include: { user: { include: { team: true } } },
         orderBy: { updatedAt: 'desc' },
-        take: 30,
-      }),
-      prisma.user.findMany({
-        where: { updatedAt: { gt: sinceDate } },
-        include: {
-          team: {
-            include: { teamLead: true },
-          },
+        take: 10,
+      });
+
+      announcementsPromise = prisma.announcement.findMany({
+        where: {
+          updatedAt: { gt: sinceDate },
+          OR: [
+            { targetType: 'ALL' },
+            ...(teamId ? [{ targetType: 'TEAM', targetId: teamId }] : []),
+            { targetType: 'SPECIFIC_EMPLOYEES', targetId: session.id },
+          ],
         },
+        include: { createdBy: true, reads: true },
         orderBy: { updatedAt: 'desc' },
-        take: 30,
-      }),
-      prisma.announcement.findMany({
-        where: { updatedAt: { gt: sinceDate } },
-        include: {
-          createdBy: true,
-          reads: true,
+        take: 10,
+      });
+
+      auditLogsPromise = prisma.auditLog.findMany({
+        where: { timestamp: { gt: sinceDate }, action: 'ANNOUNCEMENT_DELETED' },
+        orderBy: { timestamp: 'desc' },
+        take: 5,
+      });
+
+      notificationsPromise = prisma.notification.findMany({
+        where: { userId: session.id, createdAt: { gt: sinceDate } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+    } else if (role === 'TEAM_LEAD') {
+      // Team Leads query squad attendance, squad leaves, squad users, announcements, and own notifications
+      attendancesPromise = prisma.attendance.findMany({
+        where: {
+          OR: [{ userId: session.id }, ...(teamId ? [{ user: { teamId } }] : [])],
+          updatedAt: { gt: sinceDate },
         },
+        include: { user: { include: { team: true } } },
         orderBy: { updatedAt: 'desc' },
         take: 20,
-      }),
-      prisma.team.findMany({
-        where: { updatedAt: { gt: sinceDate } },
-        include: {
-          teamLead: true,
-          members: true,
+      });
+
+      leavesPromise = prisma.leaveRequest.findMany({
+        where: {
+          OR: [{ userId: session.id }, ...(teamId ? [{ user: { teamId } }] : [])],
+          updatedAt: { gt: sinceDate },
         },
+        include: { user: { include: { team: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 20,
+      });
+
+      if (teamId) {
+        usersPromise = prisma.user.findMany({
+          where: { teamId, updatedAt: { gt: sinceDate } },
+          include: { team: { include: { teamLead: true } } },
+          orderBy: { updatedAt: 'desc' },
+          take: 15,
+        });
+      }
+
+      announcementsPromise = prisma.announcement.findMany({
+        where: {
+          updatedAt: { gt: sinceDate },
+          OR: [
+            { targetType: 'ALL' },
+            ...(teamId ? [{ targetType: 'TEAM', targetId: teamId }] : []),
+            { targetType: 'SPECIFIC_EMPLOYEES', targetId: session.id },
+          ],
+        },
+        include: { createdBy: true, reads: true },
         orderBy: { updatedAt: 'desc' },
         take: 15,
-      }),
-      prisma.auditLog.findMany({
+      });
+
+      auditLogsPromise = prisma.auditLog.findMany({
+        where: { timestamp: { gt: sinceDate }, action: { in: ['ANNOUNCEMENT_DELETED', 'EMPLOYEE_DELETED'] } },
+        orderBy: { timestamp: 'desc' },
+        take: 10,
+      });
+
+      notificationsPromise = prisma.notification.findMany({
+        where: { userId: session.id, createdAt: { gt: sinceDate } },
+        orderBy: { createdAt: 'desc' },
+        take: 15,
+      });
+    } else {
+      // Managers query organization-wide data across all models
+      attendancesPromise = prisma.attendance.findMany({
+        where: { updatedAt: { gt: sinceDate } },
+        include: { user: { include: { team: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 30,
+      });
+
+      leavesPromise = prisma.leaveRequest.findMany({
+        where: { updatedAt: { gt: sinceDate } },
+        include: { user: { include: { team: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 30,
+      });
+
+      usersPromise = prisma.user.findMany({
+        where: { updatedAt: { gt: sinceDate } },
+        include: { team: { include: { teamLead: true } } },
+        orderBy: { updatedAt: 'desc' },
+        take: 30,
+      });
+
+      announcementsPromise = prisma.announcement.findMany({
+        where: { updatedAt: { gt: sinceDate } },
+        include: { createdBy: true, reads: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 20,
+      });
+
+      teamsPromise = prisma.team.findMany({
+        where: { updatedAt: { gt: sinceDate } },
+        include: { teamLead: true, members: true },
+        orderBy: { updatedAt: 'desc' },
+        take: 15,
+      });
+
+      auditLogsPromise = prisma.auditLog.findMany({
         where: {
           timestamp: { gt: sinceDate },
           action: { in: ['ANNOUNCEMENT_DELETED', 'ANNOUNCEMENT_CREATED', 'TEAM_DELETED', 'EMPLOYEE_DELETED'] },
         },
         orderBy: { timestamp: 'desc' },
         take: 20,
-      }),
-      prisma.notification.findMany({
-        where: {
-          userId: session.id,
-          createdAt: { gt: sinceDate },
-        },
+      });
+
+      notificationsPromise = prisma.notification.findMany({
+        where: { userId: session.id, createdAt: { gt: sinceDate } },
         orderBy: { createdAt: 'desc' },
         take: 15,
-      }),
+      });
+    }
+
+    const [attendances, leaves, users, announcements, teams, auditLogs, notifications] = await Promise.all([
+      attendancesPromise,
+      leavesPromise,
+      usersPromise,
+      announcementsPromise,
+      teamsPromise,
+      auditLogsPromise,
+      notificationsPromise,
     ]);
 
     const events: Array<{ type: string; payload: any; timestamp: number }> = [];

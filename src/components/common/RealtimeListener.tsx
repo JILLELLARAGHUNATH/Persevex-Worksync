@@ -7,7 +7,7 @@ export default function RealtimeListener() {
   const router = useRouter();
   const eventSourceRef = useRef<EventSource | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
-  const lastSyncTimeRef = useRef<number>(Date.now() - 10000);
+  const lastSyncTimeRef = useRef<number>(0);
   const sseActiveRef = useRef<boolean>(false);
   const isPollingRef = useRef<boolean>(false);
   const processedEventIdsRef = useRef<Set<string>>(new Set());
@@ -38,6 +38,10 @@ export default function RealtimeListener() {
   };
 
   useEffect(() => {
+    if (lastSyncTimeRef.current === 0) {
+      lastSyncTimeRef.current = Date.now() - 10000;
+    }
+
     // 1. Setup BroadcastChannel for 0ms cross-tab synchronization
     try {
       if (typeof BroadcastChannel !== 'undefined') {
@@ -82,6 +86,7 @@ export default function RealtimeListener() {
         eventSource.onopen = () => {
           sseActiveRef.current = true;
           backoffDelay = 3000;
+          scheduleNextSync(false);
         };
 
         eventSource.onmessage = (event) => {
@@ -100,16 +105,18 @@ export default function RealtimeListener() {
           clearTimeout(reconnectTimeout);
           reconnectTimeout = setTimeout(connectSSE, backoffDelay);
           backoffDelay = Math.min(backoffDelay * 1.5, 15000);
+          scheduleNextSync(true);
         };
       } catch (err) {
         sseActiveRef.current = false;
+        scheduleNextSync(true);
         console.warn('SSE connection init error:', err);
       }
     };
 
-    connectSSE();
+    // 3. Setup Universal DB Sync Engine (Adaptive: 30s when SSE healthy, 4s when SSE down, paused when hidden)
+    let syncTimeout: any = null;
 
-    // 3. Setup Universal DB Sync Engine (Efficient for multi-container/Vercel serverless cross-instance sync)
     const runSyncCheck = async () => {
       if (isPollingRef.current || (typeof document !== 'undefined' && document.hidden)) return;
       isPollingRef.current = true;
@@ -140,15 +147,32 @@ export default function RealtimeListener() {
       }
     };
 
-    // Run lightweight sync check every 4 seconds (pauses automatically if tab is in background or hidden)
-    const syncInterval = setInterval(() => {
-      runSyncCheck();
-    }, 4000);
+    const scheduleNextSync = (immediate = false) => {
+      clearTimeout(syncTimeout);
+      if (typeof document !== 'undefined' && document.hidden) return;
+
+      if (immediate) {
+        runSyncCheck().finally(() => {
+          scheduleNextSync(false);
+        });
+        return;
+      }
+
+      // Safe fallback reconciliation: 30s when SSE is healthy, 4s when SSE is disconnected/fallback
+      const delay = sseActiveRef.current ? 30000 : 4000;
+      syncTimeout = setTimeout(async () => {
+        await runSyncCheck();
+        scheduleNextSync(false);
+      }, delay);
+    };
+
+    connectSSE();
+    scheduleNextSync(true);
 
     // Run sync check and debounced server revalidation when tab regains focus or visibility
     const onVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible') {
-        runSyncCheck();
+        scheduleNextSync(true);
 
         const now = Date.now();
         // Debounce server component revalidation to at most once every 15 seconds
@@ -164,7 +188,7 @@ export default function RealtimeListener() {
 
     return () => {
       clearTimeout(reconnectTimeout);
-      clearInterval(syncInterval);
+      clearTimeout(syncTimeout);
       window.removeEventListener('persevex-realtime', handleLocalDispatch);
       window.removeEventListener('visibilitychange', onVisibilityOrFocus);
       window.removeEventListener('focus', onVisibilityOrFocus);
