@@ -3,9 +3,8 @@
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
-import { revalidatePath } from 'next/cache';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
-import { assertWithinOfficeGeofence } from '@/lib/geofence';
+import { assertWithinOfficeGeofence, getCachedOfficeSettings } from '@/lib/geofence';
 
 export async function checkInAction(
   coords?: { lat: number; lng: number; accuracy?: number } | null
@@ -23,31 +22,22 @@ export async function checkInAction(
   const now = new Date();
   const india = getIndiaWorkdayInfo(now);
 
-  // Parallelize attendance record check and office settings lookup
+  // Parallel lookup: Direct composite unique index scan (O(1)) + cached office settings
   const [existing, settings] = await Promise.all([
-    prisma.attendance.findFirst({
+    prisma.attendance.findUnique({
       where: {
-        userId: session.id,
-        OR: [
-          { date: india.canonicalDate },
-          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        ],
+        userId_date: {
+          userId: session.id,
+          date: india.canonicalDate,
+        },
       },
       include: {
         user: {
           include: { team: true },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     }),
-    prisma.systemSetting.findUnique({
-      where: {
-        id: 'global_config',
-      },
-    }),
+    getCachedOfficeSettings(),
   ]);
 
   if (existing && existing.checkInTime) {
@@ -106,10 +96,12 @@ export async function checkInAction(
       };
     }
 
-    attendanceRecord = await prisma.attendance.findUnique({
-      where: { id: existing.id },
-      include: { user: { include: { team: true } } },
-    });
+    attendanceRecord = {
+      ...existing,
+      checkInTime: now,
+      status: 'PRESENT',
+      lateStatus,
+    };
   } else {
     // Create new attendance record for today with unique constraint protection
     try {
@@ -152,7 +144,7 @@ export async function checkInAction(
       }
 
       if (raceExisting) {
-        await prisma.attendance.updateMany({
+        const raceUpdate = await prisma.attendance.updateMany({
           where: {
             id: raceExisting.id,
             checkInTime: null,
@@ -164,10 +156,19 @@ export async function checkInAction(
           },
         });
 
-        attendanceRecord = await prisma.attendance.findUnique({
-          where: { id: raceExisting.id },
-          include: { user: { include: { team: true } } },
-        });
+        if (raceUpdate.count > 0) {
+          attendanceRecord = {
+            ...raceExisting,
+            checkInTime: now,
+            status: 'PRESENT',
+            lateStatus,
+          };
+        } else {
+          attendanceRecord = await prisma.attendance.findUnique({
+            where: { id: raceExisting.id },
+            include: { user: { include: { team: true } } },
+          });
+        }
       }
     }
   }
@@ -201,27 +202,22 @@ export async function checkOutAction(
   const now = new Date();
   const india = getIndiaWorkdayInfo(now);
 
-  // Parallelize attendance record check and office settings lookup
+  // Parallel point lookup: Direct unique index point scan + cached office settings
   const [record, settings] = await Promise.all([
-    prisma.attendance.findFirst({
+    prisma.attendance.findUnique({
       where: {
-        userId: session.id,
-        OR: [
-          { date: india.canonicalDate },
-          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        ],
+        userId_date: {
+          userId: session.id,
+          date: india.canonicalDate,
+        },
       },
       include: {
         user: {
           include: { team: true },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
     }),
-    prisma.systemSetting.findUnique({ where: { id: 'global_config' } }),
+    getCachedOfficeSettings(),
   ]);
 
   if (!record || !record.checkInTime) {
@@ -244,6 +240,7 @@ export async function checkOutAction(
   const updateResult = await prisma.attendance.updateMany({
     where: {
       id: record.id,
+      userId: session.id,
       checkInTime: { not: null },
       checkOutTime: null,
     },
@@ -266,14 +263,12 @@ export async function checkOutAction(
     };
   }
 
-  const updated = await prisma.attendance.findUnique({
-    where: { id: record.id },
-    include: {
-      user: {
-        include: { team: true },
-      },
-    },
-  });
+  // Construct return record directly from verified atomic update without redundant 3rd DB query
+  const updated = {
+    ...record,
+    checkOutTime: now,
+    totalHours,
+  };
 
   appEvents.emit(EVENT_TYPES.ATTENDANCE_UPDATE, {
     status: 'CHECKED_OUT',

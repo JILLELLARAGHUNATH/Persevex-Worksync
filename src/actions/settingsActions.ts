@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { createSafeAuditLog } from '@/lib/audit';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
+import { invalidateOfficeSettingsCache } from '@/lib/geofence';
 
 export async function updateSystemSettingsAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const session = await getSession();
@@ -59,6 +60,8 @@ export async function updateSystemSettingsAction(formData: FormData): Promise<{ 
       enableLocationCheck,
     },
   });
+
+  invalidateOfficeSettingsCache();
 
   await createSafeAuditLog({
     userId: session.id,

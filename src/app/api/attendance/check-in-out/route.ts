@@ -30,22 +30,17 @@ export async function GET(_request: NextRequest) {
     const now = new Date();
     const india = getIndiaWorkdayInfo(now);
 
-    const record = await prisma.attendance.findFirst({
+    const record = await prisma.attendance.findUnique({
       where: {
-        userId: session.id,
-        OR: [
-          { date: india.canonicalDate },
-          { date: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-          { checkInTime: { gte: india.startOfDayIST, lte: india.endOfDayIST } },
-        ],
+        userId_date: {
+          userId: session.id,
+          date: india.canonicalDate,
+        },
       },
       include: {
         user: {
           include: { team: true },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
       },
     });
 

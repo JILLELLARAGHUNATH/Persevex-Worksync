@@ -1,8 +1,37 @@
+import { prisma } from './prisma';
+
 export type GeoCoords = { lat: number; lng: number; accuracy?: number };
 
 export const DEFAULT_OFFICE_LAT = 12.91648;
 export const DEFAULT_OFFICE_LNG = 77.618145;
 export const DEFAULT_OFFICE_RADIUS = 100; // meters
+
+let cachedSettings: any = null;
+let lastSettingsFetchTime = 0;
+const SETTINGS_CACHE_TTL_MS = 15000; // 15 seconds
+
+export async function getCachedOfficeSettings(): Promise<any> {
+  const now = Date.now();
+  if (cachedSettings && now - lastSettingsFetchTime < SETTINGS_CACHE_TTL_MS) {
+    return cachedSettings;
+  }
+  try {
+    const fresh = await prisma.systemSetting.findUnique({
+      where: { id: 'global_config' },
+    });
+    cachedSettings = fresh;
+    lastSettingsFetchTime = now;
+    return fresh;
+  } catch (err) {
+    if (cachedSettings) return cachedSettings;
+    throw err;
+  }
+}
+
+export function invalidateOfficeSettingsCache(): void {
+  cachedSettings = null;
+  lastSettingsFetchTime = 0;
+}
 
 function parseFiniteNumber(value: unknown): number | null {
   if (value === undefined || value === null || value === '') return null;
