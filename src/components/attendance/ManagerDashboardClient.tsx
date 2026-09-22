@@ -347,7 +347,11 @@ export default function ManagerDashboardClient({
 
     matchingRecords.forEach((r) => {
       if (activeEmployeePool.some((e) => e.id === r.userId)) {
-        if (r.status === 'PRESENT' || r.checkInTime) {
+        // Use the authoritative status field set by classifyAttendanceHours on checkout.
+        // PRESENT = full day (>= 8h), HALF_DAY = half day (>= 4h < 8h).
+        // ABSENT (<4h worked) must NOT count as Present even if a checkInTime exists.
+        // Live/ongoing check-ins have status='PRESENT' (DB default) until checkout.
+        if (r.status === 'PRESENT' || r.status === 'HALF_DAY') {
           checkedInUsers.add(r.userId);
           if (r.lateStatus === 'LATE') {
             lateUsers.add(r.userId);
