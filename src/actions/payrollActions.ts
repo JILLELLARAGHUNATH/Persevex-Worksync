@@ -401,7 +401,6 @@ export async function saveEmployeeSalaryAction(data: {
     appEvents.emit(EVENT_TYPES.PAYROLL_UPDATE, {
       action: 'SALARY_UPDATED',
       userId: data.userId,
-      baseSalary,
     });
 
     revalidatePath('/manager/salary-payroll');
