@@ -8,13 +8,15 @@ import {
   Users,
   CalendarCheck,
   CalendarDays,
+  Calendar,
   FileText,
   Settings,
   Clock,
   Megaphone,
   X,
   Layers,
-  FileCheck2
+  FileCheck2,
+  Banknote
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +38,8 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
           { name: 'Attendance', href: '/manager/attendance', icon: CalendarCheck },
           { name: 'Teams', href: '/manager/teams', icon: Layers },
           { name: 'Leave Requests', href: '/manager/leave-requests', icon: FileCheck2 },
+          { name: 'Work Calendar', href: '/manager/work-calendar', icon: Calendar },
+          { name: 'Salary & Payroll', href: '/manager/salary-payroll', icon: Banknote },
           { name: 'Announcements', href: '/manager/announcements', icon: Megaphone },
           { name: 'Reports', href: '/manager/reports', icon: FileText },
           { name: 'Settings', href: '/manager/settings', icon: Settings },
@@ -45,7 +49,9 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
           { name: 'Dashboard', href: '/team-lead', icon: LayoutDashboard },
           { name: 'Team Members', href: '/team-lead/team-members', icon: Users },
           { name: 'My Attendance', href: '/team-lead/my-attendance', icon: Clock },
-          { name: 'Leave Requests', href: '/team-lead/leave-requests', icon: CalendarDays },
+          { name: 'Apply Leave', href: '/team-lead/apply-leave', icon: CalendarDays },
+          { name: 'Leave Requests', href: '/team-lead/leave-requests', icon: FileCheck2 },
+          { name: 'Work Calendar', href: '/team-lead/work-calendar', icon: Calendar },
           { name: 'Announcements', href: '/team-lead/announcements', icon: Megaphone },
           { name: 'Reports', href: '/team-lead/reports', icon: FileText },
         ];
@@ -54,6 +60,7 @@ export default function Sidebar({ role, userName, isOpenMobile, onCloseMobile }:
           { name: 'Dashboard', href: '/employee', icon: LayoutDashboard },
           { name: 'My Attendance', href: '/employee/my-attendance', icon: Clock },
           { name: 'Apply Leave', href: '/employee/apply-leave', icon: CalendarDays },
+          { name: 'Work Calendar', href: '/employee/work-calendar', icon: Calendar },
           { name: 'Announcements', href: '/employee/announcements', icon: Megaphone },
           { name: 'Reports', href: '/employee/reports', icon: FileText },
         ];

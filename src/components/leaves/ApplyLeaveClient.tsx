@@ -14,6 +14,10 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isPending, startTransition] = React.useTransition();
 
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isHalfDay, setIsHalfDay] = useState(false);
+
   React.useEffect(() => {
     setLeaveHistory(history);
   }, [history]);
@@ -62,12 +66,20 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
     return true;
   });
 
+  const isSingleDay = Boolean(startDate && endDate && startDate === endDate);
+
   const handleSubmit = (formData: FormData) => {
+    if (isSingleDay && isHalfDay) {
+      formData.set('isHalfDay', 'true');
+    }
     startTransition(async () => {
       const res = await applyLeaveAction(formData);
       if (res?.success) {
         toast.success(res.message || 'Leave application submitted successfully!');
         formRef.current?.reset();
+        setStartDate('');
+        setEndDate('');
+        setIsHalfDay(false);
         if (res.leave) {
           setLeaveHistory((prev) => [res.leave, ...prev.filter((l) => l.id !== res.leave.id)]);
           if (typeof window !== 'undefined') {
@@ -118,6 +130,11 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
           </div>
         </div>
 
+        {/* Policy Notice */}
+        <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-center justify-between">
+          <span>✨ <strong>Monthly Paid Leave Entitlement:</strong> 1.5 paid days/month for full-time members (resets fresh on 1st of every month).</span>
+        </div>
+
         <form ref={formRef} action={handleSubmit} className="space-y-3.5 text-xs">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Leave Type *</label>
@@ -133,13 +150,61 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">From Date *</label>
-              <input type="date" name="startDate" required className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500" />
+              <input
+                type="date"
+                name="startDate"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  if (!endDate) setEndDate(e.target.value);
+                }}
+                required
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
+              />
             </div>
             <div>
               <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">To Date *</label>
-              <input type="date" name="endDate" required className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500" />
+              <input
+                type="date"
+                name="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+                className="w-full h-9 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:border-blue-500"
+              />
             </div>
           </div>
+
+          {/* Single Day Half Day Selector */}
+          {isSingleDay && (
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                Duration Type:
+              </span>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="dayOption"
+                    checked={!isHalfDay}
+                    onChange={() => setIsHalfDay(false)}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-slate-800 dark:text-slate-200 font-medium">Full Day (1.0d)</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="dayOption"
+                    checked={isHalfDay}
+                    onChange={() => setIsHalfDay(true)}
+                    className="text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-xs text-slate-800 dark:text-slate-200 font-medium">Half Day (0.5d)</span>
+                </label>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-slate-700 dark:text-slate-300 font-medium mb-1">Reason for Absence *</label>
@@ -229,7 +294,28 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
                         <td className="py-2.5 px-3.5 font-mono text-slate-600 dark:text-slate-400">{formatDate(h.startDate)} &rarr; {formatDate(h.endDate)}</td>
                         <td className="py-2.5 px-3.5 font-mono font-semibold text-violet-600 dark:text-violet-400">{h.numberOfDays}d</td>
                         <td className="py-2.5 px-3.5 max-w-xs truncate">{h.reason}</td>
-                        <td className="py-2.5 px-3.5"><StatusBadge status={h.currentStage} /></td>
+                        <td className="py-2.5 px-3.5">
+                          <div className="flex flex-col items-start gap-1">
+                            <StatusBadge status={h.currentStage} />
+                            {h.currentStage === 'APPROVED' && (
+                              <span
+                                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                                  h.payTreatment === 'PAID'
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                    : h.payTreatment === 'SPLIT'
+                                    ? 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800'
+                                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                }`}
+                              >
+                                {h.payTreatment === 'PAID'
+                                  ? `● Paid (${h.paidDays ?? h.numberOfDays}d)`
+                                  : h.payTreatment === 'SPLIT'
+                                  ? `⚡ ${h.paidDays ?? 0}d Paid + ${h.unpaidDays ?? 0}d Unpaid`
+                                  : `○ Unpaid (${h.unpaidDays ?? h.numberOfDays}d)`}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-2.5 px-3.5 font-mono text-slate-400">{formatDate(h.createdAt)}</td>
                       </tr>
                     ))

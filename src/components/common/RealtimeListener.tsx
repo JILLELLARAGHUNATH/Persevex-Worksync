@@ -177,6 +177,34 @@ export default function RealtimeListener() {
               }
             }
           )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'CompanyCalendar' },
+            (payload: any) => {
+              handleIncomingEvent({
+                type: 'CALENDAR_UPDATE',
+                payload: {
+                  action: payload.eventType === 'DELETE' ? 'ENTRY_DELETED' : 'ENTRY_UPDATED',
+                  entry: payload.new || payload.old,
+                },
+                timestamp: Date.now(),
+              });
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'PayrollRecord' },
+            (payload: any) => {
+              handleIncomingEvent({
+                type: 'PAYROLL_UPDATE',
+                payload: {
+                  action: 'PAYROLL_RECORD_CHANGED',
+                  record: payload.new || payload.old,
+                },
+                timestamp: Date.now(),
+              });
+            }
+          )
           .subscribe();
       }
     } catch (err) {

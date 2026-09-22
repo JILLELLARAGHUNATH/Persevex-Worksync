@@ -2,6 +2,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import TeamLeadDashboardClient from '@/components/attendance/TeamLeadDashboardClient';
 import Link from 'next/link';
+import { Calendar } from 'lucide-react';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
@@ -105,6 +106,12 @@ export default async function TeamLeadDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/team-lead/work-calendar"
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Calendar className="w-3.5 h-3.5" /> Work Calendar
+          </Link>
           <Link
             href="/team-lead/team-members"
             className="text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700"

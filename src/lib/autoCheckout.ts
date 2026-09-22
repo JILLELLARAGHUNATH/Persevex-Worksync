@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { getIndiaWorkdayInfo } from './attendanceDate';
+import { classifyAttendanceHours } from './attendanceClassification';
 
 /**
  * Automatically finalizes open attendance records where an employee checked in but forgot to check out.
@@ -55,6 +56,7 @@ export async function autoFinalizeForgottenAttendance(targetUserId?: string): Pr
       const checkInTime = new Date(record.checkInTime);
       const diffMs = Math.max(0, autoCheckOutTime.getTime() - checkInTime.getTime());
       const totalHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+      const classification = classifyAttendanceHours(totalHours);
 
       const updated = await prisma.attendance.updateMany({
         where: {
@@ -64,6 +66,7 @@ export async function autoFinalizeForgottenAttendance(targetUserId?: string): Pr
         data: {
           checkOutTime: autoCheckOutTime,
           totalHours,
+          status: classification.dbStatus,
         },
       });
 

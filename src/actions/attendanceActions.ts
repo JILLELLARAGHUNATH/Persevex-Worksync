@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth';
 import { appEvents, EVENT_TYPES } from '@/lib/events';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 import { assertWithinOfficeGeofence, getCachedOfficeSettings } from '@/lib/geofence';
+import { classifyAttendanceHours } from '@/lib/attendanceClassification';
 
 export async function checkInAction(
   coords?: { lat: number; lng: number; accuracy?: number } | null
@@ -235,6 +236,7 @@ export async function checkOutAction(
 
   const diffMs = now.getTime() - new Date(record.checkInTime).getTime();
   const totalHours = parseFloat((Math.max(0, diffMs) / (1000 * 60 * 60)).toFixed(2));
+  const classification = classifyAttendanceHours(totalHours);
 
   // Atomic conditional update: ensure checkOutTime is only updated if it is currently null
   const updateResult = await prisma.attendance.updateMany({
@@ -247,6 +249,7 @@ export async function checkOutAction(
     data: {
       checkOutTime: now,
       totalHours,
+      status: classification.dbStatus,
     },
   });
 
@@ -268,6 +271,7 @@ export async function checkOutAction(
     ...record,
     checkOutTime: now,
     totalHours,
+    status: classification.dbStatus,
   };
 
   appEvents.emit(EVENT_TYPES.ATTENDANCE_UPDATE, {

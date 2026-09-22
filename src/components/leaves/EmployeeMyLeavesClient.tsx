@@ -231,7 +231,26 @@ export default function EmployeeMyLeavesClient({
                     {formatDate(leave.startDate)} &rarr; {formatDate(leave.endDate)} ({leave.numberOfDays ?? leave.daysCount ?? 1} Days)
                   </p>
                 </div>
-                <StatusBadge status={leave.currentStage} />
+                <div className="flex flex-col items-end gap-1">
+                  <StatusBadge status={leave.currentStage} />
+                  {leave.currentStage === 'APPROVED' && (
+                    <span
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                        leave.payTreatment === 'PAID'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          : leave.payTreatment === 'SPLIT'
+                          ? 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800'
+                          : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                      }`}
+                    >
+                      {leave.payTreatment === 'PAID'
+                        ? `● Paid (${leave.paidDays ?? leave.numberOfDays}d)`
+                        : leave.payTreatment === 'SPLIT'
+                        ? `⚡ ${leave.paidDays ?? 0}d Paid + ${leave.unpaidDays ?? 0}d Unpaid`
+                        : `○ Unpaid (${leave.unpaidDays ?? leave.numberOfDays}d)`}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400 pt-2.5">
                 <span className="font-semibold text-slate-800 dark:text-slate-200">Reason:</span> {leave.reason}
