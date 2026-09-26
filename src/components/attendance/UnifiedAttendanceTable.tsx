@@ -502,7 +502,7 @@ export default function UnifiedAttendanceTable({
       )}
 
       {/* Filter Control Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl shadow-xs space-y-2.5 transition-colors">
+      <div className="ws-card p-3 sm:p-3.5 space-y-2.5">
         <div className="flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -657,7 +657,7 @@ export default function UnifiedAttendanceTable({
       </div>
 
       {/* Main Ledger Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
+      <div className="ws-card overflow-hidden shadow-xs transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">

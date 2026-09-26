@@ -22,7 +22,7 @@ export default function AnnouncementViewModal({ isOpen, onClose, announcement }:
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-5 sm:p-6 shadow-xl animate-in zoom-in-95 duration-150 space-y-4 transition-colors">
+      <div className="ws-card max-w-2xl w-full max-h-[85vh] overflow-y-auto p-5 sm:p-6 shadow-xl animate-in zoom-in-95 duration-150 space-y-4 transition-colors">
         <div className="flex justify-between items-start pb-3 border-b border-slate-100 dark:border-slate-800 gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-1.5 mb-1.5">

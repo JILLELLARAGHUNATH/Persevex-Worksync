@@ -113,26 +113,48 @@ export default function EmployeeMyLeavesClient({
     });
   }, [leaves, datePreset, selectedDate, statusFilter]);
 
+  const pendingCount = leaves.filter((l) => l.currentStage === 'PENDING_TL' || l.currentStage === 'PENDING_MANAGER').length;
+  const approvedCount = leaves.filter((l) => l.currentStage === 'APPROVED').length;
+  const rejectedCount = leaves.filter((l) => l.currentStage === 'REJECTED').length;
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">My Leave History & Status</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Track your leave applications and current status
-          </p>
+      {/* Hero Banner */}
+      <div className="ws-hero rounded-2xl p-5 sm:p-7">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Leave Management</p>
+            <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">My Leave History & Status</h2>
+            <p className="text-white/60 text-sm mt-1">Track your leave applications and current status</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Mini stat tiles */}
+            <div className="flex items-center gap-2">
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-3 py-2">
+                <div className="text-xl font-black text-white font-mono">{pendingCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Pending</div>
+              </div>
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-3 py-2">
+                <div className="text-xl font-black text-white font-mono">{approvedCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Approved</div>
+              </div>
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-3 py-2">
+                <div className="text-xl font-black text-white font-mono">{rejectedCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Rejected</div>
+              </div>
+            </div>
+            <Link
+              href="/employee/apply-leave"
+              className="h-9 bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 rounded-xl text-xs flex items-center gap-2 transition shadow-lg cursor-pointer"
+            >
+              + Apply Leave
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/employee/apply-leave"
-          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5"
-        >
-          <span>+ Apply New Leave</span>
-        </Link>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs space-y-3 transition-colors">
+      <div className="ws-card p-3.5 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Date Presets */}
           <div className="flex flex-wrap items-center gap-1.5">
@@ -211,7 +233,7 @@ export default function EmployeeMyLeavesClient({
       {/* Leave Requests Cards List */}
       <div className="space-y-3">
         {filteredLeaves.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl text-center text-slate-400 text-xs shadow-xs">
+          <div className="ws-card p-8 rounded-xl text-center text-slate-400 text-xs shadow-xs">
             {leaves.length === 0
               ? 'You have not submitted any leave requests yet.'
               : 'No leave requests match your selected filters.'}
@@ -220,7 +242,7 @@ export default function EmployeeMyLeavesClient({
           filteredLeaves.map((leave) => (
             <div
               key={leave.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors duration-150"
+              className="ws-card p-4 sm:p-5 shadow-xs transition-colors duration-150"
             >
               <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>

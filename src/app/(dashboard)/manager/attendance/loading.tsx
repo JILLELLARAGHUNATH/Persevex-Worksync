@@ -10,7 +10,7 @@ export default function ManagerAttendanceLoading() {
       </div>
 
       {/* Preset & Filter Bar Skeleton */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs space-y-3">
+      <div className="ws-card p-3.5 rounded-xl shadow-xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-1.5">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -32,7 +32,7 @@ export default function ManagerAttendanceLoading() {
       </div>
 
       {/* Attendance Ledger Table Skeleton */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+      <div className="ws-card overflow-hidden shadow-xs">
         <div className="h-10 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800" />
         <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (

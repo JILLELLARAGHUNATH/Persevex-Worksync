@@ -11,7 +11,7 @@ export default function TLTeamMembersLoading() {
         <div className="h-8 w-36 bg-blue-50 dark:bg-blue-950/50 rounded-lg" />
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+      <div className="ws-card overflow-hidden shadow-xs">
         <div className="h-10 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800" />
         <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {[1, 2, 3, 4, 5].map((i) => (

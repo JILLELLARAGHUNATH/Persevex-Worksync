@@ -458,11 +458,11 @@ export default function EmployeeAttendanceHub({
   const targetShiftHours = 9.0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ws-animate-fade-up">
       {/* ========================================================================= */}
       {/* 0. FILTER TOOLBAR: TODAY, YESTERDAY, SELECT DATE                          */}
       {/* ========================================================================= */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
+      <div className="ws-card px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         <div className="flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
             {(['TODAY', 'YESTERDAY', 'DATE'] as const).map((preset) => (
@@ -471,7 +471,7 @@ export default function EmployeeAttendanceHub({
                 onClick={() => setDayPreset(preset)}
                 className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   dayPreset === preset
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm font-semibold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
@@ -515,112 +515,96 @@ export default function EmployeeAttendanceHub({
       {/* ========================================================================= */}
       {/* 1. TOP HERO: ATTENDANCE PUNCH & SHIFT OVERVIEW                            */}
       {/* ========================================================================= */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-          {/* Live Clock / Date & Shift Details */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
-              <Clock className="w-4 h-4" />
+      {/* ─── HERO CHECK-IN CARD ─── */}
+      <div className={`ws-checkin-hero ${
+        isCheckedIn && !isCheckedOut
+          ? (activeDayStatus.color === 'amber' ? 'ws-checkin-hero-late' : 'ws-checkin-hero-working')
+          : isCheckedOut
+          ? 'ws-checkin-hero-done'
+          : 'ws-checkin-hero-idle'
+      } p-5 sm:p-7`}>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          {/* Left: Big icon + time + status + duration */}
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 shadow-lg">
+              {isCheckedIn && !isCheckedOut ? (
+                <span className="text-3xl">⏱</span>
+              ) : isCheckedOut ? (
+                <Check className="w-8 h-8 text-white" />
+              ) : (
+                <Clock className="w-8 h-8 text-white/80" />
+              )}
             </div>
 
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight" suppressHydrationWarning>
+              {/* Live clock / date */}
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight" suppressHydrationWarning>
                   {isViewingToday ? (mounted ? time : '--:--:--') : activeDateKey}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-                  &middot; {isViewingToday ? 'Today' : (dayPreset === 'YESTERDAY' ? 'Yesterday' : 'Selected Date')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Shift: 11:00 AM – 8:00 PM (15m Grace) &middot; Target: 9h
-              </p>
-            </div>
-
-            <div className="hidden sm:block pl-2">
-              <span
-                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-semibold text-[10px] border ${
-                  activeDayStatus.color === 'emerald'
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60'
-                    : activeDayStatus.color === 'amber'
-                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border-amber-200 dark:border-amber-800/60'
-                    : activeDayStatus.color === 'violet'
-                    ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400 border-violet-200 dark:border-violet-800/60'
-                    : activeDayStatus.color === 'rose'
-                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border-rose-200 dark:border-rose-800/60'
-                    : activeDayStatus.color === 'blue'
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border-blue-200 dark:border-blue-800/60'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {activeDayStatus.color === 'emerald' ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    activeDayStatus.color === 'blue' ? 'bg-blue-500' :
-                    activeDayStatus.color === 'amber' ? 'bg-amber-500' :
-                    activeDayStatus.color === 'violet' ? 'bg-violet-500' :
-                    activeDayStatus.color === 'rose' ? 'bg-rose-500' : 'bg-slate-400'
-                  }`} />
+                {isCheckedIn && !isCheckedOut && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded-full border border-white/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white ws-pulse-dot" />
+                    ACTIVE
+                  </span>
                 )}
+              </div>
+
+              {/* Status badge */}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-white/15 text-white border border-white/25">
                 {activeDayStatus.label}
               </span>
+
+              {/* Duration */}
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight" suppressHydrationWarning>
+                  {activeDurationDisplay}
+                </span>
+                <span className="text-white/60 text-sm">worked</span>
+              </div>
             </div>
           </div>
 
-          {/* Timestamps Pill */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-2 text-xs font-mono bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">In: </span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
-                  {activeInDisplay}
-                </span>
+          {/* Right: Timestamps + punch buttons */}
+          <div className="flex flex-col gap-3 shrink-0">
+            {/* In / Out times */}
+            <div className="flex items-center gap-3 text-xs font-mono bg-white/10 rounded-xl px-4 py-2.5 border border-white/20">
+              <div className="text-center">
+                <div className="text-white/60 text-[10px] uppercase tracking-wider font-sans mb-0.5">Check In</div>
+                <div className="font-bold text-white">{activeInDisplay}</div>
               </div>
-              <span className="text-slate-300 dark:text-slate-600">|</span>
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Out: </span>
-                <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">
-                  {activeOutDisplay}
-                </span>
-              </div>
-              <span className="text-slate-300 dark:text-slate-600">|</span>
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-sans font-medium">Duration: </span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400 font-mono" suppressHydrationWarning>
-                  {activeDurationDisplay}
-                </span>
+              <div className="w-px h-6 bg-white/20" />
+              <div className="text-center">
+                <div className="text-white/60 text-[10px] uppercase tracking-wider font-sans mb-0.5">Check Out</div>
+                <div className="font-bold text-white">{activeOutDisplay}</div>
               </div>
             </div>
 
-            {/* Punch Buttons or History Indicator */}
+            {/* Punch Buttons */}
             {isViewingToday ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button
                   disabled={isCheckedIn || loading}
                   onClick={handleCheckIn}
-                  className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="flex-1 h-10 px-4 rounded-xl font-bold text-sm bg-white text-emerald-700 hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-lg shadow-black/20 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {loading && !isCheckedIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  <span>{isCheckedIn ? 'Punched In' : 'Clock In'}</span>
+                  {loading && !isCheckedIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {isCheckedIn ? 'Punched In' : 'Clock In'}
                 </button>
-
                 <button
                   disabled={!isCheckedIn || isCheckedOut || loading}
                   onClick={handleCheckOut}
-                  className="h-8 px-3 rounded-lg font-medium text-xs text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                  className="flex-1 h-10 px-4 rounded-xl font-bold text-sm bg-white/15 hover:bg-white/25 border border-white/30 text-white disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                  <span>{isCheckedOut ? 'Completed' : 'Clock Out'}</span>
+                  {loading && isCheckedIn && !isCheckedOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
+                  {isCheckedOut ? 'Completed' : 'Clock Out'}
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <span className="h-8 px-3 rounded-lg font-medium text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
-                  <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Historical Record</span>
-                </span>
-              </div>
+              <span className="h-10 px-4 rounded-xl font-medium text-sm text-white/80 bg-white/10 border border-white/20 flex items-center gap-2">
+                <CalendarDays className="w-4 h-4" />
+                Historical Record
+              </span>
             )}
           </div>
         </div>
@@ -631,7 +615,7 @@ export default function EmployeeAttendanceHub({
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left (2 Cols): MY ATTENDANCE & WORKING HOURS CHART */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between overflow-hidden">
+        <div className="lg:col-span-2 ws-card p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
           <div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
@@ -648,13 +632,13 @@ export default function EmployeeAttendanceHub({
                 <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
                   <button
                     onClick={() => setFilterMode('MONTH')}
-                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'MONTH' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'MONTH' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
                   >
                     Month
                   </button>
                   <button
                     onClick={() => setFilterMode('CUSTOM')}
-                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'CUSTOM' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}
+                    className={`px-2 py-0.5 rounded-md transition text-xs ${filterMode === 'CUSTOM' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}
                   >
                     Custom
                   </button>
@@ -868,7 +852,7 @@ export default function EmployeeAttendanceHub({
         </div>
 
         {/* Right (1 Col): STATUS DISTRIBUTION */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+        <div className="ws-card p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-3.5">
               <div>
@@ -892,10 +876,10 @@ export default function EmployeeAttendanceHub({
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalOnTime}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-emerald-100 dark:bg-emerald-950/40 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalOnTime / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
                   />
                 </div>
               </div>
@@ -908,10 +892,10 @@ export default function EmployeeAttendanceHub({
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalLate}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-amber-100 dark:bg-amber-950/40 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalLate / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-amber-500 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-500"
                   />
                 </div>
               </div>
@@ -924,10 +908,10 @@ export default function EmployeeAttendanceHub({
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalLeave}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-violet-100 dark:bg-violet-950/40 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalLeave / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-violet-500 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full transition-all duration-500"
                   />
                 </div>
               </div>
@@ -940,10 +924,10 @@ export default function EmployeeAttendanceHub({
                   </span>
                   <span className="text-slate-900 dark:text-white font-mono font-semibold">{stats.totalAbsent}</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-rose-100 dark:bg-rose-950/40 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${stats.workingDaysCount > 0 ? (stats.totalAbsent / stats.workingDaysCount) * 100 : 0}%` }}
-                    className="h-full bg-rose-500 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all duration-500"
                   />
                 </div>
               </div>

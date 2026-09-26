@@ -41,6 +41,9 @@ model User {
   tasksAssigned          Task[]                 @relation("AssignedTasks")
   ledTeams               Team[]                 @relation("TeamLead")
   team                   Team?                  @relation("TeamMembers", fields: [teamId], references: [id])
+  pushSubscriptions      PushSubscription[]
+  pushReminderLogs       PushReminderLog[]
+
 
   @@index([employeeId, email, role, teamId, accountStatus, isDeleted])
   @@index([updatedAt])
@@ -293,3 +296,40 @@ model PayrollRecord {
   @@index([monthKey, status])
   @@index([userId, monthKey])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Push Notification Models (Punch-In Reminder Feature)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// One row per authenticated browser/device subscription.
+/// An employee may have multiple rows (laptop + phone).
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([endpoint])
+}
+
+/// One row per (userId, dateKey, endpoint) triple.
+/// Prevents the same device from receiving duplicate reminders
+/// if the cron endpoint is retried or invoked concurrently.
+model PushReminderLog {
+  id        String   @id @default(uuid())
+  userId    String
+  dateKey   String
+  endpoint  String
+  sentAt    DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dateKey, endpoint])
+  @@index([userId, dateKey])
+  @@index([dateKey])
+}
+

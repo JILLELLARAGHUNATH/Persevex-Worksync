@@ -150,7 +150,7 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {teams.map((t) => (
-          <div key={t.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col justify-between transition-colors">
+          <div key={t.id} className="ws-card p-4 sm:p-5 shadow-xs flex flex-col justify-between transition-colors">
             <div>
               <div className="flex justify-between items-start">
                 <div>
@@ -219,7 +219,7 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
       {/* Create / Edit Team Modal */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-5 shadow-xl space-y-3.5 animate-in zoom-in-95 transition-colors">
+          <div className="ws-card max-w-md w-full p-5 shadow-xl space-y-3.5 animate-in zoom-in-95 transition-colors">
             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
                 {editingTeam ? 'Edit Team Details' : 'Create New Team'}
@@ -297,7 +297,7 @@ export default function TeamsManagementClient({ initialTeams, allUsers }: { init
       {/* View Squad Roster Modal */}
       {viewingTeam && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-lg w-full p-5 shadow-xl space-y-3.5 animate-in zoom-in-95 transition-colors">
+          <div className="ws-card max-w-lg w-full p-5 shadow-xl space-y-3.5 animate-in zoom-in-95 transition-colors">
             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <span className="text-[10px] font-mono font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 px-2 py-0.5 rounded-md">

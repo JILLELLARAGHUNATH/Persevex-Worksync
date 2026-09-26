@@ -36,6 +36,21 @@ export interface CalendarDayInfo {
     numberOfDays: number;
     reason: string;
   }>;
+  attendance?: {
+    id?: string;
+    status: 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'PENDING';
+    checkInTime: string | null;
+    checkOutTime: string | null;
+    totalHours: number;
+    isPunchedIn: boolean;
+    classification: string;
+  } | null;
+  attendanceSummary?: {
+    presentCount: number;
+    absentCount: number;
+    halfDayCount: number;
+    pendingCount: number;
+  } | null;
 }
 
 export interface MonthCalendarSummary {
@@ -47,6 +62,9 @@ export interface MonthCalendarSummary {
   companyHolidaysCount: number;
   specialWorkingDaysCount: number;
   workingDaysCount: number;
+  presentDaysCount?: number;
+  absentDaysCount?: number;
+  halfDaysCount?: number;
   days: CalendarDayInfo[];
 }
 
@@ -270,6 +288,8 @@ export function buildMonthWorkCalendar(
       isWorkingDay,
       overrideEntry: override,
       leaves: [],
+      attendance: null,
+      attendanceSummary: null,
     });
   }
 

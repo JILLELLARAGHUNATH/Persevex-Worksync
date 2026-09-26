@@ -139,7 +139,7 @@ export default function OfficeSettingsClient({ initialConfig, userRole }: Office
   };
 
   return (
-    <form onSubmit={handleSave} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs space-y-6 transition-colors">
+    <form onSubmit={handleSave} className="ws-card p-5 sm:p-6 shadow-xs space-y-6 transition-colors">
       <div className="space-y-3.5">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">

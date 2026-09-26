@@ -21,9 +21,9 @@ export default async function TeamLeadMyAttendancePage() {
   const totalHours = history.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">My Attendance (Team Lead)</h1>
+    <div className="space-y-3">
+      <div className="px-4 py-3 ws-card rounded-xl border-l-4 border-l-blue-500">
+        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">My Attendance (Team Lead)</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Personal shift history ledger, working hours, and punctuality compliance
         </p>
@@ -31,24 +31,24 @@ export default async function TeamLeadMyAttendancePage() {
 
       {/* Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs">
+        <div className="ws-card p-3.5 rounded-xl shadow-xs">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed Days</span>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{totalShifts}</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-0.5">{totalShifts}</h3>
           <p className="text-[11px] text-slate-400 font-medium">Logged present</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs">
+        <div className="ws-card p-3.5 rounded-xl shadow-xs">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">On-Time</span>
-          <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{onTimeCount}</h3>
+          <h3 className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{onTimeCount}</h3>
           <p className="text-[11px] text-slate-400 font-medium">By 11:15 AM</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs">
+        <div className="ws-card p-3.5 rounded-xl shadow-xs">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Late Arrivals</span>
-          <h3 className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{lateCount}</h3>
+          <h3 className="text-lg font-bold text-amber-600 dark:text-amber-400 mt-0.5">{lateCount}</h3>
           <p className="text-[11px] text-slate-400 font-medium">After grace cutoff</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs">
+        <div className="ws-card p-3.5 rounded-xl shadow-xs">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Working Hours</span>
-          <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-0.5">{totalHours.toFixed(1)} hrs</h3>
+          <h3 className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-0.5">{totalHours.toFixed(1)} hrs</h3>
           <p className="text-[11px] text-slate-400 font-medium">Cumulative duration</p>
         </div>
       </div>

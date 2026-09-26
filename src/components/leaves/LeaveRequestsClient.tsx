@@ -397,6 +397,8 @@ export default function LeaveRequestsClient({
   const pendingCount = leaves.filter((l) =>
     role === 'TEAM_LEAD' ? l.currentStage === 'PENDING_TL' : (l.currentStage === 'PENDING_MANAGER' || l.currentStage === 'PENDING_TL')
   ).length;
+  const approvedCount = leaves.filter((l) => l.currentStage === 'APPROVED').length;
+  const rejectedCount = leaves.filter((l) => l.currentStage === 'REJECTED').length;
 
   const isFilterActive =
     datePreset !== 'ALL' ||
@@ -406,47 +408,68 @@ export default function LeaveRequestsClient({
 
   return (
     <div className="space-y-4">
-      {/* Top Bar: Title & Top-level Tabs */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 rounded-xl shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-colors">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">
-            <CalendarDays className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-              {role === 'MANAGER' ? 'Organization Leave Review' : 'Team Leave Requests'}
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {pendingCount} pending requests awaiting your action
-            </p>
-          </div>
-        </div>
+      {/* ─── HEADER: Gradient banner + mini stat tiles + tab switcher ─── */}
+      <div className="ws-hero rounded-2xl p-5 sm:p-7 overflow-hidden">
+        <div className="relative z-10">
+          {/* Title row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Leave Management</p>
+              <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                {role === 'MANAGER' ? 'Organization Leave Review' : 'Team Leave Requests'}
+              </h2>
+              <p className="text-white/60 text-sm mt-1">
+                {pendingCount > 0
+                  ? `${pendingCount} request${pendingCount > 1 ? 's' : ''} awaiting your review`
+                  : 'No pending requests — you\'re all caught up!'}
+              </p>
+            </div>
 
-        <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-          {[
-            { key: 'PENDING', label: `Pending (${pendingCount})` },
-            { key: 'APPROVED', label: 'Approved' },
-            { key: 'REJECTED', label: 'Rejected' },
-            { key: 'ALL', label: 'All Requests' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilterStage(tab.key)}
-              className={`px-2.5 py-1 rounded-md transition text-xs cursor-pointer ${
-                filterStage === tab.key
-                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            {/* Mini stat tiles */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-4 py-2.5">
+                <div className="text-2xl font-black text-white font-mono">{pendingCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider mt-0.5">Pending</div>
+              </div>
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-4 py-2.5">
+                <div className="text-2xl font-black text-white font-mono">{approvedCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider mt-0.5">Approved</div>
+              </div>
+              <div className="text-center bg-white/15 border border-white/20 rounded-xl px-4 py-2.5">
+                <div className="text-2xl font-black text-white font-mono">{rejectedCount}</div>
+                <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider mt-0.5">Rejected</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-xl border border-white/15 w-fit">
+            {[
+              { key: 'PENDING', label: `Pending (${pendingCount})` },
+              { key: 'APPROVED', label: 'Approved' },
+              { key: 'REJECTED', label: 'Rejected' },
+              { key: 'ALL', label: 'All Requests' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFilterStage(tab.key)}
+                className={`px-3 py-1.5 rounded-lg transition text-xs font-semibold cursor-pointer ${
+                  filterStage === tab.key
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+
       {/* Advanced Filters Panel (Shown ONLY when "All Requests" is selected) */}
       {filterStage === 'ALL' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs space-y-3 transition-colors">
+        <div className="ws-card p-3.5 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2.5">
             {/* Date Range Presets */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -466,7 +489,7 @@ export default function LeaveRequestsClient({
                     onClick={() => setDatePreset(preset.key)}
                     className={`px-2.5 py-1 rounded-md transition text-xs cursor-pointer ${
                       datePreset === preset.key
-                        ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-semibold shadow-xs'
+                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
@@ -564,7 +587,7 @@ export default function LeaveRequestsClient({
       )}
 
       {/* Requests Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
+      <div className="ws-card overflow-hidden shadow-xs transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
@@ -672,7 +695,7 @@ export default function LeaveRequestsClient({
       {/* MANAGER PAY TREATMENT APPROVAL MODAL */}
       {approvalModalLeave && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4 my-auto">
+          <div className="ws-card max-w-lg w-full p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4 my-auto">
             <div className="flex justify-between items-start pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
@@ -943,7 +966,7 @@ export default function LeaveRequestsClient({
       {/* MANAGER REJECT MODAL */}
       {rejectModalLeave && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
+          <div className="ws-card max-w-md w-full p-5 shadow-2xl animate-in zoom-in-95 duration-150 space-y-4">
             <div className="flex justify-between items-start pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">

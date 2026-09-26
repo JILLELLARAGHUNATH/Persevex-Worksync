@@ -119,7 +119,7 @@ function LoginForm() {
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition cursor-pointer flex items-center justify-center"
+          className="p-2 rounded-lg ws-card text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition cursor-pointer flex items-center justify-center"
           title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {mounted && isDark ? (
@@ -130,10 +130,10 @@ function LoginForm() {
         </button>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-7 shadow-lg transition-colors">
+      <div className="w-full max-w-md ws-card p-6 sm:p-7 shadow-xl ring-1 ring-black/5 dark:ring-white/5 transition-colors">
         <div className="flex flex-col items-center text-center mb-5">
           <PersevexLogo size="lg" subtitle="Employee Management & Attendance System" className="justify-center mb-1.5" />
-          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 rounded-md text-xs font-medium">
+          <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 text-indigo-600 dark:text-indigo-400 rounded-md text-xs font-semibold">
             <RoleIcon className="w-3.5 h-3.5" /> Persevex Internal Access
           </div>
         </div>
@@ -222,7 +222,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-9.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium rounded-lg transition duration-150 shadow-xs text-xs sm:text-sm mt-1 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full h-9.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 text-white font-semibold rounded-lg transition duration-150 shadow-sm shadow-indigo-900/30 text-xs sm:text-sm mt-1 cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -239,7 +239,7 @@ function LoginForm() {
       {/* Professional Password Reset Modal */}
       {forgotModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 transition-colors animate-in zoom-in-95">
+          <div className="ws-card max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4 transition-colors animate-in zoom-in-95">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60 shrink-0">
@@ -274,7 +274,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setForgotModalOpen(false)}
-                className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-xs sm:text-sm transition shadow-xs cursor-pointer flex items-center justify-center"
+                className="w-full h-9 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold rounded-lg text-xs sm:text-sm transition shadow-sm cursor-pointer flex items-center justify-center"
               >
                 Got it
               </button>

@@ -50,7 +50,7 @@ export default function PasswordManagerModal({ isOpen, onClose, employee }: Pass
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-5 shadow-xl space-y-3.5 transition-colors">
+      <div className="ws-card max-w-md w-full p-5 shadow-xl space-y-3.5 transition-colors">
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
             <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60">

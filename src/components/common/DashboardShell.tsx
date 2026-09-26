@@ -16,7 +16,7 @@ export default function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#F5F7FA] dark:bg-[#0A101F] text-slate-900 dark:text-slate-100 transition-colors duration-150">
+    <div className="flex min-h-screen ws-page-bg text-slate-900 dark:text-slate-100 transition-colors duration-150">
       <RealtimeListener />
       <CommandPalette />
 
@@ -29,7 +29,7 @@ export default function DashboardShell({
 
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar user={user} onOpenMobileMenu={() => setMobileMenuOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-6 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-[1400px] w-full mx-auto">
           {children}
         </main>
       </div>

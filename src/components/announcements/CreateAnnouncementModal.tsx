@@ -87,7 +87,7 @@ export default function CreateAnnouncementModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-lg w-full p-5 shadow-xl space-y-3.5 transition-colors animate-in zoom-in-95">
+      <div className="ws-card max-w-lg w-full p-5 shadow-xl space-y-3.5 transition-colors animate-in zoom-in-95">
         <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">

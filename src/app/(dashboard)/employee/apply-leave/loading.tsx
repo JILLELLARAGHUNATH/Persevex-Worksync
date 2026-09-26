@@ -11,7 +11,7 @@ export default function EmployeeApplyLeaveLoading() {
       {/* Balance cards skeleton */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs space-y-2">
+          <div key={i} className="ws-card p-3.5 rounded-xl shadow-xs space-y-2">
             <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
             <div className="h-7 w-12 bg-slate-300 dark:bg-slate-700 rounded-md" />
           </div>
@@ -19,7 +19,7 @@ export default function EmployeeApplyLeaveLoading() {
       </div>
 
       {/* Form skeleton */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="ws-card p-5 shadow-xs space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="h-9 bg-slate-50 dark:bg-slate-800/60 rounded-lg" />
           <div className="h-9 bg-slate-50 dark:bg-slate-800/60 rounded-lg" />

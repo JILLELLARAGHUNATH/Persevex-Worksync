@@ -79,12 +79,24 @@ export default function UnifiedReportsClient({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-xl shadow-xs space-y-5 transition-colors">
-      <div className="space-y-4">
-        <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Select Report Parameters</h3>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure filters and format for data export</p>
+    <div className="space-y-4">
+      {/* Hero Banner */}
+      <div className="ws-hero rounded-2xl p-5 sm:p-7">
+        <div className="relative z-10">
+          <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Analytics &amp; Exports</p>
+          <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Reports &amp; Data Export</h1>
+          <p className="text-white/60 text-sm mt-1">
+            Configure filters, select report type, and export data in XLSX or CSV format
+          </p>
         </div>
+      </div>
+
+      <div className="ws-card p-5 sm:p-6 space-y-5">
+        <div className="space-y-4">
+          <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Select Report Parameters</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure filters and format for data export</p>
+          </div>
 
         {role !== 'EMPLOYEE' && (
           <div>
@@ -223,6 +235,7 @@ export default function UnifiedReportsClient({
           Export Excel (.xlsx)
         </button>
       </div>
+    </div>
     </div>
   );
 }

@@ -45,12 +45,10 @@ export default async function TLLeavesPage() {
     : [];
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Team Leave Requests</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Stage 1 review for team member leave applications
-        </p>
+    <div className="space-y-3">
+      <div className="px-4 py-3 ws-card rounded-xl border-l-4 border-l-amber-500">
+        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Team Leave Requests</h1>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">Stage 1 review for team member leave applications</p>
       </div>
 
       <LeaveRequestsClient

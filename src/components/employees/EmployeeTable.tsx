@@ -272,7 +272,7 @@ export default function EmployeeTable({
   return (
     <div className="space-y-4">
       {/* Top Filter Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-xl shadow-xs flex flex-col sm:flex-row gap-2.5 items-center justify-between transition-colors">
+      <div className="ws-card p-3 sm:p-3.5 flex flex-col sm:flex-row gap-2.5 items-center justify-between">
         <div className="relative w-full sm:w-80">
           <input
             type="text"
@@ -321,7 +321,7 @@ export default function EmployeeTable({
       </div>
 
       {/* Main Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors relative">
+      <div className="ws-card overflow-hidden shadow-xs transition-colors relative">
         {loading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-10 animate-in fade-in duration-100">
             <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">

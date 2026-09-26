@@ -8,7 +8,7 @@ export default function ManagerSettingsLoading() {
         <div className="h-3.5 w-80 bg-slate-100 dark:bg-slate-800/60 rounded-md" />
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="ws-card p-5 shadow-xs space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <div className="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded" />

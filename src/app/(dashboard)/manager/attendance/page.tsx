@@ -25,12 +25,16 @@ export default async function ManagerAttendancePage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Organization Attendance Ledger</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Real-time check-in and check-out logs, shift punctuality, and working hours
-        </p>
+    <div className="space-y-3">
+      {/* Compact page header */}
+      <div className="flex items-center justify-between px-4 py-3 ws-card rounded-xl border-l-4 border-l-emerald-500">
+        <div>
+          <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Organization Attendance Ledger</h1>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Live check-in / check-out logs, punctuality indicators, and working hours</p>
+        </div>
+        <span className="text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800/60 shrink-0">
+          {records.length} Records
+        </span>
       </div>
 
       <UnifiedAttendanceTable

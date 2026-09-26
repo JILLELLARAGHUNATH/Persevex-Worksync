@@ -79,34 +79,44 @@ export default function AnnouncementManagerClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Announcements</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Broadcast updates to all employees, specific teams, or individuals
-          </p>
+      {/* Hero Banner */}
+      <div className="ws-hero rounded-2xl p-5 sm:p-7">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Communications</p>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Announcements</h1>
+            <p className="text-white/60 text-sm mt-1">
+              Broadcast updates to all employees, specific teams, or individuals
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-center bg-white/15 border border-white/20 rounded-xl px-4 py-2.5">
+              <div className="text-2xl font-black text-white font-mono">{announcements.length}</div>
+              <div className="text-[10px] text-white/70 font-semibold uppercase tracking-wider mt-0.5">Total</div>
+            </div>
+            {userRole === 'MANAGER' && (
+              <button
+                onClick={() => setCreateModalOpen(true)}
+                className="h-9 bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 rounded-xl text-xs flex items-center gap-2 transition shadow-lg cursor-pointer"
+              >
+                <PlusCircle className="w-4 h-4" /> Create Announcement
+              </button>
+            )}
+          </div>
         </div>
-
-        {userRole === 'MANAGER' && (
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="h-8 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3 rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
-          >
-            <PlusCircle className="w-3.5 h-3.5" /> Create Announcement
-          </button>
-        )}
       </div>
+
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl text-center text-slate-400 text-xs shadow-xs">
+          <div className="ws-card p-8 rounded-xl text-center text-slate-400 text-xs shadow-xs">
             No announcements broadcasted yet.
           </div>
         ) : (
           filtered.map((a) => (
             <div
               key={a.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs transition-colors space-y-2.5"
+              className="ws-card p-4 sm:p-5 shadow-xs transition-colors space-y-2.5"
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">

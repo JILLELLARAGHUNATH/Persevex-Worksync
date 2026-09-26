@@ -23,14 +23,7 @@ export default async function TeamLeadApplyLeavePage() {
   ]);
 
   return (
-    <div className="space-y-4 max-w-4xl">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Apply for Leave</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Submit a personal leave application for Management review and approval
-        </p>
-      </div>
-
+    <div className="max-w-4xl">
       <ApplyLeaveClient balances={balances} history={history} />
     </div>
   );

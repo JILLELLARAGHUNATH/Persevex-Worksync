@@ -21,12 +21,16 @@ export default async function ManagerTeamsPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Team Management</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Create teams, assign Team Leads, and manage team member rosters
-        </p>
+    <div className="space-y-3">
+      {/* Compact page header */}
+      <div className="flex items-center justify-between px-4 py-3 ws-card rounded-xl border-l-4 border-l-indigo-500">
+        <div>
+          <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Team Management</h1>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Create squads, assign Team Leads, and manage member rosters</p>
+        </div>
+        <span className="text-[11px] font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-800/60 font-mono shrink-0">
+          {teams.length} Teams
+        </span>
       </div>
 
       <TeamsManagementClient initialTeams={teams} allUsers={allUsers} />

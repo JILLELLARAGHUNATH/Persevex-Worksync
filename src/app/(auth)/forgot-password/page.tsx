@@ -5,7 +5,7 @@ import PersevexLogo from '@/components/common/PersevexLogo';
 export default function ForgotPasswordPage() {
   return (
     <div className="w-full flex items-center justify-center relative">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-7 shadow-lg transition-colors space-y-5">
+      <div className="w-full max-w-md ws-card p-6 sm:p-7 shadow-lg transition-colors space-y-5">
         <div className="flex flex-col items-center text-center">
           <PersevexLogo size="lg" subtitle="Employee Management & Attendance System" className="justify-center mb-2" />
         </div>

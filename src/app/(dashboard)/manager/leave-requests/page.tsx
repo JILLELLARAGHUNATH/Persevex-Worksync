@@ -22,12 +22,10 @@ export default async function ManagerLeaveRequestsPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Leave Requests & Approvals</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Review and execute final decisions on workforce leave applications
-        </p>
+    <div className="space-y-3">
+      <div className="px-4 py-3 ws-card rounded-xl border-l-4 border-l-rose-500">
+        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Leave Requests &amp; Approvals</h1>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">Review and execute final decisions on workforce leave applications</p>
       </div>
 
       <LeaveRequestsClient

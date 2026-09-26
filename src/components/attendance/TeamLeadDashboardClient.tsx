@@ -328,7 +328,7 @@ export default function TeamLeadDashboardClient({
       <LiveAttendanceCard initialAttendance={tlAttendance} currentUserId={currentUserId} />
 
       {/* 2. Advanced Filter Toolbar (Today, Yesterday, Week, Month, Year, Date, Custom, Assigned Employee, Status) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs transition-colors">
+      <div className="ws-card px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         {/* Left: Date Presets */}
         <div className="flex flex-wrap items-center gap-1.5">
           <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -457,43 +457,33 @@ export default function TeamLeadDashboardClient({
       </div>
 
       {/* 3. 4 Refined Summary Stat Cards (Synced to TL Squad) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 ws-stagger">
         {/* Present (On-Duty) */}
         <div
           onMouseEnter={() => setHoveredSegment('PRESENT')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'PRESENT'
-              ? 'border-emerald-500 ring-1 ring-emerald-500/30'
-              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          className={`ws-stat-card border-l-4 border-l-emerald-500 cursor-pointer transition-all duration-200 ${
+            hoveredSegment === 'PRESENT' ? 'ring-2 ring-emerald-500/20' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+          <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-emerald-400/5 -translate-y-10 translate-x-10 pointer-events-none" />
+          <div className="relative p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Present
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                {presentPct}%
               </span>
             </div>
-            <span className="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/60">
-              {presentPct}%
-            </span>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums leading-none mb-0.5">
               {displayMode === 'PERCENTAGE' ? `${presentPct}%` : summary.totalPresent}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {summary.onTimeCount} on-time &middot; {summary.lateCount} late
-            </p>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              style={{ width: `${presentPct}%` }}
-              className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-            />
+            <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Present</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{summary.onTimeCount} on-time &middot; {summary.lateCount} late</p>
+            <div className="mt-2 w-full h-1 bg-emerald-100 dark:bg-emerald-950/40 rounded-full overflow-hidden">
+              <div style={{ width: `${presentPct}%` }} className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-700" />
+            </div>
           </div>
         </div>
 
@@ -501,38 +491,28 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('LATE')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'LATE'
-              ? 'border-amber-500 ring-1 ring-amber-500/30'
-              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          className={`ws-stat-card border-l-4 border-l-amber-500 cursor-pointer transition-all duration-200 ${
+            hoveredSegment === 'LATE' ? 'ring-2 ring-amber-500/20' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                <AlertTriangle className="w-3.5 h-3.5" />
+          <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-amber-400/5 -translate-y-10 translate-x-10 pointer-events-none" />
+          <div className="relative p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="w-4 h-4" />
               </div>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Late Arrivals
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full">
+                {latePct}%
               </span>
             </div>
-            <span className="text-xs font-mono font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/60">
-              {latePct}%
-            </span>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums leading-none mb-0.5">
               {displayMode === 'PERCENTAGE' ? `${latePct}%` : summary.lateCount}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              After 11:15 AM grace cutoff
-            </p>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              style={{ width: `${latePct}%` }}
-              className="h-full bg-amber-500 rounded-full transition-all duration-300"
-            />
+            <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Late</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">After 11:15 AM grace cutoff</p>
+            <div className="mt-2 w-full h-1 bg-amber-100 dark:bg-amber-950/40 rounded-full overflow-hidden">
+              <div style={{ width: `${latePct}%` }} className="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-700" />
+            </div>
           </div>
         </div>
 
@@ -540,38 +520,28 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('ABSENT')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'ABSENT'
-              ? 'border-rose-500 ring-1 ring-rose-500/30'
-              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          className={`ws-stat-card border-l-4 border-l-rose-500 cursor-pointer transition-all duration-200 ${
+            hoveredSegment === 'ABSENT' ? 'ring-2 ring-rose-500/20' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                <XCircle className="w-3.5 h-3.5" />
+          <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-rose-400/5 -translate-y-10 translate-x-10 pointer-events-none" />
+          <div className="relative p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <XCircle className="w-4 h-4" />
               </div>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Absent
+              <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-full">
+                {absentPct}%
               </span>
             </div>
-            <span className="text-xs font-mono font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded-md border border-rose-200/60 dark:border-rose-800/60">
-              {absentPct}%
-            </span>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums leading-none mb-0.5">
               {displayMode === 'PERCENTAGE' ? `${absentPct}%` : summary.absentCount}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Unpunched shift
-            </p>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              style={{ width: `${absentPct}%` }}
-              className="h-full bg-rose-500 rounded-full transition-all duration-300"
-            />
+            <p className="text-[11px] font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wider">Absent</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">Unpunched shift</p>
+            <div className="mt-2 w-full h-1 bg-rose-100 dark:bg-rose-950/40 rounded-full overflow-hidden">
+              <div style={{ width: `${absentPct}%` }} className="h-full bg-gradient-to-r from-rose-600 to-rose-400 rounded-full transition-all duration-700" />
+            </div>
           </div>
         </div>
 
@@ -579,44 +549,35 @@ export default function TeamLeadDashboardClient({
         <div
           onMouseEnter={() => setHoveredSegment('LEAVE')}
           onMouseLeave={() => setHoveredSegment(null)}
-          className={`bg-white dark:bg-slate-900 border rounded-xl p-4 shadow-xs space-y-2.5 transition cursor-pointer ${
-            hoveredSegment === 'LEAVE'
-              ? 'border-violet-500 ring-1 ring-violet-500/30'
-              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          className={`ws-stat-card border-l-4 border-l-violet-500 cursor-pointer transition-all duration-200 ${
+            hoveredSegment === 'LEAVE' ? 'ring-2 ring-violet-500/20' : ''
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/50 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-center text-violet-600 dark:text-violet-400">
-                <CalendarDays className="w-3.5 h-3.5" />
+          <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-violet-400/5 -translate-y-10 translate-x-10 pointer-events-none" />
+          <div className="relative p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/60 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                <CalendarDays className="w-4 h-4" />
               </div>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Approved Leave
+              <span className="text-[10px] font-bold text-violet-700 dark:text-violet-400 bg-violet-100 dark:bg-violet-950/60 px-2 py-0.5 rounded-full">
+                {leavePct}%
               </span>
             </div>
-            <span className="text-xs font-mono font-semibold text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/50 px-1.5 py-0.5 rounded-md border border-violet-200/60 dark:border-violet-800/60">
-              {leavePct}%
-            </span>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
+            <div className="text-2xl font-black text-slate-900 dark:text-white font-mono tabular-nums leading-none mb-0.5">
               {displayMode === 'PERCENTAGE' ? `${leavePct}%` : summary.leaveCount}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Sanctioned time-off
-            </p>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              style={{ width: `${leavePct}%` }}
-              className="h-full bg-violet-500 rounded-full transition-all duration-300"
-            />
+            <p className="text-[11px] font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wider">On Leave</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">Sanctioned time-off</p>
+            <div className="mt-2 w-full h-1 bg-violet-100 dark:bg-violet-950/40 rounded-full overflow-hidden">
+              <div style={{ width: `${leavePct}%` }} className="h-full bg-gradient-to-r from-violet-600 to-violet-400 rounded-full transition-all duration-700" />
+            </div>
           </div>
         </div>
       </div>
 
+
       {/* 4. Single Horizontal Attendance Distribution Bar (Squad Scoped) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-xl shadow-xs space-y-4 transition-colors">
+      <div className="ws-card p-4 sm:p-5 space-y-4">
         {/* Header & Status Legend */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>

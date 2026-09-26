@@ -8,7 +8,7 @@ export default function EmployeeReportsLoading() {
         <div className="h-3.5 w-64 bg-slate-100 dark:bg-slate-800/60 rounded-md" />
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4 max-w-2xl">
+      <div className="ws-card p-5 shadow-xs space-y-4 max-w-2xl">
         <div className="h-12 bg-slate-100 dark:bg-slate-800 rounded-lg" />
         <div className="space-y-3 pt-3">
           <div className="h-9 bg-slate-50 dark:bg-slate-800/60 rounded-lg" />

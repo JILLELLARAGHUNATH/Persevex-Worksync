@@ -76,7 +76,7 @@ export default function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-5 shadow-xl animate-in zoom-in-95 duration-150 transition-colors">
+      <div className="ws-card max-w-md w-full p-5 shadow-xl animate-in zoom-in-95 duration-150 transition-colors">
         <div className="flex items-start gap-3.5">
           {getIcon()}
           <div className="flex-1">

@@ -8,7 +8,7 @@ export default function ProfileLoading() {
         <div className="h-3.5 w-80 bg-slate-100 dark:bg-slate-800/60 rounded-md" />
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="ws-card p-5 shadow-xs space-y-4">
         <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/60">
           <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800" />
           <div className="space-y-2">

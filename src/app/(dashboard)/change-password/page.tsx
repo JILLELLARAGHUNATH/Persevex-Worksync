@@ -37,12 +37,12 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="max-w-md space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Security & Password</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Update your account authentication credentials</p>
+      <div className="px-4 py-3 ws-card rounded-xl border-l-4 border-l-slate-500">
+        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Security & Password</h1>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">Update your account authentication credentials</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3.5 shadow-xs transition-colors">
+      <form onSubmit={handleSubmit} className="ws-card p-5 space-y-3.5 shadow-xs transition-colors">
         <div>
           <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
           <input

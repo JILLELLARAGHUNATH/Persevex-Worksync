@@ -275,7 +275,7 @@ export default function MyAttendanceClient({
 
       {!showHistory ? (
         <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="ws-card p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 shrink-0">
@@ -363,7 +363,7 @@ export default function MyAttendanceClient({
       ) : (
         /* NO TOP CARDS HERE - TODAY FILTER ACTIVE BY DEFAULT */
         <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="ws-card p-3.5 rounded-xl shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
             <div className="relative w-full md:w-80">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -409,7 +409,7 @@ export default function MyAttendanceClient({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+          <div className="ws-card overflow-hidden shadow-xs">
             <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>

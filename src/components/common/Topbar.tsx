@@ -3,10 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, User, Key, LogOut, Sun, Moon, CalendarCheck, Menu } from 'lucide-react';
+import { Bell, User, Key, LogOut, Sun, Moon, CalendarCheck, Menu, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import PersevexLogo from './PersevexLogo';
-
+import Image from 'next/image';
 
 interface TopbarProps {
   user: {
@@ -111,7 +110,6 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
         const detail = (e as CustomEvent).detail;
         if (!detail) return;
 
-        // Only fetch notifications if the event is a notification, announcement, leave status update, or targeted to this user
         if (
           detail.type === 'NOTIFICATION_RECEIVED' ||
           detail.type === 'SYSTEM_ANNOUNCEMENT' ||
@@ -156,8 +154,7 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
 
   const handleNotificationClick = (notif: any) => {
     setNotifOpen(false);
-    
-    // Optimistic update
+
     setNotifications((prev) =>
       prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
     );
@@ -195,104 +192,117 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
     }
   };
 
-  return (
-    <header className="h-14 bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors duration-150">
+  const initials = currentUser.fullName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  const roleLabel = currentUser.role === 'TEAM_LEAD' ? 'Team Lead' : currentUser.role === 'MANAGER' ? 'Manager' : 'Employee';
 
-      <div className="flex items-center gap-3">
+  return (
+    <header className="h-14 bg-white/80 dark:bg-[#0d1424]/90 backdrop-blur-md border-b border-slate-200/70 dark:border-slate-800/60 px-4 sm:px-5 flex items-center justify-between sticky top-0 z-30 transition-colors duration-150">
+
+      {/* Left: Mobile menu + mobile logo */}
+      <div className="flex items-center gap-2.5">
         <button
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          className="lg:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition cursor-pointer"
           aria-label="Open Navigation Menu"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4.5 h-4.5" />
         </button>
 
-        <Link href="/" className="lg:hidden flex items-center shrink-0 focus:outline-none">
-          <PersevexLogo size="sm" showWorkSyncTag={true} contained={true} className="!items-start" />
+        {/* Mobile brand mark */}
+        <Link href="/" className="lg:hidden flex items-center gap-2 shrink-0 focus:outline-none">
+          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
+            <Image src="/logo.svg.webp" alt="Persevex" width={16} height={16} priority className="object-contain w-4 h-4" />
+          </div>
+          <span className="text-sm font-bold text-slate-900 dark:text-white">WorkSync</span>
         </Link>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
-        {/* Theme Switcher */}
+      {/* Right: Actions */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+
+        {/* Theme toggle */}
         <button
           type="button"
           onClick={toggleTheme}
-          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:white transition border border-slate-200 dark:border-slate-700 cursor-pointer flex items-center justify-center"
-          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/70 transition border border-slate-200 dark:border-slate-700/60 cursor-pointer flex items-center justify-center"
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {mounted && isDark ? (
-            <Sun className="w-4 h-4 text-amber-400" />
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
           ) : (
-            <Moon className="w-4 h-4 text-blue-600" />
+            <Moon className="w-3.5 h-3.5 text-indigo-500" />
           )}
         </button>
 
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
-            onClick={() => {
-              setNotifOpen(!notifOpen);
-              setDropdownOpen(false);
-            }}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition relative cursor-pointer"
+            onClick={() => { setNotifOpen(!notifOpen); setDropdownOpen(false); }}
+            className="w-8 h-8 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/70 transition relative cursor-pointer flex items-center justify-center"
             aria-label="Notifications"
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="w-3.5 h-3.5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow-xs">
+              <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#0d1424]">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-2 z-50 animate-in fade-in duration-100">
-              <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#0e1628] border border-slate-200 dark:border-slate-700/60 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 py-0 z-50 ws-animate-scale-in overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/20">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Activity Feed</h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">{unreadCount} unread updates</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-indigo-500" />
+                    Activity Feed
+                  </h4>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{unreadCount} unread</p>
                 </div>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                    className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer px-2 py-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition"
                   >
                     Mark all read
                   </button>
                 )}
               </div>
 
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/40">
                 {notifications.length === 0 ? (
-                  <p className="p-6 text-center text-xs text-slate-400">No new notifications.</p>
+                  <div className="p-8 text-center">
+                    <Bell className="w-7 h-7 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-xs text-slate-400 dark:text-slate-500">No notifications yet</p>
+                  </div>
                 ) : (
                   notifications.map((n) => (
                     <div
                       key={n.id}
                       onClick={() => handleNotificationClick(n)}
-                      className={`p-3 transition flex items-start gap-2.5 cursor-pointer ${
+                      className={`p-3.5 transition-colors flex items-start gap-3 cursor-pointer ${
                         !n.isRead
-                          ? 'bg-blue-50/40 dark:bg-blue-950/20 hover:bg-blue-50/70 dark:hover:bg-blue-950/40'
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-80'
+                          ? 'bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-50 dark:hover:bg-indigo-950/30'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/30 opacity-75'
                       }`}
                     >
-                      <div className={`p-1.5 rounded-md mt-0.5 shrink-0 ${
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
                         !n.isRead
-                          ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                          ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                       }`}>
                         <CalendarCheck className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <p className={`text-xs truncate ${!n.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-xs truncate ${!n.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-600 dark:text-slate-300'}`}>
                             {n.title}
                           </p>
                           {!n.isRead && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
                           )}
                         </div>
-                        <p className={`text-[11px] mt-0.5 line-clamp-2 leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+                        <p className={`text-[11px] mt-0.5 line-clamp-2 leading-relaxed ${!n.isRead ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'}`}>
                           {n.message}
                         </p>
                       </div>
@@ -307,47 +317,58 @@ export default function Topbar({ user, onOpenMobileMenu }: TopbarProps) {
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => {
-              setDropdownOpen(!dropdownOpen);
-              setNotifOpen(false);
-            }}
-            className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            onClick={() => { setDropdownOpen(!dropdownOpen); setNotifOpen(false); }}
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs text-white shadow-xs">
-              {currentUser.fullName.charAt(0)}
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-xs text-white shadow-sm shrink-0">
+              {initials}
             </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">{currentUser.fullName}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-mono">{currentUser.employeeId}</p>
+            <div className="text-left hidden sm:block max-w-[120px] overflow-hidden">
+              <p className="text-[12px] font-semibold text-slate-900 dark:text-white leading-tight truncate">{currentUser.fullName}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight font-mono truncate">{currentUser.employeeId}</p>
             </div>
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 animate-in fade-in duration-100">
-              <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{currentUser.fullName}</p>
-                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-mono capitalize">{currentUser.role.toLowerCase().replace(/_/g, ' ')}</p>
+            <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#0e1628] border border-slate-200 dark:border-slate-700/60 rounded-xl shadow-2xl shadow-slate-900/10 dark:shadow-black/40 py-1.5 z-50 ws-animate-scale-in overflow-hidden">
+              {/* Profile header */}
+              <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800/60 mb-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-xs text-white shadow-sm shrink-0">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{currentUser.fullName}</p>
+                    <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 mt-0.5">
+                      {roleLabel}
+                    </span>
+                  </div>
+                </div>
               </div>
+
               <Link
                 href="/profile"
                 onClick={() => setDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
               >
                 <User className="w-3.5 h-3.5 text-slate-400" /> My Profile
               </Link>
               <Link
                 href="/change-password"
                 onClick={() => setDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
               >
                 <Key className="w-3.5 h-3.5 text-slate-400" /> Change Password
               </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3.5 py-1.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition mt-1 border-t border-slate-100 dark:border-slate-800 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" /> Logout
-              </button>
+
+              <div className="mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-1">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[12px] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -10,7 +10,7 @@ export default function ManagerTeamsLoading() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-3">
+          <div key={i} className="ws-card p-4 shadow-xs space-y-3">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded" />

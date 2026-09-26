@@ -43,7 +43,7 @@ export default function CommandPalette() {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-start justify-center pt-24 p-4 animate-in fade-in duration-150">
-      <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 transition-colors">
+      <div className="w-full max-w-xl ws-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
           <Search className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <input

@@ -5,6 +5,7 @@ import { User, Mail, Phone, Lock, Shield, Check, Save, Eye, EyeOff, Loader2, Spa
 import { updateMyProfileAction, updateMyPasswordAction } from '@/actions/profileActions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import PushNotificationToggle from '@/components/profile/PushNotificationToggle';
 
 export default function ProfileSettingsClient({ initialProfile }: { initialProfile: any }) {
   const router = useRouter();
@@ -94,14 +95,14 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
   return (
     <div className="space-y-4 max-w-4xl">
       {/* Header Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors">
+      <div className="ws-card p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center font-semibold text-lg text-white shadow-xs shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 flex items-center justify-center font-bold text-lg text-white shadow-sm shrink-0">
             {profile?.fullName?.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100">{profile?.fullName}</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">{profile?.fullName}</h2>
               {isOrganizer && (
                 <span className="text-[10px] bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 px-2 py-0.5 rounded-md font-medium">
                   Master Organizer
@@ -115,8 +116,8 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-            Role: <strong className="text-blue-600 dark:text-blue-400 font-semibold">{profile?.role}</strong>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-800/50">
+            Role: <strong className="text-indigo-700 dark:text-indigo-300 font-bold">{profile?.role}</strong>
           </span>
           <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
             {profile?.accountStatus}
@@ -126,7 +127,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left Column: Personal Information Form */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-colors">
+        <div className="ws-card p-4 sm:p-5 space-y-3.5">
           <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
               <User className="w-3.5 h-3.5" />
@@ -194,7 +195,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
               <button
                 type="submit"
                 disabled={profileLoading}
-                className="h-8 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer transition"
+                className="h-8 px-3.5 rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-900/20 disabled:opacity-50 cursor-pointer transition"
               >
                 {profileLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Save Details
@@ -204,7 +205,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
         </div>
 
         {/* Right Column: Change Password Form */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-colors">
+        <div className="ws-card p-4 sm:p-5 space-y-3.5">
           <div className="pb-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60">
               <Lock className="w-3.5 h-3.5" />
@@ -270,7 +271,7 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
               <button
                 type="submit"
                 disabled={passLoading}
-                className="h-8 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer transition"
+                className="h-8 px-3.5 rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm shadow-amber-900/20 disabled:opacity-50 cursor-pointer transition"
               >
                 {passLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
                 Update Password
@@ -279,6 +280,9 @@ export default function ProfileSettingsClient({ initialProfile }: { initialProfi
           </form>
         </div>
       </div>
+
+      {/* Punch-In Reminder Notifications — EMPLOYEE & TEAM_LEAD only */}
+      <PushNotificationToggle userRole={profile?.role ?? ''} />
     </div>
   );
 }

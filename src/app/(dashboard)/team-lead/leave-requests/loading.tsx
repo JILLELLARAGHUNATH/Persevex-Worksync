@@ -10,7 +10,7 @@ export default function TLLeaveRequestsLoading() {
 
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-xs space-y-3">
+          <div key={i} className="ws-card p-4 rounded-xl shadow-xs space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-lg" />

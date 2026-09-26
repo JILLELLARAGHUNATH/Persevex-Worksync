@@ -86,7 +86,7 @@ export default function MemberFormModal({ isOpen, onClose, onSaved, memberData, 
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-md w-full p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-4 transition-colors">
+      <div className="ws-card max-w-md w-full p-5 shadow-xl animate-in zoom-in-95 duration-150 space-y-4 transition-colors">
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">

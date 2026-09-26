@@ -11,12 +11,10 @@ export default async function ManagerReportsPage() {
   ]);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Reporting Center</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Generate and download custom attendance, roster, and leave reports in Excel or CSV
-        </p>
+    <div className="space-y-3">
+      <div className="px-4 py-3 ws-card rounded-xl border-l-4 border-l-indigo-500">
+        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Reporting Center</h1>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">Generate and download custom attendance, roster, and leave reports in Excel or CSV</p>
       </div>
 
       <UnifiedReportsClient role="MANAGER" teams={teams} employees={employees} />

@@ -104,34 +104,32 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Action Bar */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setHistoryOpen(true)}
-          className="h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-3 rounded-lg text-xs flex items-center gap-1.5 transition border border-slate-200 dark:border-slate-700 shadow-xs cursor-pointer"
-        >
-          <History className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
-          Leave History ({history.length})
-        </button>
-      </div>
-
-      {/* Clean Apply Leave Form */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-6 rounded-xl shadow-xs space-y-4 max-w-2xl transition-colors">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">
+    <div className="space-y-3">
+      {/* Compact inline header — title + history button */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-violet-100 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60 shrink-0">
             <CalendarPlus className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-              Submit Leave Request
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Fill in absence dates and reason</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">Apply for Leave</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Submit a leave request for review and approval</p>
           </div>
         </div>
+        <button
+          onClick={() => setHistoryOpen(true)}
+          className="h-8 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-semibold px-3 rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0 whitespace-nowrap"
+        >
+          <History className="w-3.5 h-3.5" />
+          History ({history.length})
+        </button>
+      </div>
+
+      {/* Apply Leave Form */}
+      <div className="ws-card p-5 sm:p-6 space-y-4 max-w-3xl">
 
         {/* Policy Notice */}
-        <div className="p-3 bg-blue-50/70 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-center justify-between">
+        <div className="p-3 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 rounded-lg border border-indigo-100 dark:border-indigo-900/40 text-[11px] text-indigo-800 dark:text-indigo-300 flex items-center justify-between">
           <span>✨ <strong>Monthly Paid Leave Entitlement:</strong> 1.5 paid days/month for full-time members (resets fresh on 1st of every month).</span>
         </div>
 
@@ -221,7 +219,7 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
             <button
               type="submit"
               disabled={isPending}
-              className="h-9 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition shadow-xs text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-9 px-5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold rounded-lg transition shadow-sm shadow-indigo-900/20 text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? (
                 <>
@@ -240,7 +238,7 @@ export default function ApplyLeaveClient({ history }: { balances?: any[]; histor
       {/* Leave History Modal */}
       {historyOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-5 shadow-xl space-y-3.5 transition-colors">
+          <div className="ws-card max-w-3xl w-full max-h-[85vh] overflow-y-auto p-5 shadow-xl space-y-3.5 transition-colors">
             <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200/60 dark:border-violet-800/60">

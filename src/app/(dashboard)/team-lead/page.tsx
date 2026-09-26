@@ -2,7 +2,8 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import TeamLeadDashboardClient from '@/components/attendance/TeamLeadDashboardClient';
 import Link from 'next/link';
-import { Calendar } from 'lucide-react';
+import { Calendar, Users, FileCheck2 } from 'lucide-react';
+import PushNotificationToggle from '@/components/profile/PushNotificationToggle';
 import { getIndiaWorkdayInfo } from '@/lib/attendanceDate';
 import { autoFinalizeForgottenAttendance } from '@/lib/autoCheckout';
 
@@ -93,41 +94,53 @@ export default async function TeamLeadDashboardPage() {
     orderBy: { date: 'desc' },
   });
 
+  const now = new Date();
+  const hour = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false });
+  const h = parseInt(hour, 10);
+  const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
+  const greetingEmoji = h < 12 ? '☀️' : h < 17 ? '🌤️' : '🌙';
+
+  const firstName = session?.fullName?.split(' ')[0] || 'Team Lead';
+
   return (
-    <div className="space-y-4">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            Team Lead Command Center
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {primaryTeamName} &middot; Real-Time Attendance & Workforce Operations
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/team-lead/work-calendar"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
-          >
-            <Calendar className="w-3.5 h-3.5" /> Work Calendar
-          </Link>
-          <Link
-            href="/team-lead/team-members"
-            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition border border-slate-200 dark:border-slate-700"
-          >
-            Squad Members ({assignedMembers.length})
-          </Link>
-          <Link
-            href="/team-lead/leave-requests"
-            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition shadow-xs"
-          >
-            Leave Requests ({pendingTlLeaves})
-          </Link>
+    <div className="space-y-3">
+      {/* Compact hero greeting */}
+      <div className="ws-hero rounded-xl px-4 py-3 sm:px-6 sm:py-4 ws-animate-fade-up">
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-indigo-200 text-[11px] font-medium tracking-wide">{greetingEmoji} {greeting}</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white leading-tight">{firstName}</h1>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-xs text-white bg-white/10 px-2.5 py-1 rounded-lg border border-white/20 font-semibold">
+                <Users className="w-3 h-3" /> {primaryTeamName}
+              </span>
+              <span className="text-xs text-indigo-200/80">{assignedMembers.length} members</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/team-lead/work-calendar" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-xs transition border border-white/20">
+              <Calendar className="w-3.5 h-3.5" /> Calendar
+            </Link>
+            <Link href="/team-lead/team-members" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-xs transition border border-white/20">
+              <Users className="w-3.5 h-3.5" /> Squad ({assignedMembers.length})
+            </Link>
+            <Link href="/team-lead/leave-requests" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs transition shadow-md">
+              <FileCheck2 className="w-3.5 h-3.5" /> Leaves
+              {pendingTlLeaves > 0 && (
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">{pendingTlLeaves}</span>
+              )}
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Main Team Lead Client (Compact Attendance Marker, Single Horizontal Bar Chart & Real-Time Sync) */}
+      {/* Push-In Reminder Setup Card (shown only if not enabled on this device) */}
+      <PushNotificationToggle userRole={session?.role ?? 'TEAM_LEAD'} variant="dashboard" />
+
+      {/* ─── TEAM LEAD DASHBOARD CLIENT ─── */}
       <TeamLeadDashboardClient
         teamMembers={fullSquadPool}
         initialAttendances={initialAttendances}

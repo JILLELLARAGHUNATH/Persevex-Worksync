@@ -251,25 +251,25 @@ export default function AttendanceTableClient({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+        <div className="ws-card p-3.5">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Filtered Logs</span>
           <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{totalCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+        <div className="ws-card p-3.5">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">On-Time (By 11:15 AM)</span>
           <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{onTimeCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+        <div className="ws-card p-3.5">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Late Arrivals</span>
           <p className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{lateCount}</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 rounded-xl shadow-xs transition-colors">
+        <div className="ws-card p-3.5">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Shift Hours</span>
           <p className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-0.5">{avgHours} hrs</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-xs space-y-3.5 transition-colors">
+      <div className="ws-card p-4 space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           {/* Standard Filter Order: Today 1st -> Yesterday -> This Week -> This Month -> All Time */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
@@ -357,7 +357,7 @@ export default function AttendanceTableClient({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs transition-colors">
+      <div className="ws-card overflow-hidden shadow-xs transition-colors">
         <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
           <thead className="bg-slate-50 dark:bg-slate-950/80 uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>

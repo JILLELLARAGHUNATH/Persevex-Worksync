@@ -10,7 +10,7 @@ export default function TLAnnouncementsLoading() {
 
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-xs space-y-3">
+          <div key={i} className="ws-card p-5 rounded-xl shadow-xs space-y-3">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-2">
                 <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
